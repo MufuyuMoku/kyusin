@@ -84,10 +84,35 @@ button {
 	padding: 0 0.25ch;
 }
 
-.tbtn:disabled {
+/* Nonaktif tetap bisa difokus (D-033): redup, dan saat fokus ditandai
+   garis putus-putus alih-alih blok terbalik. */
+.tbtn[aria-disabled='true'] {
 	color: var(--dim);
 	cursor: default;
+}
+
+.tbtn[aria-disabled='true']:hover {
 	background: none;
+	color: var(--dim);
+}
+
+.tbtn[aria-disabled='true']:focus-visible {
+	background: none;
+	color: var(--dim);
+	outline: 1px dashed var(--fg);
+}
+
+/* Kontrol yang disorot tutorial (SPEC §7.6). */
+.tbtn.sorot {
+	outline: 1px solid var(--fg);
+	animation: sorot 1.06s steps(1) infinite;
+}
+
+@keyframes sorot {
+	50% {
+		background: var(--fg);
+		color: var(--bg);
+	}
 }
 
 .dim {

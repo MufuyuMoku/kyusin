@@ -3,6 +3,7 @@
 	import { effectOn, settings } from '$lib/settings.svelte';
 	import { errorText, lang, t, type Key } from '$lib/i18n.svelte';
 	import { startSession } from '$lib/boot/session';
+	import { NAV_SELECTOR, moveFocus } from '$lib/nav';
 	import Boot from '$lib/components/Boot.svelte';
 	import Console from '$lib/components/Console.svelte';
 	import GameScreen from '$lib/components/GameScreen.svelte';
@@ -51,15 +52,15 @@
 			if (app.consoleOpen) return;
 			// Kontrol yang disorot tutorial didahulukan.
 			const first =
-				main?.querySelector<HTMLElement>('[data-nav].sorot') ??
-				main?.querySelector<HTMLElement>('[data-nav]');
+				main?.querySelector<HTMLElement>(`${NAV_SELECTOR}.sorot`) ??
+				main?.querySelector<HTMLElement>(NAV_SELECTOR);
 			// focusVisible: sorotan tampil walau fokus dipasang lewat skrip.
 			first?.focus({ focusVisible: true } as FocusOptions);
 		});
 	});
 
 	function navItems(): HTMLElement[] {
-		return Array.from(main?.querySelectorAll<HTMLElement>('[data-nav]') ?? []);
+		return Array.from(main?.querySelectorAll<HTMLElement>(NAV_SELECTOR) ?? []);
 	}
 
 	function onkeydown(e: KeyboardEvent) {
@@ -79,11 +80,8 @@
 		if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
 			const items = navItems();
 			if (items.length === 0) return;
-			const i = items.indexOf(document.activeElement as HTMLElement);
-			const step = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1;
-			const next = i < 0 ? 0 : (i + step + items.length) % items.length;
 			e.preventDefault();
-			items[next].focus();
+			moveFocus(items, document.activeElement, e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1);
 		}
 	}
 </script>

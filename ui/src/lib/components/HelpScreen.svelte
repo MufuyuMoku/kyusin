@@ -6,13 +6,14 @@
 	import { helpText } from '$lib/help';
 	import { t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
+	import NavButton from './NavButton.svelte';
 </script>
 
 <div class="help">
 	<Frame title={t('help.frame')}>
 		<pre>{helpText(app.catalog)}</pre>
 	</Frame>
-	<div><button class="tbtn" data-nav onclick={back}>[ {t('action.back')} ]</button></div>
+	<div><NavButton onclick={back}>[ {t('action.back')} ]</NavButton></div>
 </div>
 
 <style>

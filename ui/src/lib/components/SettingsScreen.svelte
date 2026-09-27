@@ -20,6 +20,7 @@
 		settings
 	} from '$lib/settings.svelte';
 	import Frame from './Frame.svelte';
+	import NavButton from './NavButton.svelte';
 
 	const BAR = 10;
 
@@ -34,14 +35,12 @@
 	<Frame title={t('settings.theme')}>
 		{#each THEMES as th (th)}
 			<div>
-				<button
-					class="tbtn"
-					data-nav
-					aria-pressed={settings.theme === th}
+				<NavButton
+					pressed={settings.theme === th}
 					onclick={() => {
 						settings.theme = th;
 						save();
-					}}>{settings.theme === th ? '(●)' : '( )'} {t(`settings.theme.${th}` as Key)}</button
+					}}>{settings.theme === th ? '(●)' : '( )'} {t(`settings.theme.${th}` as Key)}</NavButton
 				>
 			</div>
 		{/each}
@@ -50,37 +49,31 @@
 	<Frame title={t('settings.fx')}>
 		{#each EFFECTS as fx (fx)}
 			<div>
-				<button
-					class="tbtn"
-					data-nav
+				<NavButton
 					disabled={forcedOff(fx)}
-					aria-pressed={effectOn(fx)}
+					reason={t('settings.fx.reduced')}
+					pressed={effectOn(fx)}
 					onclick={() => {
 						settings.fx[fx] = !settings.fx[fx];
 						save();
-					}}>{mark(effectOn(fx))} {t(`settings.fx.${fx}` as Key)}</button
+					}}>{mark(effectOn(fx))} {t(`settings.fx.${fx}` as Key)}</NavButton
 				>
-				{#if forcedOff(fx)}
-					<span class="dim">— {t('settings.fx.reduced')}</span>
-				{/if}
 			</div>
 		{/each}
 		<div class="intensity">
 			<span>{t('settings.intensity')}</span>
-			<button
-				class="tbtn"
-				data-nav
-				aria-label={t('settings.intensity.down')}
+			<NavButton
+				label={t('settings.intensity.down')}
 				disabled={settings.intensity <= 0}
-				onclick={() => setIntensity(settings.intensity - INTENSITY_STEP)}>[-]</button
+				onclick={() => setIntensity(settings.intensity - INTENSITY_STEP)}>[-]</NavButton
 			>
-			<span aria-hidden="true">{'■'.repeat(filled)}<span class="dim">{'□'.repeat(BAR - filled)}</span></span>
-			<button
-				class="tbtn"
-				data-nav
-				aria-label={t('settings.intensity.up')}
+			<span aria-hidden="true"
+				>{'■'.repeat(filled)}<span class="dim">{'□'.repeat(BAR - filled)}</span></span
+			>
+			<NavButton
+				label={t('settings.intensity.up')}
 				disabled={settings.intensity >= 100}
-				onclick={() => setIntensity(settings.intensity + INTENSITY_STEP)}>[+]</button
+				onclick={() => setIntensity(settings.intensity + INTENSITY_STEP)}>[+]</NavButton
 			>
 			<span role="status">{settings.intensity}%</span>
 		</div>
@@ -89,15 +82,13 @@
 	<Frame title={t('settings.language')}>
 		{#each LANGS as l (l)}
 			<div>
-				<button
-					class="tbtn"
-					data-nav
+				<NavButton
 					lang={l}
-					aria-pressed={lang() === l}
+					pressed={lang() === l}
 					onclick={() => {
 						settings.lang = l;
 						save();
-					}}>{lang() === l ? '(●)' : '( )'} {t(`settings.lang.${l}` as Key)}</button
+					}}>{lang() === l ? '(●)' : '( )'} {t(`settings.lang.${l}` as Key)}</NavButton
 				>
 			</div>
 		{/each}
@@ -106,14 +97,12 @@
 	<Frame title={t('settings.boot')}>
 		{#each BOOT_MODES as mode (mode)}
 			<div>
-				<button
-					class="tbtn"
-					data-nav
-					aria-pressed={settings.bootMode === mode}
+				<NavButton
+					pressed={settings.bootMode === mode}
 					onclick={() => {
 						settings.bootMode = mode;
 						save();
-					}}>{settings.bootMode === mode ? '(●)' : '( )'} {t(`settings.boot.${mode}` as Key)}</button
+					}}>{settings.bootMode === mode ? '(●)' : '( )'} {t(`settings.boot.${mode}` as Key)}</NavButton
 				>
 			</div>
 		{/each}
@@ -121,19 +110,17 @@
 
 	<Frame title={t('settings.other')}>
 		<div>
-			<button
-				class="tbtn"
-				data-nav
-				aria-pressed={settings.consoleAlways}
+			<NavButton
+				pressed={settings.consoleAlways}
 				onclick={() => {
 					settings.consoleAlways = !settings.consoleAlways;
 					save();
-				}}>{mark(settings.consoleAlways)} {t('settings.console_always')}</button
+				}}>{mark(settings.consoleAlways)} {t('settings.console_always')}</NavButton
 			>
 		</div>
 	</Frame>
 
-	<div><button class="tbtn" data-nav onclick={back}>[ {t('action.back')} ]</button></div>
+	<div><NavButton onclick={back}>[ {t('action.back')} ]</NavButton></div>
 </div>
 
 <style>

@@ -249,6 +249,16 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Tombol atau klik yang melewati boot "ditelan" supaya tidak ikut memilih tombol menu yang baru muncul.
 - Rujukan: SPEC §4, D-031.
 
+### D-033 — Kontrol nonaktif tetap bisa difokus; navigasi bersama
+- Tanggal / milestone: 2026-09-27 / perbaikan M0c (sebelum M1)
+- Diputuskan oleh: klien (hasil uji M0c) dan developer (penerapan)
+- Konteks: dengan efek animasi Windows mati, flicker tampil nonaktif lewat atribut `disabled` asli. Elemen seperti itu menolak `focus()`, sehingga navigasi panah di pengaturan macet di "Lengkungan layar". Tombol intensitas `[-]`/`[+]` di 0%/100% punya masalah yang sama.
+- Keputusan:
+  - Semua kontrol yang bisa dipilih memakai komponen bersama `NavButton`. Nonaktif = `aria-disabled="true"` (bukan `disabled`): tetap bisa difokus, alasannya tampil dan dibacakan lewat `aria-describedby`, klik/Enter/Spasi tidak berefek. Saat fokus, item nonaktif ditandai garis putus-putus, bukan blok terbalik.
+  - Navigasi panah memakai `lib/nav.ts` (`moveFocus`, melingkar) untuk semua layar, dan melewati item nonaktif seperti item lain.
+  - Tes regresi (`ui/src/lib/nav.test.ts`): model fokus yang meniru peramban (`disabled` asli menolak fokus) menjelajahi daftar 1–7 item turun, naik, dan turun-lalu-naik untuk setiap kombinasi item nonaktif; model yang sama membuktikan bug lama muncul dengan `disabled` asli. Tes sumber memastikan tidak ada `<button>` mentah, `data-nav` di luar `NavButton`, atau atribut `disabled` asli di markup.
+- Rujukan: SPEC §4 (aksesibilitas keyboard), D-026.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

@@ -8,6 +8,7 @@
 	import { app, back, tutorialAct, tutorialNext } from '$lib/app.svelte';
 	import { L, t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
+	import NavButton from './NavButton.svelte';
 
 	const tut = $derived(app.tutorial);
 	const highlighted = $derived(
@@ -23,7 +24,7 @@
 			<span class="dim">
 				{tut.finished ? t('tutorial.done') : t('tutorial.step', { i: tut.index + 1, n: tut.total })}
 			</span>
-			<button class="tbtn" data-nav onclick={back}>[ {t('action.exit')} ]</button>
+			<NavButton onclick={back}>[ {t('action.exit')} ]</NavButton>
 		</div>
 
 		<Frame title={t('tutorial.board')}>
@@ -34,7 +35,7 @@
 			{#if tut.finished}
 				<p>{t('tutorial.finished')}</p>
 				<div class="controls">
-					<button class="tbtn" data-nav onclick={back}>[ {t('action.back')} ]</button>
+					<NavButton onclick={back}>[ {t('action.back')} ]</NavButton>
 				</div>
 			{:else if tut.step}
 				<p>{L(tut.step.teks)}</p>
@@ -42,15 +43,12 @@
 					{#if tut.step.aksi}
 						<!-- Label tombol = perintah teks, yang tetap Inggris di kedua bahasa. -->
 						{#each buttons as cmd (cmd)}
-							<button
-								class="tbtn"
-								class:sorot={highlighted.has(cmd)}
-								data-nav
-								onclick={() => tutorialAct(cmd)}>[ {cmd.toUpperCase()} ]</button
+							<NavButton sorot={highlighted.has(cmd)} onclick={() => tutorialAct(cmd)}
+								>[ {cmd.toUpperCase()} ]</NavButton
 							>
 						{/each}
 					{:else}
-						<button class="tbtn sorot" data-nav onclick={tutorialNext}>[ {t('action.next')} ]</button>
+						<NavButton sorot onclick={tutorialNext}>[ {t('action.next')} ]</NavButton>
 					{/if}
 				</div>
 				{#if tut.feedback?.kind === 'wrong'}
@@ -75,7 +73,7 @@
 		align-items: baseline;
 		gap: 2ch;
 	}
-	.head .tbtn {
+	.head :global(.tbtn) {
 		margin-left: auto;
 	}
 	.big {
@@ -92,16 +90,6 @@
 		flex-wrap: wrap;
 		gap: 1ch 2ch;
 		margin: var(--cell-h) 0;
-	}
-	.sorot {
-		outline: 1px solid var(--fg);
-		animation: sorot 1.06s steps(1) infinite;
-	}
-	@keyframes sorot {
-		50% {
-			background: var(--fg);
-			color: var(--bg);
-		}
 	}
 	.hint {
 		margin-bottom: var(--cell-h);

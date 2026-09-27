@@ -7,6 +7,7 @@
 	import { back, startTutorial } from '$lib/app.svelte';
 	import { L, errorText, t, type Localized } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
+	import NavButton from './NavButton.svelte';
 
 	let { id }: { id: string } = $props();
 
@@ -25,8 +26,8 @@
 
 <div class="game">
 	<div class="actions">
-		<button class="tbtn" data-nav onclick={() => startTutorial(id)}>[ {t('action.tutorial')} ]</button>
-		<button class="tbtn" data-nav onclick={back}>[ {t('action.back')} ]</button>
+		<NavButton onclick={() => startTutorial(id)}>[ {t('action.tutorial')} ]</NavButton>
+		<NavButton onclick={back}>[ {t('action.back')} ]</NavButton>
 	</div>
 	<div class="grow">
 		<Frame title={`man ${id}`} fill>

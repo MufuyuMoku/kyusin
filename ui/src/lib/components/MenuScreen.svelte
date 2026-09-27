@@ -5,6 +5,7 @@
 	import { app, go } from '$lib/app.svelte';
 	import { L, t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
+	import NavButton from './NavButton.svelte';
 
 	function players(min: number, max: number) {
 		return t('menu.players', { n: min === max ? min : `${min}–${max}` });
@@ -23,9 +24,7 @@
 					<ul>
 						{#each cat.games as g (g.id)}
 							<li>
-								<button class="tbtn" data-nav onclick={() => go({ name: 'game', id: g.id })}
-									>▸ {L(g.nama)}</button
-								>
+								<NavButton onclick={() => go({ name: 'game', id: g.id })}>▸ {L(g.nama)}</NavButton>
 								<span class="dim"
 									>{players(g.pemain_min, g.pemain_maks)}{g.rtp_line
 										? ` · ${L(g.rtp_line)}`
@@ -42,12 +41,10 @@
 	<Frame title={t('menu.system')}>
 		<ul>
 			<li>
-				<button class="tbtn" data-nav onclick={() => go({ name: 'settings' })}
-					>▸ {t('menu.settings')}</button
-				>
+				<NavButton onclick={() => go({ name: 'settings' })}>▸ {t('menu.settings')}</NavButton>
 			</li>
 			<li>
-				<button class="tbtn" data-nav onclick={() => go({ name: 'help' })}>▸ {t('menu.help')}</button>
+				<NavButton onclick={() => go({ name: 'help' })}>▸ {t('menu.help')}</NavButton>
 			</li>
 		</ul>
 	</Frame>
