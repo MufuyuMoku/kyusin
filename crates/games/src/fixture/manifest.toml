@@ -1,0 +1,16 @@
+# Game fixture khusus tes (SPEC §9 M0, D-005). Bukan game katalog.
+id = "fixture"
+nama = "Fixture: Batang"
+kategori = "uji"
+pemain_min = 2
+pemain_maks = 2
+jenis = "giliran"
+lawan = "bot"
+kompetitif = false
+lan = false
+agen = false
+tutorial = "crates/games/src/fixture/tutorial.toml"
+
+[[perintah]]
+pola = "take <n>"
+ringkas = "Ambil 1 sampai 3 batang"

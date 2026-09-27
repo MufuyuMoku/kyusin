@@ -1,0 +1,37 @@
+game = "fixture"
+judul = "Batang: dasar"
+
+[config]
+batang = 7
+
+[man]
+aturan = """
+Ada setumpuk batang. Dua pemain bergantian mengambil 1, 2, atau 3 batang.
+Yang mengambil batang terakhir menang.
+
+Game ini hanya fixture untuk menguji registry dan runner tutorial; bukan
+game katalog.
+"""
+kontrol = """
+Klik tombol [ TAKE n ] di bawah tumpukan. Dengan keyboard: Tab untuk
+berpindah tombol, Enter untuk memilih.
+"""
+
+[[langkah]]
+teks = "Ada 7 batang. Setiap giliran kamu boleh mengambil 1 sampai 3."
+
+[[langkah]]
+teks = "Ambil 3 batang supaya tersisa 4."
+aksi = "take 3"
+sorot = ["aksi:take 3"]
+petunjuk = "Pilih tombol yang mengambil tiga batang."
+
+[[langkah]]
+teks = "Lawan mengambil 1, tersisa 3. Ambil semuanya untuk menang."
+sebelum = ["take 1"]
+aksi = "take 3"
+sorot = ["aksi:take 3"]
+petunjuk = "Batang terakhir menang: ambil ketiganya."
+
+[[langkah]]
+teks = "Kamu mengambil batang terakhir dan menang."

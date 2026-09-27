@@ -1,0 +1,262 @@
+<!--
+  Konsol perintah `> _` (SPEC §4). Opsional: mati secara bawaan, dibuka
+  dengan `:` atau `` ` ``. Autocomplete (Tab) dan riwayat (↑/↓).
+-->
+<script lang="ts">
+	import { tick } from 'svelte';
+	import {
+		app,
+		back,
+		current,
+		findGame,
+		gameCommands,
+		go,
+		home,
+		print,
+		startTutorial,
+		tutorialAct
+	} from '$lib/app.svelte';
+	import { EFFECT_IDS, GLOBAL_COMMANDS, History, THEME_IDS, complete, parse } from '$lib/commands';
+	import { helpText, lsText } from '$lib/help';
+	import { save, settings, type Effect, type Theme } from '$lib/settings.svelte';
+
+	const HISTORY_KEY = 'kyusin.history.v1';
+
+	function loadHistory(): string[] {
+		try {
+			return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]');
+		} catch {
+			return [];
+		}
+	}
+
+	const history = new History(loadHistory());
+	let value = $state('');
+	let caret = $state(0);
+	let options = $state<string[]>([]);
+	let input: HTMLInputElement | undefined = $state();
+	let outputEl: HTMLDivElement | undefined = $state();
+
+	const visible = $derived(app.consoleOpen || settings.consoleAlways);
+
+	$effect(() => {
+		if (app.consoleOpen) tick().then(() => input?.focus());
+	});
+
+	$effect(() => {
+		void app.output.length;
+		tick().then(() => outputEl?.scrollTo({ top: outputEl.scrollHeight }));
+	});
+
+	function ctx() {
+		return {
+			gameIds: app.catalog.flatMap((c) => c.games.map((g) => g.id)),
+			categoryKeys: app.catalog.map((c) => c.key),
+			gameCommands: gameCommands()
+		};
+	}
+
+	function persist() {
+		try {
+			localStorage.setItem(HISTORY_KEY, JSON.stringify(history.entries));
+		} catch {
+			// Riwayat berlaku untuk sesi ini saja.
+		}
+	}
+
+	async function run(line: string) {
+		history.push(line);
+		persist();
+		print(`> ${line}`);
+		const p = parse(line, ctx());
+		try {
+			switch (p.kind) {
+				case 'empty':
+					return;
+				case 'unknown':
+					print(`${p.name}: perintah tidak dikenal. Ketik \`help\`.`);
+					return;
+				case 'game': {
+					if (!app.tutorial) {
+						print('Tidak ada permainan yang berjalan.');
+						return;
+					}
+					await tutorialAct(p.command);
+					const f = app.tutorial?.feedback;
+					if (f?.kind === 'wrong') print(`! ${f.hint}`);
+					return;
+				}
+				case 'global':
+					return runGlobal(p.name, p.args);
+			}
+		} catch (e) {
+			print(String(e));
+		}
+	}
+
+	async function runGlobal(name: string, args: string[]) {
+		const [a, b] = args;
+		switch (name) {
+			case 'help': {
+				const c = GLOBAL_COMMANDS.find((c) => c.name === a);
+				print(c ? `${c.name} ${c.args}  —  ${c.summary}` : helpText(app.catalog));
+				return;
+			}
+			case 'ls':
+				print(lsText(app.catalog, a));
+				return;
+			case 'man':
+			case 'tutorial': {
+				if (!a) return print(`${name}: sebutkan id game. Contoh: ${name} ${ctx().gameIds[0] ?? '<id>'}`);
+				if (!findGame(a)) return print(`${name}: tidak ada game \`${a}\``);
+				if (name === 'man') go({ name: 'game', id: a });
+				else await startTutorial(a);
+				return;
+			}
+			case 'menu':
+				return home();
+			case 'back':
+				return back();
+			case 'settings':
+				if (current().name !== 'settings') go({ name: 'settings' });
+				return;
+			case 'theme':
+				if (!THEME_IDS.includes(a)) return print(`theme: pilih ${THEME_IDS.join(', ')}`);
+				settings.theme = a as Theme;
+				save();
+				return;
+			case 'fx':
+				if (!EFFECT_IDS.includes(a) || (b !== 'on' && b !== 'off'))
+					return print(`fx: fx <${EFFECT_IDS.join('|')}> <on|off>`);
+				settings.fx[a as Effect] = b === 'on';
+				save();
+				return;
+			case 'clear':
+				app.output = [];
+				return;
+		}
+	}
+
+	function syncCaret() {
+		caret = input?.selectionStart ?? value.length;
+	}
+
+	async function onkeydown(e: KeyboardEvent) {
+		if (e.key === 'Tab') {
+			e.preventDefault();
+			const c = complete(value, ctx());
+			value = c.value;
+			options = c.options.length > 1 ? c.options : [];
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			value = history.up(value);
+		} else if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			value = history.down();
+		} else if (e.key === 'Enter') {
+			e.preventDefault();
+			const line = value;
+			value = '';
+			options = [];
+			await run(line);
+		} else if (e.key === 'Escape') {
+			e.preventDefault();
+			e.stopPropagation();
+			options = [];
+			app.consoleOpen = false;
+			input?.blur();
+			return;
+		} else {
+			options = [];
+		}
+		await tick();
+		input?.setSelectionRange(value.length, value.length);
+		syncCaret();
+	}
+</script>
+
+{#if visible}
+	<section class="console" aria-label="Konsol perintah">
+		{#if app.output.length}
+			<div class="output" bind:this={outputEl} aria-live="polite">
+				{#each app.output as line, i (i)}
+					<div>{line || ' '}</div>
+				{/each}
+			</div>
+		{/if}
+		{#if options.length}
+			<div class="options dim">{options.join('  ')}</div>
+		{/if}
+		<label class="prompt">
+			<span aria-hidden="true">&gt;&nbsp;</span>
+			<span class="field">
+				<input
+					bind:this={input}
+					bind:value
+					{onkeydown}
+					oninput={syncCaret}
+					onclick={syncCaret}
+					onkeyup={syncCaret}
+					onfocus={() => (app.consoleOpen = true)}
+					spellcheck="false"
+					autocomplete="off"
+					aria-label="Perintah"
+				/>
+				<span class="mirror" aria-hidden="true"
+					>{value.slice(0, caret)}<span class="cursor">{value[caret] ?? ' '}</span></span
+				>
+			</span>
+		</label>
+	</section>
+{/if}
+
+<style>
+	.console {
+		border-top: 1px solid var(--dim);
+		padding: 0.25rem 2ch 0.5rem;
+	}
+	.output {
+		max-height: calc(var(--cell-h) * 8);
+		overflow-y: auto;
+		white-space: pre-wrap;
+	}
+	.options {
+		white-space: pre-wrap;
+	}
+	.prompt {
+		display: flex;
+		white-space: pre;
+	}
+	.field {
+		position: relative;
+		flex: 1;
+	}
+	input {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		font: inherit;
+		color: transparent;
+		caret-color: transparent;
+		background: transparent;
+		border: 0;
+		padding: 0;
+		outline: none;
+	}
+	input:focus-visible {
+		background: transparent;
+	}
+	.mirror {
+		white-space: pre;
+		pointer-events: none;
+	}
+	.cursor {
+		color: var(--bg);
+	}
+	.field:not(:focus-within) .cursor {
+		animation: none;
+		background: transparent;
+		color: inherit;
+		outline: 1px solid var(--dim);
+	}
+</style>

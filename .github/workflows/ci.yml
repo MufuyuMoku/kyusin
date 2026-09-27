@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    # Perubahan dokumen saja tidak perlu build. Repo privat, jadi menit
+    # Actions terbatas (Windows dihitung dua kali).
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Lisensi crate Rust (SPEC §3). Daftar izin dan alasannya ada di deny.toml.
+  # Hanya pemeriksaan lisensi; advisories butuh basis data dari internet.
+  licences:
+    name: licences (cargo-deny)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check licenses
+
+  # Tes crate di crates/ saja, tanpa crate Tauri: sama dengan yang boleh
+  # dijalankan di sesi cloud (SPEC §11). Termasuk tes tutorial (SPEC §7.7).
+  crates:
+    name: crates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: crates
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+      - name: cargo clippy (crates)
+        run: cargo clippy -p kyusin-core -p kyusin-games -p kyusin-bots -p kyusin-net -p kyusin-store --all-targets -- -D warnings
+      - name: cargo test (crates, termasuk tes tutorial)
+        run: cargo test -p kyusin-core -p kyusin-games -p kyusin-bots -p kyusin-net -p kyusin-store
+
+  app:
+    name: app (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        timeout-minutes: 10
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential file pkg-config libssl-dev \
+            libwebkit2gtk-4.1-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: npm ci
+        working-directory: ui
+        run: npm ci
+
+      - name: svelte-check
+        working-directory: ui
+        run: npm run check
+
+      - name: interface tests
+        working-directory: ui
+        run: npm test
+
+      # Konteks Tauri menanam antarmuka yang sudah dibangun.
+      - name: Build interface
+        working-directory: ui
+        run: npm run build
+
+      # Lisensi paket npm yang masuk bundle produksi (SPEC §3, D-006).
+      - name: npm licences
+        if: runner.os == 'Linux'
+        working-directory: ui
+        run: npm run licenses
+
+      - name: cargo clippy (workspace)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: cargo test (workspace)
+        run: cargo test --workspace
+
+      # Build debug membuktikan aplikasi terbangun di kedua sistem. Installer
+      # dan paket .deb masuk CI di M11.
+      - name: Build application
+        working-directory: src-tauri
+        run: npx --prefix ../ui tauri build --debug --no-bundle

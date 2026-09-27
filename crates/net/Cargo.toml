@@ -1,0 +1,9 @@
+[package]
+name = "kyusin-net"
+description = "Server/klien LAN dan protokol agen KyuSin (mulai M9)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]

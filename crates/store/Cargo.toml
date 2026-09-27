@@ -1,0 +1,9 @@
+[package]
+name = "kyusin-store"
+description = "Penyimpanan SQLite KyuSin: profil, chip, riwayat, replay (mulai M1/M3)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]

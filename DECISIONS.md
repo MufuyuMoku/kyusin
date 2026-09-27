@@ -120,6 +120,53 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: game beranimasi kontinu (slot, Plinko, Crash, pachinko, coin pusher, tembak ikan) dirender di canvas dengan grid karakter; itu soal render, sedangkan jenis kontrak mengikuti §6.6. `rtp` berupa angka untuk semua casino melawan rumah, baik ber-bandar maupun solo (slot, Keno, Bingo, kartu gosok); `null` untuk antar-pemain dan non-casino. Judul DoD §7.1 menjadi "Casino melawan rumah (`rtp` berupa angka)".
 - Rujukan: SPEC §4, §5.2, §6.6, §7.1.
 
+### D-015 — Fixture hanya untuk tes dan fitur build `fixture`
+- Tanggal / milestone: 2026-09-27 / M0
+- Diputuskan oleh: developer (dalam batas SPEC §9 M0)
+- Konteks: registry dan runner diuji dengan game fixture yang bukan game katalog, tetapi menu, `man`, konsol, dan tutorial juga perlu dicek visual di M0.
+- Keputusan: fixture (Nim, "Fixture: Batang") ada di `crates/games/src/fixture/`, dengan manifest berkategori `uji` dan tutorial di samping modulnya. Tes memakai `kyusin_games::with_fixture()`. Registry aplikasi (`builtin()`) kosong di M0; fixture hanya muncul bila dibangun dengan fitur `fixture` (`cargo tauri dev --features fixture`). Build rilis tidak memuatnya.
+- Rujukan: SPEC §9 (M0), D-005.
+
+### D-016 — Kontrak `TurnGame` sementara di M0
+- Tanggal / milestone: 2026-09-27 / M0
+- Diputuskan oleh: developer
+- Konteks: runner tutorial butuh antarmuka game sebelum kontrak final M1.
+- Keputusan: `kyusin-core::game` berisi `TurnGame` sementara yang sudah memakai nama dan bentuk SPEC §5.2 (`pending_players`, `legal_actions -> Vec<ActionSpec>`, `apply(player, action)`, `view_for -> View: Serialize`, `to_text`, `parse_command`, `format_action`), ditambah `Session` tanpa tipe konkret yang menerima perintah teks. RNG yang disuntikkan, replay, dan hasil akhir final ditetapkan di M1.
+- Rujukan: SPEC §5.2, §9.
+
+### D-017 — Format tutorial dan manifest
+- Tanggal / milestone: 2026-09-27 / M0
+- Diputuskan oleh: developer
+- Keputusan: manifest = `manifest.toml` di modul game dengan kunci persis SPEC §5.2 (`nama`, `kategori`, `pemain_min`, `pemain_maks`, `jenis`, `lawan`, `kompetitif`, `lan`, `agen`, `rtp` dalam persen, `tutorial`, `[[perintah]]`). Validasi di registry: aturan `rtp` D-014, kompetitif ⇒ lawan bot, LAN/agen ⇒ giliran, path tutorial `tutorials/<id>.toml`. Tutorial TOML: `seed`, `config`, `pemain`, `[man]` (`aturan`, `kontrol` untuk halaman `man`), dan `[[langkah]]` (`teks`, `sebelum`, `aksi`, `sorot`, `petunjuk`). Keadaan awal = konfigurasi + seed + perintah `sebelum`, jadi tutorial selalu diputar terhadap mesin aturan asli. Langkah beraksi wajib punya `petunjuk` dan `sorot`; target `aksi:<perintah>` harus aksi yang sah. Isi tutorial ditanam saat kompilasi; tes memastikan sama dengan berkas di repo, dan gagal bila ada tutorial tanpa game.
+- Rujukan: SPEC §5.2, §7.6, §7.7; format lengkap di `tutorials/README.md`.
+
+### D-018 — Pengaturan tampilan di localStorage sampai M3
+- Tanggal / milestone: 2026-09-27 / M0
+- Diputuskan oleh: developer
+- Konteks: SQLite (`store`) baru berisi profil di M3.
+- Keputusan: tema, efek CRT, konsol selalu tampil, dan boot disimpan di localStorage jendela; riwayat konsol juga (maks. 100 baris). Pindah ke profil SQLite di M3.
+- Rujukan: SPEC §4, §9.
+
+### D-019 — Perintah global konsol dan perilaku tampilan
+- Tanggal / milestone: 2026-09-27 / M0
+- Diputuskan oleh: developer
+- Keputusan: perintah global bergaya terminal: `help`, `ls`, `man`, `tutorial`, `menu`, `back`, `settings`, `theme`, `fx`, `clear`. Perintah game dan daftar id datang dari manifest dan `legal_actions`. Efek bawaan: scanline, glow, dan lengkungan menyala; flicker mati. Saat reduced motion: semua efek CRT mati dan urutan boot dilewati. Suara belum ada di M0 (tidak termasuk isi M0).
+- Rujukan: SPEC §4.
+
+### D-020 — Pemeriksa lisensi npm membaca isi bundle
+- Tanggal / milestone: 2026-09-27 / M0
+- Diputuskan oleh: developer (alat pilihan developer, SPEC §3)
+- Konteks: `npm query .prod` ikut menghitung peer dependency SvelteKit (Vite dan `lightningcss` MPL-2.0), padahal alat build tidak dikirim.
+- Keputusan: plugin Vite kecil mencatat paket npm yang benar-benar masuk bundle klien; `scripts/check-npm-licenses.mjs` (tanpa dependensi tambahan) memeriksa lisensi daftar itu terhadap daftar izin. Saat ini: `svelte`, `@sveltejs/kit`, `@tauri-apps/api` (MIT / Apache-2.0 OR MIT).
+- Rujukan: SPEC §3, D-006.
+
+### D-021 — MPL-2.0 diizinkan di `deny.toml` (menunggu konfirmasi klien)
+- Tanggal / milestone: 2026-09-27 / M0
+- Diputuskan oleh: developer, sementara; lihat Q-003
+- Konteks: Tauri 2 membawa crate MPL-2.0 (`cssparser`, `cssparser-macros`, `selectors`, `dtoa-short` lewat `tauri-utils`; `option-ext` lewat `dirs`). SPEC §3 tidak menyebut MPL-2.0 di daftar izin, tetapi juga tidak melarangnya; yang dilarang GPL/LGPL/AGPL.
+- Keputusan: MPL-2.0 diizinkan sebagai lisensi "setara". Kewajibannya per berkas (hanya berkas MPL yang diubah yang harus dibuka) dan tidak menjangkau kode KyuSin; kami tidak mengubah crate tersebut. Ini sama dengan kebijakan `deny.toml` Onsa. Tanpa ini, stack wajib SPEC §3 tidak bisa dipakai.
+- Rujukan: SPEC §3, Q-003.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
@@ -127,6 +174,11 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 
 ### Q-002 — Kedudukan slot dan game solo casino dalam manifest
 - Status: terjawab (lihat D-014).
+
+### Q-003 — Konfirmasi MPL-2.0 sebagai lisensi "setara"
+- Bagian SPEC: §3 (aturan lisensi)
+- Pertanyaan: apakah klien menerima MPL-2.0 untuk dependensi yang dibawa Tauri (D-021)? Bila tidak, satu-satunya jalan adalah mengganti Tauri, yang bertentangan dengan stack SPEC §3.
+- Status: menunggu klien.
 
 ## Usulan
 

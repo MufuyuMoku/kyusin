@@ -1,0 +1,16 @@
+[package]
+name = "kyusin-games"
+description = "Cartridge bawaan KyuSin: satu modul per game."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[features]
+# Mendaftarkan game fixture di registry aplikasi, hanya untuk pengecekan
+# visual saat pengembangan (D-015). Build rilis tidak memakainya.
+fixture = []
+
+[dependencies]
+kyusin-core.workspace = true
+serde.workspace = true

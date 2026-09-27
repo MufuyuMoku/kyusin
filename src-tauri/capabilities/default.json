@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Izin jendela utama KyuSin. Sekecil mungkin; tiap milestone hanya menambah yang dibutuhkan.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

@@ -1,0 +1,31 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / SvelteKit
+node_modules/
+ui/.svelte-kit/
+ui/build/
+ui/.vite/
+
+# Tauri
+src-tauri/gen/
+src-tauri/target/
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env
+.env.*
+*.log
+
+# Stockfish is a calibration tool on the developer machine only (SPEC §3, §8)
+stockfish*
+
+# Konfigurasi lokal Claude Code
+.claude/

@@ -20,6 +20,7 @@
 - Dependensi hanya MIT, Apache-2.0, BSD, zlib, ISC, OFL (font), atau setara. **Dilarang GPL/LGPL/AGPL** untuk semua yang dikompilasi/dibundel (crate Rust dan npm produksi).
 - Pengecualian: WebView2 (Windows) dan webkit2gtk/GTK (Linux), ditautkan dinamis dan tidak dibundel. Karena itu paket Linux hanya `.deb`, tanpa AppImage.
 - CI wajib: `cargo-deny` + pemeriksa lisensi dependensi produksi npm.
+- MPL-2.0 (dibawa Tauri) sementara diizinkan di `deny.toml`, menunggu konfirmasi klien (D-021, Q-003).
 - Stockfish hanya alat kalibrasi di mesin developer: tidak masuk repo, tidak ikut dikirim.
 
 ## Aturan kerja (SPEC §11, §9)
@@ -29,8 +30,14 @@
 - Git: repo `MufuyuMoku/kyusin` (privat). Git global mesin klien memakai identitas clownface471; repo ini memakai `user.name`/`user.email` lokal MufuyuMoku. Jangan mengubah konfigurasi global.
 - **Lokal vs cloud:** M0 dan semua pekerjaan yang perlu dicek visual dikerjakan di sesi lokal. Logika murni (mesin aturan, bot, simulasi RTP, protokol) boleh di sesi cloud; tes cloud hanya pada crate di `crates/` (tanpa crate Tauri).
 
+## Perintah
+- Cek seperti CI: `sh scripts/check.sh` (svelte-check, tes UI, build UI, lisensi npm, fmt, clippy, tes Rust termasuk tes tutorial, cargo-deny).
+- Aplikasi dev: `cd src-tauri && npx --prefix ../ui tauri dev` (tambah `--features fixture` untuk menampilkan game fixture, D-015).
+- UI saja di peramban: `npm --prefix ui run dev` (backend tiruan fixture, hanya mode dev).
+
 ## Pengingat arsitektur
 - Game = mesin keadaan murni: tanpa IO, tanpa jam dinding, tanpa RNG global; acak lewat RNG yang disuntikkan.
 - Menu, `help`, `man`, dan autocomplete dibangkitkan dari manifest, bukan ditulis tangan.
 - Kontrol visual adalah cara utama bermain; perintah teks opsional tapi tetap wajib ada (protokol LAN/agen).
 - Definition of Done per game ada di SPEC §7; jangan menandai game selesai sebelum kesembilan poinnya terpenuhi.
+- Game baru = modul di `crates/games/src/<id>/` (+ `manifest.toml`), tutorial `tutorials/<id>.toml`, satu baris di `kyusin_games::builtin()`.

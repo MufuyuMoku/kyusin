@@ -1,0 +1,48 @@
+# Lisensi yang boleh dibawa dependensi Rust KyuSin (cargo-deny), SPEC §3.
+#
+# Repo sengaja tanpa lisensi karena klien mungkin menjual atau menutup
+# kodenya nanti, jadi tidak ada dependensi yang boleh memutuskannya lebih
+# dulu: GPL, LGPL, dan AGPL ditolak karena tidak ada di daftar izin.
+#
+# Crate KyuSin sendiri `publish = false` dan tanpa lisensi; cargo-deny
+# menganggapnya privat.
+#
+#     cargo deny check licenses
+
+[graph]
+# Kedua sistem target (SPEC §1). Dependensi yang hanya muncul di salah satu
+# tetap dependensi.
+targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"]
+all-features = true
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "CC0-1.0",
+    # Copyleft per berkas: kewajibannya hanya pada berkas MPL itu sendiri bila
+    # diubah, tidak menjangkau aplikasi di sekitarnya. Masuk lewat Tauri
+    # (cssparser, selectors, dtoa-short lewat tauri-utils; option-ext lewat
+    # dirs), jadi tak terhindarkan dengan stack SPEC §3. D-017.
+    "MPL-2.0",
+]
+confidence-threshold = 0.9
+
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "allow"
+
+[advisories]
+yanked = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

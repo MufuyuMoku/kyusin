@@ -1,0 +1,201 @@
+/*
+ * Gaya terminal retro (SPEC §4). Tiga tema fosfor; warna hanya lewat token.
+ * Efek CRT dipasang sebagai kelas `fx-*` pada .crt dan bisa dimatikan satu
+ * per satu. Semua efek mati bila sistem meminta reduced motion (lihat
+ * settings.svelte.ts).
+ */
+
+:root {
+	--fg: #41ff00;
+	--dim: #1f7a00;
+	--bg: #050a05;
+	--font-body: 'IBM Plex Mono', ui-monospace, monospace;
+	--font-display: 'VT323', ui-monospace, monospace;
+	--cell-h: 22px; /* bilangan bulat supaya grid karakter tidak bergeser */
+	color-scheme: dark;
+}
+
+:root[data-theme='p1'] {
+	--fg: #41ff00;
+	--dim: #1f7a00;
+	--bg: #050a05;
+}
+
+:root[data-theme='p3'] {
+	--fg: #ffb000;
+	--dim: #7a5400;
+	--bg: #0a0703;
+}
+
+:root[data-theme='p4'] {
+	--fg: #e6eeff;
+	--dim: #6b7385;
+	--bg: #06070a;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	background: var(--bg);
+	color: var(--fg);
+	font-family: var(--font-body);
+	font-size: 15px;
+	line-height: var(--cell-h);
+	overflow: hidden;
+}
+
+::selection {
+	background: var(--fg);
+	color: var(--bg);
+}
+
+button {
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	line-height: inherit;
+	white-space: pre;
+}
+
+/* Sorotan = blok terbalik (SPEC §4). Fokus selalu terlihat. */
+:focus {
+	outline: none;
+}
+
+:focus-visible,
+.tbtn:hover {
+	background: var(--fg);
+	color: var(--bg);
+	text-shadow: none;
+}
+
+.tbtn {
+	display: inline-block;
+	vertical-align: top;
+	padding: 0 0.25ch;
+}
+
+.tbtn:disabled {
+	color: var(--dim);
+	cursor: default;
+	background: none;
+}
+
+.dim {
+	color: var(--dim);
+}
+
+.display {
+	font-family: var(--font-display);
+	font-weight: 400;
+	letter-spacing: 0.02em;
+}
+
+pre {
+	margin: 0;
+	font: inherit;
+	white-space: pre-wrap;
+}
+
+::-webkit-scrollbar {
+	width: 1ch;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--dim);
+}
+
+/* ── Efek CRT ───────────────────────────────────────────────────────── */
+
+.crt {
+	position: fixed;
+	inset: 0;
+	background: var(--bg);
+	overflow: hidden;
+}
+
+.crt.fx-glow {
+	text-shadow:
+		0 0 1px color-mix(in srgb, var(--fg) 80%, transparent),
+		0 0 6px color-mix(in srgb, var(--fg) 35%, transparent);
+}
+
+.crt::before,
+.crt::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 50;
+}
+
+.crt.fx-scanline::after {
+	background: repeating-linear-gradient(
+		to bottom,
+		rgb(0 0 0 / 0.3) 0,
+		rgb(0 0 0 / 0.3) 1px,
+		transparent 1px,
+		transparent 3px
+	);
+}
+
+/* Lengkungan: sudut membulat dan vinyet seperti kaca tabung. */
+.crt.fx-curve {
+	border-radius: 18px / 14px;
+}
+
+.crt.fx-curve::before {
+	background: radial-gradient(ellipse at center, transparent 62%, rgb(0 0 0 / 0.55) 100%);
+	border-radius: inherit;
+}
+
+.crt.fx-flicker::after {
+	animation: flicker 0.12s steps(2) infinite;
+}
+
+.crt.fx-flicker:not(.fx-scanline)::after {
+	background: rgb(0 0 0 / 0.04);
+}
+
+@keyframes flicker {
+	0% {
+		opacity: 0.92;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+/* Kursor blok berkedip (SPEC §4). */
+.cursor {
+	display: inline-block;
+	width: 1ch;
+	background: var(--fg);
+	animation: blink 1.06s steps(1) infinite;
+}
+
+@keyframes blink {
+	50% {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cursor,
+	.crt::after,
+	.sorot {
+		animation: none !important;
+	}
+}

@@ -1,0 +1,29 @@
+[package]
+name = "kyusin"
+description = "KyuSin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "kyusin_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "kyusin"
+path = "src/main.rs"
+
+[features]
+# Menampilkan game fixture di menu untuk pengecekan visual (D-015).
+fixture = ["kyusin-games/fixture"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+kyusin-core.workspace = true
+kyusin-games.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2", features = [] }
