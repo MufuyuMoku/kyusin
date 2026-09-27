@@ -319,6 +319,13 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Catatan untuk M4: `chips_low` dipilih dari saldo **sebelum** tunjangan harian, lalu tunjangannya disebut sesudahnya dengan nada yang sama.
 - Rujukan: SPEC §4, D-031, D-032.
 
+### D-040 — Aplikasi mengikuti folder data dari otomasi dan dari variabel uji
+- Tanggal / milestone: 2026-09-28 / M1b
+- Diputuskan oleh: developer
+- Konteks: tes tauri-driver pertama di CI gagal dengan "DevToolsActivePort file doesn't exist". msedgedriver mengeset `WEBVIEW2_USER_DATA_FOLDER` dan menunggu berkas itu di sana, tetapi Tauri memberi WebView2 folder datanya sendiri secara eksplisit, yang menang atas variabel tersebut. Dibuktikan lokal: port DevTools terbuka, berkasnya ditulis di folder aplikasi.
+- Keputusan: jendela utama dibuat di `setup` (bukan otomatis dari konfigurasi); bila `WEBVIEW2_USER_DATA_FOLDER` diset, folder itu dipakai sebagai folder data WebView. Basis data SQLite bisa dialihkan dengan `KYUSIN_DATA_DIR`. Runner tes jendela asli memakai keduanya dengan folder sementara, jadi tes tidak menyentuh pengaturan maupun replay pemain. Pemakaian biasa tidak berubah.
+- Rujukan: SPEC §11, D-038.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

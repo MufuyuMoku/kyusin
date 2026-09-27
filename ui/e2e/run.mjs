@@ -11,12 +11,12 @@
 //
 // Tangkapan layar disimpan di ui/e2e/artifacts/.
 //
-// Catatan: tes memakai folder data aplikasi yang sama dengan pemakaian
-// biasa. Pengaturan dikembalikan di akhir, tetapi pertandingan uji tercatat
-// sebagai replay yang ditinggalkan.
+// Tes memakai folder data sementara (KYUSIN_DATA_DIR untuk SQLite; folder
+// WebView2 disiapkan msedgedriver), jadi data pemain tidak tersentuh (D-040).
 
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run as board } from './board.e2e.mjs';
@@ -40,7 +40,11 @@ const native =
 	(process.env.EdgeWebDriver ? join(process.env.EdgeWebDriver, 'msedgedriver.exe') : undefined);
 if (native) args.push('--native-driver', native);
 
-const driver = spawn('tauri-driver', args, { stdio: ['ignore', 'inherit', 'inherit'] });
+const dataDir = mkdtempSync(join(tmpdir(), 'kyusin-e2e-'));
+const driver = spawn('tauri-driver', args, {
+	stdio: ['ignore', 'inherit', 'inherit'],
+	env: { ...process.env, KYUSIN_DATA_DIR: dataDir }
+});
 driver.on('error', (e) => {
 	console.error(`tauri-driver gagal dijalankan: ${e.message}`);
 	process.exit(2);
@@ -70,5 +74,10 @@ try {
 	code = 1;
 } finally {
 	driver.kill();
+	try {
+		rmSync(dataDir, { recursive: true, force: true });
+	} catch {
+		// Berkas mungkin masih dipakai aplikasi yang sedang ditutup.
+	}
 }
 process.exit(code);

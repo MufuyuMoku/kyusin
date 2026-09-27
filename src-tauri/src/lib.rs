@@ -12,7 +12,7 @@ use kyusin_core::i18n::core;
 use kyusin_core::{ActionSpec, Localized, Manifest, Registry};
 use kyusin_store::Store;
 use serde::Serialize;
-use tauri::{Manager, State};
+use tauri::{Manager, State, WebviewWindowBuilder};
 
 mod play;
 mod tutorial;
@@ -120,10 +120,19 @@ fn man(id: String, state: State<'_, AppState>) -> Result<Localized, Localized> {
     man_page(cartridge).map_err(|e| e.message())
 }
 
+/// Folder data. `KYUSIN_DATA_DIR` mengalihkannya, dipakai tes jendela asli
+/// supaya tidak menyentuh data pemain (D-040).
+fn data_dir(app: &tauri::App) -> Result<PathBuf, String> {
+    match std::env::var_os("KYUSIN_DATA_DIR") {
+        Some(dir) if !dir.is_empty() => Ok(PathBuf::from(dir)),
+        _ => app.path().app_data_dir().map_err(|e| e.to_string()),
+    }
+}
+
 fn open_store(app: &tauri::App) -> (Result<Mutex<Store>, String>, Option<PathBuf>) {
-    let dir = match app.path().app_data_dir() {
+    let dir = match data_dir(app) {
         Ok(d) => d,
-        Err(e) => return (Err(e.to_string()), None),
+        Err(e) => return (Err(e), None),
     };
     let path = dir.join("kyusin.sqlite");
     let store = std::fs::create_dir_all(&dir)
@@ -137,6 +146,19 @@ pub fn run() {
     let registry = kyusin_games::builtin().expect("registry cartridge bawaan tidak sah");
     tauri::Builder::default()
         .setup(move |app| {
+            // Jendela dibuat di sini (bukan otomatis dari konfigurasi) supaya
+            // folder data WebView2 mengikuti `WEBVIEW2_USER_DATA_FOLDER` bila
+            // variabel itu diset. msedgedriver (lewat tauri-driver) mengesetnya
+            // dan menunggu berkas DevToolsActivePort di folder itu (D-040).
+            let config = app.config().app.windows[0].clone();
+            let mut window = WebviewWindowBuilder::from_config(app.handle(), &config)?;
+            if let Some(dir) =
+                std::env::var_os("WEBVIEW2_USER_DATA_FOLDER").filter(|d| !d.is_empty())
+            {
+                window = window.data_directory(PathBuf::from(dir));
+            }
+            window.build()?;
+
             let (store, db_path) = open_store(app);
             app.manage(AppState {
                 registry,
