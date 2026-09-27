@@ -204,7 +204,7 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: pilihan bahasa di pengaturan; bawaan Indonesia bila sistem berbahasa Indonesia, selain itu Inggris. Semua teks UI, tutorial, `man`, dan pesan kesalahan tersedia dalam dua bahasa lewat berkas terjemahan. Kata perintah tetap Inggris di kedua bahasa; deskripsinya diterjemahkan. CI gagal bila ada kunci terjemahan yang hilang, termasuk di tutorial. Protokol: klien menyebut bahasa `state.text` (`id`/`en`, bawaan `en`) saat terhubung.
 - Rujukan: SPEC §4, §7.6, §10.
 
-### D-028 — `to_text` menerima bahasa
+### D-028 — `to_text` menerima bahasa (disahkan klien, D-030)
 - Tanggal / milestone: 2026-09-27 / M0b
 - Diputuskan oleh: developer (kontrak masih sementara sampai M1, D-016)
 - Konteks: SPEC §5.2 menulis `to_text(&View)`, sedangkan §10 meminta `state.text` dalam bahasa pilihan klien.
@@ -220,6 +220,22 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Pesan untuk penulis tutorial dan manifest (hanya muncul di CI) tetap satu bahasa.
   - CI gagal bila: kunci hanya ada di satu bahasa (UI, katalog Rust), kode UI memakai kunci yang tidak ada, markup Svelte berisi teks mentah (dengan uji-diri pemeriksanya), tutorial/manifest kehilangan salah satu bahasa atau berisi teks kosong, atau halaman `man` memuat kunci mentah.
 - Rujukan: SPEC §4, §7.6, D-027.
+
+### D-030 — Revisi 6: `to_text(&View, Lang)` disahkan; hasil uji M0b
+- Tanggal / milestone: 2026-09-27 / M0c
+- Diputuskan oleh: klien (SPEC Rev. 6, Rev. 7)
+- Keputusan: D-028 disahkan; SPEC §5.2 kini menulis `to_text(&View, Lang)`. Hasil uji M0b dinyatakan sesuai, dan intensitas bawaan efek CRT 30% (D-025) disahkan.
+- Rujukan: SPEC §4, §5.2.
+
+### D-031 — Revisi 7: tiga mode urutan boot
+- Tanggal / milestone: 2026-09-27 / M0c
+- Diputuskan oleh: klien (SPEC Rev. 7)
+- Keputusan: pengaturan boot kini memilih satu dari **Verbose**, **Sinematik** (bawaan), **Sapaan**, atau **Mati** (menggantikan toggle boot D-019).
+  - Verbose: banyak baris cepat ala booting Linux (stempel waktu, `[  OK  ]`) yang mencerminkan startup sungguhan; baris hiasan tidak boleh mengaku melakukan hal yang tidak terjadi.
+  - Sinematik: beberapa baris diketik perlahan dengan jeda dramatis, diakhiri nama KyuSin.
+  - Sapaan: menyapa pemain langsung, nada santai dan sedikit usil, dipilih dari kumpulan teks bersyarat berbasis data lokal (jam sistem, jeda sejak sesi terakhir; nama profil, game terakhir, dan saldo chip setelah ada di M3/M4). Syarat yang datanya belum ada dilewati otomatis. Tanpa AI, tanpa data keluar perangkat, tidak mengulang teks dua sesi berturut-turut, selalu ada cadangan umum.
+  - Semua mode bisa dilewati; saat reduced motion teks tampil langsung; semua teks dua bahasa.
+- Rujukan: SPEC §4, §9 (M0c).
 
 ## Pertanyaan terbuka
 

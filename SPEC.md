@@ -70,7 +70,12 @@ Arah: layar CRT fosfor tahun 80-an. Seluruh aplikasi terasa seperti satu sesi te
 - **Input visual adalah cara utama.** Setiap game harus bisa dimainkan penuh dengan mouse/sentuh dan kontrol visual yang wajar untuk jenis game-nya (seret bidak, klik kartu, tombol taruhan, tuas slot, bidik-dan-tembak). Pemain tidak pernah dipaksa mengetik.
 - **Mode perintah (opsional).** Konsol `> _` di bawah layar, mati secara bawaan. Dibuka dengan tombol `:` atau `` ` `` dan bisa diatur agar selalu tampil. Memiliki autocomplete dan riwayat (panah atas/bawah). Untuk game real-time, mode perintah hanya mengatur taruhan dan menu, bukan kontrol gerak.
 - **Keselarasan gaya.** Kontrol visual tetap bergaya terminal: tombol berbentuk `[ HIT ]`, sorotan berupa blok terbalik, kursor berupa blok berkedip.
-- **Satu momen khas:** urutan *boot* singkat saat aplikasi dibuka, yaitu beberapa baris teks ala komputer lama yang sedang menyala (memeriksa sistem, memuat cartridge) sebelum menu muncul. Bisa dilewati dengan tombol apa saja dan bisa dimatikan di pengaturan. Saat *reduced motion*, teksnya tampil langsung tanpa animasi ketik. Selain itu, animasi hanya sebagai respons aksi pemain: kartu dibagikan, dadu dilempar, reel berputar.
+- **Satu momen khas: urutan *boot*** saat aplikasi dibuka, sebelum menu muncul. Ada tiga mode plus "mati", dipilih di pengaturan:
+  - **Verbose:** banyak baris cepat ala booting OS Linux (stempel waktu `[    0.412031]`, status `[  OK  ]`). Baris-barisnya **mencerminkan proses startup yang sungguhan** sejauh mungkin: jumlah dan id cartridge yang benar-benar dimuat registry, tema, bahasa, font, lokasi data. Baris hiasan boleh ditambahkan, tapi tidak boleh mengaku melakukan sesuatu yang tidak terjadi (misalnya "menghubungkan ke server").
+  - **Sinematik (bawaan):** beberapa baris saja, ditik perlahan dengan jeda dramatis, seperti terminal di film. Diakhiri logo/nama KyuSin.
+  - **Sapaan:** menembus dinding keempat; aplikasi menyapa pemain secara langsung dengan nada santai dan sedikit usil (misalnya menyadari sudah larut malam, atau bahwa pemain sudah lama tidak datang). Sapaan dipilih dari kumpulan teks bersyarat berdasarkan data lokal: jam sistem, jeda sejak sesi terakhir, dan (setelah datanya ada di M3/M4) nama profil, game terakhir, serta saldo chip. Syarat yang datanya belum ada dilewati otomatis. Tidak memakai AI dan tidak ada data yang keluar dari perangkat. Sapaan tidak mengulang teks yang sama dua sesi berturut-turut. Selalu ada sapaan umum sebagai cadangan.
+  - **Mati:** langsung ke menu.
+  - Semua mode bisa dilewati dengan tombol apa saja atau klik. Saat *reduced motion*, teks tampil langsung tanpa animasi ketik. Semua teks boot tersedia dalam dua bahasa. Selain itu, animasi hanya sebagai respons aksi pemain: kartu dibagikan, dadu dilempar, reel berputar.
 - **Aksesibilitas keyboard:** fokus selalu terlihat, dan menu serta game giliran bisa dimainkan dengan keyboard (tanpa harus mengetik perintah).
 - **Suara:** bunyi beep/chiptune sederhana, bisa dimatikan.
 - **Bahasa: Indonesia dan Inggris.**
@@ -109,7 +114,7 @@ Dua jenis:
   - `apply(player, action)`: ditolak bila tidak cocok dengan salah satu `ActionSpec` pemain itu.
   - **Taruhan majemuk:** pemain mengirim beberapa `place …` berurutan lalu `done`. **Fase serentak** berakhir ketika semua pemain di `pending_players` sudah mengirim aksi penutupnya. Selama fase serentak, aksi seorang pemain tidak terlihat pemain lain sampai fase selesai.
   - `view_for(player) -> View`: tampilan tersaring; kartu lawan tidak bocor. `View` mengimplementasikan `Serialize` dan menjadi `state.data` di protokol (§10).
-  - `to_text(&View)`: bentuk teks yang dilihat manusia, menjadi `state.text`.
+  - `to_text(&View, Lang)`: bentuk teks yang dilihat manusia dalam bahasa yang diminta (`id`/`en`), menjadi `state.text`.
   - `is_over()` / `result()`
   - `parse_command(str) -> Action`
   - `format_action(Action) -> str`
@@ -230,6 +235,7 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 |---|-----|
 | M0 | Kerangka Tauri + workspace Rust, tema fosfor + efek CRT, navigasi visual + mode perintah opsional (help/autocomplete/riwayat), registry manifest, runner tutorial + tes tutorial di CI, `cargo-deny` + pemeriksa lisensi npm. Registry dan runner diuji dengan **game fixture minimal khusus tes** (bukan game katalog); kontrak final dibuat di M1 dan fixture disesuaikan |
 | M0b | Perbaikan hasil uji klien: efek CRT samar menyala secara bawaan + slider intensitas, perilaku *reduced motion* yang baru, checkbox yang jujur (§4); dua bahasa Indonesia/Inggris untuk semua yang sudah ada, termasuk tutorial fixture dan cek kelengkapan terjemahan di CI |
+| M0c | Tiga mode urutan boot + mati (§4). Kumpulan sapaan menyiapkan syarat untuk data M3/M4 yang otomatis aktif begitu datanya ada |
 | M1 | Kontrak `TurnGame`/`Player`, RNG provably fair + `verify`, replay. Dibuktikan dengan **Reversi** memenuhi §7 |
 | M2 | Catur: mesin, 3+ level, PGN, jam, tutorial. Skrip kalibrasi |
 | M3 | Profil, Glicko-2, riwayat, halaman statistik |
@@ -284,3 +290,5 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 - **Revisi 3 (27 Sep 2026):** menjawab Q-001 dan Q-002 — aturan kegagalan dua tahap dan jaminan "tidak bisa memilih, hanya bisa membatalkan secara terlihat" (§5.4); §4 memakai istilah "animasi kontinu" sebagai soal render, bukan kontrak; `rtp` berupa angka untuk semua casino melawan rumah termasuk game solo (§5.2, §7).
 - **Revisi 4 (27 Sep 2026):** menjawab Q-003 — MPL-2.0 diizinkan tanpa modifikasi (§3); halaman lisensi pihak ketiga di M11 (§9); larangan otomasi input tingkat OS (§11).
 - **Revisi 5 (27 Sep 2026):** hasil uji klien atas M0 — efek CRT sebagai bumbu samar yang menyala secara bawaan, slider intensitas, *reduced motion* hanya mematikan efek bergerak, checkbox jujur, penjelasan urutan boot (§4); dua bahasa Indonesia/Inggris dengan kata perintah tetap Inggris (§4, §7, §10); milestone M0b (§9).
+- **Revisi 6 (27 Sep 2026):** mengesahkan D-028 — `to_text` menerima parameter bahasa (§5.2).
+- **Revisi 7 (27 Sep 2026):** urutan boot punya tiga mode — Verbose, Sinematik (bawaan), Sapaan (menembus dinding keempat) — plus mati (§4); milestone M0c (§9). Intensitas bawaan efek CRT 30% disahkan klien.
