@@ -1,13 +1,15 @@
-//! Kontrak game giliran (SPEC §5.2).
+//! Kontrak game giliran (SPEC §5.2), final sejak M1 (D-034).
 //!
-//! **Sementara (M0).** Bentuk ini cukup untuk registry dan runner tutorial.
-//! Kontrak final, termasuk RNG yang disuntikkan dan replay, ditetapkan di M1
-//! bersama Reversi; fixture ikut disesuaikan (D-005).
+//! Game adalah mesin keadaan murni: tanpa IO, tanpa jam dinding, tanpa RNG
+//! global. Semua acak lewat [`crate::rng::GameRng`] yang dibuat dari seed
+//! ronde di `new`. Keadaan game bisa diserialisasi supaya bisa di-hash
+//! untuk `verify` dan replay (SPEC §5.4, §2.5).
 
-use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 
 use crate::action::{ActionSpec, find_match};
+use crate::hash::{hex, sha256};
 use crate::i18n::{Lang, Localized, core};
 
 /// Nomor kursi pemain dalam satu permainan, mulai dari 0.
@@ -49,20 +51,27 @@ impl std::fmt::Display for GameError {
 
 impl std::error::Error for GameError {}
 
-/// Hasil akhir sementara; bentuk final (termasuk skor dan chip) di M1/M4.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+/// Hasil akhir permainan. Chip dan pembayaran casino ditambahkan di M4.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GameResult {
+    /// Kursi pemenang; kosong = seri.
     pub winners: Vec<PlayerId>,
-    pub summary: String,
+    /// Skor per kursi (arti bergantung game, misalnya jumlah bidak).
+    pub scores: Vec<i64>,
+    pub summary: Localized,
 }
 
 /// Mesin keadaan murni: tanpa IO, tanpa jam dinding, tanpa RNG global.
-pub trait TurnGame: Sized {
+pub trait TurnGame: Sized + Serialize {
     type Config: DeserializeOwned + Default;
     type Action;
     type View: Serialize;
 
-    fn new(config: Self::Config, seed: Seed) -> Self;
+    /// Membuat permainan dari konfigurasi dan seed ronde. Gagal bila
+    /// konfigurasinya tidak sah (misalnya posisi awal kustom yang rusak).
+    fn new(config: Self::Config, seed: Seed) -> Result<Self, GameError>;
+    /// Jumlah kursi.
+    fn seats(&self) -> u8;
     /// Pemain yang sedang ditunggu aksinya; bisa lebih dari satu pada fase
     /// serentak.
     fn pending_players(&self) -> Vec<PlayerId>;
@@ -82,6 +91,7 @@ pub trait TurnGame: Sized {
 /// Permainan yang sedang berjalan, tanpa tipe konkret. Semua aksi masuk
 /// sebagai perintah teks, sama seperti dari LAN dan agen (SPEC §2.1).
 pub trait Session: Send {
+    fn seats(&self) -> u8;
     fn pending_players(&self) -> Vec<PlayerId>;
     fn legal_actions(&self, player: PlayerId) -> Vec<ActionSpec>;
     /// Memeriksa giliran dan `legal_actions`, lalu menerapkan perintah.
@@ -90,9 +100,15 @@ pub trait Session: Send {
     fn view_text(&self, player: PlayerId, lang: Lang) -> String;
     fn is_over(&self) -> bool;
     fn result(&self) -> Option<GameResult>;
+    /// SHA-256 (hex) dari seluruh keadaan game; dipakai `verify` dan replay.
+    fn state_hash(&self) -> String;
 }
 
 impl<G: TurnGame + Send> Session for G {
+    fn seats(&self) -> u8 {
+        TurnGame::seats(self)
+    }
+
     fn pending_players(&self) -> Vec<PlayerId> {
         TurnGame::pending_players(self)
     }
@@ -131,6 +147,11 @@ impl<G: TurnGame + Send> Session for G {
     fn result(&self) -> Option<GameResult> {
         TurnGame::result(self)
     }
+
+    fn state_hash(&self) -> String {
+        let json = serde_json::to_vec(self).expect("keadaan game harus bisa diserialisasi");
+        hex(&sha256(&json))
+    }
 }
 
 /// Membuat sesi baru dari konfigurasi JSON (`null` = konfigurasi bawaan).
@@ -143,5 +164,5 @@ pub fn create_session<G: TurnGame + Send + 'static>(
     } else {
         serde_json::from_value(config.clone()).map_err(|e| GameError::Config(e.to_string()))?
     };
-    Ok(Box::new(G::new(config, seed)))
+    Ok(Box::new(G::new(config, seed)?))
 }

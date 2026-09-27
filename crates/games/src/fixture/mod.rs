@@ -53,7 +53,7 @@ pub struct View {
     pub pemenang: Option<PlayerId>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Batang {
     left: u32,
     turn: PlayerId,
@@ -65,12 +65,16 @@ impl TurnGame for Batang {
     type Action = Take;
     type View = View;
 
-    fn new(config: Config, _seed: Seed) -> Self {
-        Batang {
+    fn new(config: Config, _seed: Seed) -> Result<Self, GameError> {
+        Ok(Batang {
             left: config.batang,
             turn: 0,
             winner: None,
-        }
+        })
+    }
+
+    fn seats(&self) -> u8 {
+        2
     }
 
     fn pending_players(&self) -> Vec<PlayerId> {
@@ -144,7 +148,8 @@ impl TurnGame for Batang {
     fn result(&self) -> Option<GameResult> {
         self.winner.map(|w| GameResult {
             winners: vec![w],
-            summary: catalog().text(Lang::Id, "summary", &[("p", &(w + 1).to_string())]),
+            scores: Vec::new(),
+            summary: catalog().localized("summary", &[("p", &(w + 1).to_string())]),
         })
     }
 
@@ -170,7 +175,7 @@ mod tests {
     use kyusin_core::Session;
 
     fn game(n: u32) -> Batang {
-        Batang::new(Config { batang: n }, [0; 32])
+        Batang::new(Config { batang: n }, [0; 32]).unwrap()
     }
 
     #[test]

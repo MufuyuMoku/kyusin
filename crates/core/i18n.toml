@@ -53,6 +53,10 @@
 "error.tutorial_empty_man" = "Halaman man belum lengkap."
 "error.tutorial_step" = "Langkah {step}: {detail}"
 "error.tutorial_finished" = "Tutorial sudah selesai."
+"error.replay_move" = "Langkah ke-{index} tidak sah saat diputar ulang: {detail}"
+"error.replay_fair" = "Catatan seed tidak cocok: {detail}"
+"error.replay_format" = "Format replay versi {version} tidak dikenal."
+"error.replay_mismatch" = "Hasil pemutaran ulang berbeda dengan yang dicatat."
 
 [en]
 "yes" = "yes"
@@ -105,3 +109,7 @@
 "error.tutorial_empty_man" = "The man page is incomplete."
 "error.tutorial_step" = "Step {step}: {detail}"
 "error.tutorial_finished" = "The tutorial is finished."
+"error.replay_move" = "Move {index} is not legal when replayed: {detail}"
+"error.replay_fair" = "The seed record does not check out: {detail}"
+"error.replay_format" = "Unknown replay format version {version}."
+"error.replay_mismatch" = "Replaying gives a different result than recorded."
