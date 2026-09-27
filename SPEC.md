@@ -28,7 +28,7 @@ Target platform: **Windows dan Linux**.
 
 1. **Main secara visual, perintah teks sebagai opsi.** Cara utama bermain adalah visual: klik, seret, dan kontrol langsung (menyeret bidak, mengklik kartu, menarik tuas slot, membidik di tembak ikan). Mode perintah teks (`e2e4`, `hit`, `spin`, `bet 50`) tersedia bagi yang suka, tapi tidak pernah diwajibkan. Di balik layar, setiap aksi visual diterjemahkan menjadi aksi yang sama dengan perintah teks. Aksi inilah yang dikirim teman di LAN dan Nor-4, jadi ini tetap fondasi poin akhir 2 dan 3.
 2. **Casino yang jujur.** Aturan dan pembayaran memakai angka casino sungguhan. Setiap game casino menampilkan RTP/house edge sebenarnya di tutorial dan layar info. Halaman statistik menunjukkan total menang/kalah terhadap bandar sepanjang waktu. Chip tidak pernah bisa dibeli, dicairkan, atau dipindahkan antar pemain.
-3. **Acak yang bisa dibuktikan (provably fair).** Setiap kocokan kartu, lemparan dadu, dan putaran slot berasal dari seed. Hash seed ditampilkan *sebelum* ronde, seed dibuka *setelah* ronde, dan pemain bisa memverifikasinya. Di LAN, ini juga mencegah host mengatur kartu diam-diam.
+3. **Acak yang bisa dibuktikan (provably fair).** Setiap kocokan kartu, lemparan dadu, dan putaran slot berasal dari seed gabungan yang disumbang semua peserta. Komitmen (hash) setiap sumbangan diumumkan sebelum ronde, dan semua seed dibuka setelah ronde, jadi siapa pun bisa memverifikasi. Tidak ada pihak, termasuk host, yang bisa memilih atau mengatur hasil. Batasan yang diakui terbuka: di game kartu tertutup, aplikasi host secara teknis mengetahui urutan dek selama ronde (lihat §5.4).
 4. **Game lokal Indonesia berdampingan dengan game dunia.** Gaple, Cangkulan, Remi, Capsa Susun, dan Domino QiuQiu ada di samping catur dan poker.
 5. **Replay semua pertandingan.** Karena setiap pertandingan adalah seed + urutan perintah, semuanya bisa diputar ulang persis.
 6. **Tutorial interaktif di setiap game**, dijamin oleh tes otomatis (lihat §7).
@@ -36,14 +36,20 @@ Target platform: **Windows dan Linux**.
 
 ## 3. Stack dan aturan dependensi
 
-- **Tauri 2 + Rust + SvelteKit** (adapter-static, SPA), sama dengan Onsa.
+- **Tauri 2 + Rust + SvelteKit 2 + Svelte 5** (adapter-static, SPA), versi stabil terbaru. Onsa (proyek klien sebelumnya dengan stack yang sama) adalah repo publik di akun MufuyuMoku; temukan lewat `gh repo list MufuyuMoku`. Boleh dibaca sebagai rujukan konvensi (struktur proyek, CI installer Windows), tidak wajib disalin.
 - Penyimpanan: SQLite lewat `rusqlite` (fitur `bundled`).
 - RNG: `rand_chacha` (ChaCha20) dengan seed eksplisit; hash seed SHA-256.
 - Jaringan LAN: `tokio-tungstenite` (WebSocket) + `mdns-sd` (penemuan host).
 - Generator langkah catur: `cozy-chess` (MIT) atau buatan sendiri. **Bukan** `shakmaty` (GPL).
 - Font dibundel lokal (aplikasi offline): VT323 untuk judul/tampilan besar, IBM Plex Mono untuk isi (keduanya OFL).
 
-**Aturan lisensi (wajib):** repo sengaja tanpa lisensi karena klien mungkin menjualnya atau menutup kodenya nanti. Hanya dependensi berlisensi MIT, Apache-2.0, BSD, zlib, ISC, OFL (font), atau yang setara. **Dilarang GPL/LGPL/AGPL.** Tambahkan pengecekan `cargo-deny` di CI. Stockfish boleh dipakai **hanya sebagai alat kalibrasi di mesin developer**, tidak masuk repo dan tidak ikut dikirim.
+**Aturan lisensi (wajib):** repo sengaja tanpa lisensi karena klien mungkin menjualnya atau menutup kodenya nanti. Hanya dependensi berlisensi MIT, Apache-2.0, BSD, zlib, ISC, OFL (font), atau yang setara.
+
+- **Dilarang GPL/LGPL/AGPL** untuk semua kode yang dikompilasi ke dalam atau dibundel bersama KyuSin: crate Rust dan paket npm yang masuk build produksi.
+- **Pengecualian:** pustaka sistem operasi yang ditautkan secara dinamis dan **tidak ikut dibundel**, yaitu WebView2 di Windows serta webkit2gtk/GTK di Linux.
+- Karena itu paket Linux berupa **.deb** yang memakai pustaka sistem. Tidak ada AppImage (AppImage membundel pustaka tersebut).
+- CI: `cargo-deny` untuk crate Rust, dan pemeriksa lisensi untuk dependensi produksi npm (alat berlisensi permisif, pilihan developer).
+- Stockfish boleh dipakai **hanya sebagai alat kalibrasi di mesin developer**, tidak masuk repo dan tidak ikut dikirim.
 
 ## 4. Gaya visual: terminal retro
 
@@ -86,10 +92,12 @@ Dua jenis:
 
 - **Giliran (`TurnGame`):**
   - `new(config, seed)`
-  - `legal_actions(player)`
-  - `apply(action)`
-  - `view_for(player)` (tampilan yang disaring; kartu lawan tidak bocor)
-  - `to_text(view)`
+  - `pending_players()`: pemain yang sedang ditunggu aksinya. Bisa lebih dari satu pada **fase serentak** (Capsa Susun menyusun kartu, taruhan multipemain di Roulette/Craps/Sic Bo).
+  - `legal_actions(player) -> Vec<ActionSpec>`. Setiap `ActionSpec` berupa **aksi tetap** (`hit`, `stand`) atau **templat berparameter** dengan batas (`bet <jumlah>` dengan min/maks/kelipatan; `place <jenis_taruhan> <jumlah>`), lengkap dengan bentuk perintah teksnya.
+  - `apply(player, action)`: ditolak bila tidak cocok dengan salah satu `ActionSpec` pemain itu.
+  - **Taruhan majemuk:** pemain mengirim beberapa `place …` berurutan lalu `done`. **Fase serentak** berakhir ketika semua pemain di `pending_players` sudah mengirim aksi penutupnya. Selama fase serentak, aksi seorang pemain tidak terlihat pemain lain sampai fase selesai.
+  - `view_for(player) -> View`: tampilan tersaring; kartu lawan tidak bocor. `View` mengimplementasikan `Serialize` dan menjadi `state.data` di protokol (§10).
+  - `to_text(&View)`: bentuk teks yang dilihat manusia, menjadi `state.text`.
   - `is_over()` / `result()`
   - `parse_command(str) -> Action`
   - `format_action(Action) -> str`
@@ -98,7 +106,7 @@ Dua jenis:
   - `snapshot()`
   - Input direkam per tick, jadi replay tetap persis.
 
-**Manifest cartridge** (per game): id, nama tampilan, kategori, jumlah pemain min/maks, jenis (giliran/real-time), dukungan LAN, dukungan agen, RTP (untuk casino), path tutorial, daftar perintah + deskripsi singkatnya.
+**Manifest cartridge** (per game): id, nama tampilan, kategori, jumlah pemain min/maks, jenis (giliran/real-time), `lawan` (bandar / bot / tidak ada), `kompetitif` (dapat rating dan wajib 3 level bot, lihat §8), `lan`, `agen`, `rtp` (angka untuk casino ber-bandar; `null` untuk game antar-pemain dan non-casino), path tutorial, daftar perintah + deskripsi singkatnya.
 
 Registry membaca semua manifest. Menu, `help`, `man`, dan autocomplete **dibangkitkan dari manifest**, tidak ditulis tangan. Menambah game baru = menambah satu modul + manifest + tutorial, tanpa menyentuh kode menu.
 
@@ -113,7 +121,23 @@ Pemain LAN dan Nor-4 sama-sama **Remote**.
 
 ### 5.4 Provably fair
 
-Sebelum ronde, host membuat seed, menampilkan/mengirim `SHA-256(seed)`, lalu memainkan ronde. Setelah ronde, seed dibuka. Perintah `verify` menghitung ulang semua acak ronde tersebut dari seed dan membandingkan hasilnya.
+Skema sumbangan seed (commit-reveal) untuk **setiap ronde**:
+
+1. Setiap peserta (host, setiap pemain LAN, setiap agen) membuat seed acak 32 byte dan mengirim `SHA-256(seed_i)` ke host. Host menyiarkan daftar lengkap komitmen, termasuk komitmennya sendiri, ke semua peserta.
+2. Setelah semua komitmen terkumpul, setiap peserta non-host mengirim `seed_i` **hanya ke host**. Host memeriksa kecocokannya dengan komitmen.
+3. Seed ronde = `SHA-256(seed_host ‖ seed_a ‖ seed_b ‖ …)`, dengan sumbangan non-host diurutkan menurut id peserta. Seed ini menjadi masukan ChaCha20.
+4. Setelah ronde selesai, host menyiarkan **semua** seed. Setiap klien otomatis menjalankan `verify`: memeriksa komitmen, menghitung ulang seed ronde, memutar ulang ronde, dan membandingkan hasilnya. Hasil verifikasi ditampilkan.
+
+**Sifat yang dijamin:**
+- Tidak ada yang bisa menggeser hasil. Seed host terkunci oleh komitmennya sebelum host melihat seed siapa pun, dan seed peserta lain terkunci sebelum mereka melihat apa pun.
+- Peserta non-host tidak bisa mengetahui dek selama ronde, karena seed host baru dibuka setelah ronde. Menyadap seed peserta lain di jaringan tidak berguna, jadi koneksi LAN tidak perlu dienkripsi untuk keperluan ini.
+
+**Batasan yang diterima:** host yang menghitung dek, jadi aplikasi host yang dimodifikasi bisa melihat kartu tertutup. Batasan ini dijelaskan terus terang di tutorial dan `man` untuk mode LAN. Solusi kriptografis (mental poker) di luar cakupan.
+
+**Detail lain:**
+- Peserta yang tidak mengirim komitmen atau seed dalam batas waktu dikeluarkan dari ronde itu. Untuk agen, sumbangan seed ditangani pustaka klien protokol secara otomatis, jadi tidak bergantung pada kecepatan model.
+- **Singleplayer:** aplikasi berperan sebagai host, dan pemain lokal adalah peserta. Pemain boleh mengisi seed sendiri di pengaturan; bila kosong, dibuat otomatis.
+- Replay menyimpan semua seed ronde.
 
 ## 6. Katalog game
 
@@ -135,6 +159,8 @@ Status tiap game mengikuti Definition of Done di §7. Urutan pengerjaan ada di �
 ### 6.3 Casino: meja kartu
 Blackjack, Baccarat (Punto Banco), Texas Hold'em, Omaha, Three Card Poker, Caribbean Stud, Casino Hold'em, Pai Gow Poker, Let It Ride, Casino War, Red Dog, Dragon Tiger, Capsa Susun, Domino QiuQiu, Teen Patti, Andar Bahar.
 
+**Game antar-pemain (tanpa bandar):** Texas Hold'em, Omaha, Capsa Susun, Domino QiuQiu, Teen Patti. Tidak ada rake. `rtp: null`, ditampilkan sebagai "antar-pemain, tanpa house edge". Lawan di singleplayer adalah bot.
+
 ### 6.4 Casino: dadu, roda, ubin
 Roulette (Eropa dan Amerika), Craps, Sic Bo, Big Six / Money Wheel, Fan-Tan, Pai Gow (ubin), Chuck-a-luck.
 
@@ -142,42 +168,42 @@ Roulette (Eropa dan Amerika), Craps, Sic Bo, Big Six / Money Wheel, Fan-Tan, Pai
 Keno, Bingo, kartu gosok, Hi-Lo, Video Poker (Jacks or Better, Deuces Wild, Joker Poker).
 
 ### 6.6 Casino: arcade dopamin
-- Slot 3-reel klasik dan slot video 5-reel. Tabel pembayaran dan RTP ditampilkan.
-- Pachinko dan Pachislot.
-- Plinko.
-- Coin pusher.
-- Tembak ikan (fish shooter).
-- Crash (pengali naik).
-- Mines.
-- Dice over/under.
-- Tower / Limbo.
+Pembagian ditentukan oleh mekanik, bukan kategori:
 
-Game real-time di kelompok ini **singleplayer saja**. LAN dan agen hanya untuk game giliran.
+- **Giliran (`TurnGame`)**, hasil ditentukan RNG saat aksi dan animasi hanya kosmetik: slot 3-reel klasik, slot video 5-reel, Plinko, Mines, Dice over/under, Tower, Limbo. Tabel pembayaran dan RTP ditampilkan.
+- **Real-time (`TickGame`)**, waktu atau keterampilan pemain memengaruhi hasil: Crash (pengali naik), Pachinko, Pachislot, Coin pusher, Tembak ikan (fish shooter).
+
+Game giliran di kelompok ini singleplayer (`lan: false`) tetapi **boleh dimainkan agen** (`agen: true`). Game real-time singleplayer saja, tanpa LAN dan tanpa agen. Hi-Lo tetap di §6.5.
 
 ### 6.7 Ekonomi chip
-- Chip profil untuk singleplayer.
-- Saldo awal tetap.
-- **Tunjangan harian** bila saldo di bawah ambang.
+- Chip profil untuk singleplayer. **Saldo awal: 10.000.**
+- **Tunjangan harian:** sekali per hari kalender lokal (mulai pukul 00:00 waktu sistem). Bila saldo di bawah 1.000, saldo diisi menjadi 2.000.
 - Tidak ada pembelian, tidak ada pencairan, tidak ada transfer.
-- Meja LAN memakai **chip meja** terpisah (buy-in baru tiap sesi), bukan chip profil.
+- **Meja LAN** memakai chip meja terpisah, bukan chip profil. Buy-in ditetapkan host saat membuat meja (bawaan 10.000 per pemain, sama untuk semua). Rebuy diizinkan secara bawaan dan bisa dimatikan host.
+- **Bandar di meja casino LAN:** bandar sistem yang berjalan di aplikasi host, dengan chip tak terbatas. Host ikut bermain sebagai pemain biasa.
+- Angka-angka di atas adalah angka awal; klien boleh mengubahnya kapan saja lewat `DECISIONS.md`.
 
 ## 7. Definition of Done per game
 
 Sebuah game belum boleh ditandai selesai sebelum semua poin ini terpenuhi:
 
-1. Mesin aturan + tes unit untuk aturan dan pembayaran. Untuk casino: tes simulasi jutaan ronde bahwa RTP terukur sesuai RTP di manifest (dalam toleransi yang dicatat).
-2. Bot/bandar yang bisa dimainkan. Untuk game kompetitif: minimal 3 tingkat kesulitan.
+1. Mesin aturan + tes unit untuk aturan dan pembayaran, ditambah:
+   - **Casino ber-bandar:** RTP di manifest dihitung secara analitis atau enumerasi bila memungkinkan (slot: enumerasi seluruh kombinasi reel; roulette, sic bo, dan sejenisnya: tabel peluang). Game yang bergantung strategi (Blackjack, Video Poker) memakai RTP untuk strategi dasar/optimal yang didokumentasikan, disimulasikan dengan bot yang memainkan strategi itu. Simulasi memverifikasi RTP: **≥100.000 ronde di CI setiap push**, dan **≥10.000.000 ronde di workflow terjadwal/manual**. Toleransi = 4 × σ/√n (σ = simpangan baku pembayaran per ronde dari simulasi itu sendiri), bukan angka tetap.
+   - **Game antar-pemain:** tes peringkat tangan, pembagian pot termasuk side pot, dan *property test* kekekalan chip (total chip meja tidak pernah berubah).
+2. Lawan bila game-nya punya lawan (`lawan` di manifest): bandar untuk casino ber-bandar, bot untuk game ber-lawan. Game dengan `kompetitif: true` wajib minimal 3 tingkat kesulitan. Poin ini **tidak berlaku** untuk game solo (Klondike, Keno, Bingo, kartu gosok, slot, dan arcade dopamin).
 3. Kontrol visual lengkap: seluruh game bisa dimainkan tanpa mengetik.
 4. Perintah teks lengkap (`parse_command`/`format_action`) + tes bolak-balik. Tetap wajib, karena ini protokol LAN/agen dan dipakai mode perintah.
 5. Tampilan terminal retro sesuai §4.
 6. **Tutorial interaktif** di `tutorials/<id>.toml`: langkah berisi keadaan awal, teks penjelasan, aksi yang diharapkan, dan petunjuk bila salah. Tutorial memandu lewat kontrol visual (menyorot bidak/kartu/tombol yang harus disentuh); perintah teks padanannya ditampilkan kecil sebagai info. Plus halaman `man <id>` (aturan lengkap, kontrol, perintah, RTP bila casino).
-7. **Tes tutorial:** CI memutar setiap tutorial terhadap mesin aturan asli dan gagal bila ada langkah yang tidak valid. CI juga gagal bila ada game terdaftar tanpa tutorial.
+7. **Tes tutorial:** CI memutar setiap tutorial terhadap mesin aturan asli dan gagal bila ada langkah yang tidak valid. CI juga gagal bila ada game terdaftar tanpa tutorial. Untuk `TickGame`, langkah tutorial memakai pemicu event ("tunggu event X") dalam skenario ber-seed tetap; tes CI memutar rekaman input yang disimpan bersama tutorial dan memastikan setiap langkah tercapai.
 8. Replay berfungsi.
 9. Manifest lengkap.
 
 ## 8. Rating dan kesulitan
 
+- **Game kompetitif** (`kompetitif: true`: dapat rating dan wajib 3 level bot): Catur, Reversi, Dam, Gaple, Cangkulan, Remi, kartu ala Uno, Hearts, Texas Hold'em, Omaha, Capsa Susun, Domino QiuQiu, Teen Patti. Game melawan bandar dan game solo tidak punya rating.
 - **Rating pemain:** Glicko-2 (implementasi sendiri), per game kompetitif, dihitung dari hasil melawan bot yang kekuatannya diketahui dan lawan LAN. UI menyebutnya "rating lokal", bukan Elo resmi.
+- **Pertandingan yang melibatkan agen tidak dihitung ke rating siapa pun**, karena kekuatan agen tidak diketahui dan agen boleh memakai `hint`.
 - **Kalibrasi catur:** skrip dev (di luar build) mengadu tiap level bot melawan Stockfish dengan batasan kekuatan yang diketahui. Hasilnya menjadi perkiraan rating tiap level. Hasil kalibrasi disimpan sebagai data di repo; Stockfish-nya tidak.
 
 ## 9. Milestone (berurutan)
@@ -186,7 +212,7 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 
 | M | Isi |
 |---|-----|
-| M0 | Kerangka Tauri + workspace Rust, tema fosfor + efek CRT, navigasi visual + mode perintah opsional (help/autocomplete/riwayat), registry manifest, runner tutorial + tes tutorial di CI, `cargo-deny` |
+| M0 | Kerangka Tauri + workspace Rust, tema fosfor + efek CRT, navigasi visual + mode perintah opsional (help/autocomplete/riwayat), registry manifest, runner tutorial + tes tutorial di CI, `cargo-deny` + pemeriksa lisensi npm. Registry dan runner diuji dengan **game fixture minimal khusus tes** (bukan game katalog); kontrak final dibuat di M1 dan fixture disesuaikan |
 | M1 | Kontrak `TurnGame`/`Player`, RNG provably fair + `verify`, replay. Dibuktikan dengan **Reversi** memenuhi §7 |
 | M2 | Catur: mesin, 3+ level, PGN, jam, tutorial. Skrip kalibrasi |
 | M3 | Profil, Glicko-2, riwayat, halaman statistik |
@@ -197,29 +223,33 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M8 | Papan & kartu non-casino sisanya (§6.1, §6.2). **→ Poin akhir 1** |
 | M9 | LAN: host/join, penemuan otomatis, lobi, chip meja, provably fair lintas jaringan, reconnect. **→ Poin akhir 2** |
 | M10 | Protokol agen (§10) + agen dummy uji (acak dan heuristik) yang memainkan setiap game giliran sampai selesai. **→ Poin akhir 3 siap, tanpa menunggu Nor-4** |
-| M11 | Installer Windows + paket Linux lewat CI, halaman Bantuan |
+| M11 | Installer Windows + paket Linux `.deb` lewat CI, halaman Bantuan |
 | M12 | Loader cartridge WASM: game baru bisa ditambah tanpa rebuild aplikasi, dengan satu game contoh dipindah ke WASM sebagai bukti |
 
 Milestone casino yang besar (M5, M6, M7) boleh dipecah menjadi sub-milestone (M5a, M5b, …) per kelompok game.
 
 ## 10. Protokol pemain remote (LAN dan agen)
 
-WebSocket, pesan JSON. Endpoint yang sama untuk teman LAN (alamat jaringan) dan agen (`127.0.0.1`).
+WebSocket, pesan JSON. Protokol yang sama untuk teman LAN (alamat jaringan) dan agen (`127.0.0.1`).
+
+- **Server LAN** aktif hanya saat pemain menjadi host.
+- **Endpoint agen** aktif hanya saat "Mode agen" dinyalakan di pengaturan, hanya mengikat `127.0.0.1`, dan memerlukan token yang ditampilkan di pengaturan.
 
 **Server → pemain:**
 - `state`: tampilan tersaring dalam dua bentuk, `text` (yang dilihat manusia) dan `data` (terstruktur).
-- `legal_actions`: daftar aksi dalam bentuk perintah teks.
+- `legal_actions`: daftar `ActionSpec` (aksi tetap atau templat berparameter dengan batas), masing-masing dengan bentuk perintah teksnya.
 - `event`: kejadian permainan untuk komentar, misalnya "lawan all-in" atau "skak".
-- `commit` / `reveal`: provably fair.
+- `seed_commits` / `seed_reveal`: provably fair sesuai §5.4.
 - `result`
 
 **Pemain → server:**
-- `act`: satu perintah teks yang harus ada di `legal_actions`.
+- `act`: satu perintah teks yang cocok dengan salah satu `ActionSpec` di `legal_actions`.
+- `seed_commit` / `seed_contribution`: sumbangan seed sesuai §5.4.
 - `chat`
 
 **Khusus agen:**
 - Mode tanpa batas waktu per langkah (model lokal lebih lambat dari manusia).
-- Opsi `hint`: meminta saran bot pada level tertentu, supaya agen bisa memilih di antara kandidat sambil tetap berkomentar.
+- Opsi `hint`: meminta saran bot pada level tertentu, supaya agen bisa memilih di antara kandidat sambil tetap berkomentar. `hint` **hanya untuk agen**; pemain LAN tidak punya akses ke `hint`.
 
 Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permainan tidak rusak.
 
@@ -229,3 +259,7 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 - Tes aturan ditulis sebelum implementasi untuk mesin aturan dan pembayaran casino.
 - Jangan menambah fitur di luar SPEC. Usulan dicatat di `DECISIONS.md` bagian "Usulan", tidak langsung dikerjakan.
 - **Lokal vs cloud:** M0 dan semua pekerjaan yang butuh dicek secara visual dikerjakan di sesi lokal. Pekerjaan logika murni (mesin aturan, bot, simulasi RTP jutaan ronde, protokol) boleh dikerjakan di sesi cloud setelah repo ada di GitHub. Tes di cloud dijalankan pada crate di `crates/` saja (tanpa crate Tauri), jadi tidak perlu membuka jendela aplikasi.
+
+## 12. Riwayat revisi SPEC
+
+- **Revisi 2 (27 Sep 2026):** menjawab temuan sesi persiapan — skema seed gabungan (§2.3, §5.4); `ActionSpec`, `pending_players`, fase serentak, dan `View: Serialize` (§5.2); field manifest baru; pembagian giliran/real-time di arcade (§6.6); game antar-pemain tanpa rake (§6.3); angka ekonomi chip dan bandar LAN (§6.7); DoD dengan cakupan per jenis game dan toleransi statistik (§7); daftar game kompetitif dan pengecualian rating agen (§8); fixture di M0 dan paket `.deb` (§9); pengecualian lisensi pustaka sistem (§3); aktivasi endpoint dan `hint` khusus agen (§10). Aturan Dam tetap dipilih developer dan dicatat di `DECISIONS.md`.
