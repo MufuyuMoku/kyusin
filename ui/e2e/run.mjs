@@ -53,17 +53,26 @@ driver.on('error', (e) => {
 // Aplikasi dijalankan sendiri dengan port DevTools tetap, lalu msedgedriver
 // menempel lewat debuggerAddress (D-040).
 const app = spawn(application, [], {
-	stdio: 'ignore',
+	stdio: ['ignore', 'inherit', 'inherit'],
 	env: {
 		...process.env,
+		RUST_BACKTRACE: '1',
 		KYUSIN_DATA_DIR: join(dataDir, 'data'),
 		WEBVIEW2_USER_DATA_FOLDER: join(dataDir, 'webview'),
 		WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${debugPort}`
 	}
 });
 
+let appExit = null;
+app.on('exit', (code, signal) => {
+	appExit = `kode ${code}, sinyal ${signal}`;
+	console.error(`aplikasi berhenti (${appExit})`);
+});
+app.on('error', (e) => console.error(`aplikasi gagal dijalankan: ${e.message}`));
+
 async function devtools() {
 	for (let i = 0; i < 150; i++) {
+		if (appExit) throw new Error(`aplikasi berhenti sebelum port DevTools terbuka (${appExit})`);
 		try {
 			const res = await fetch(`http://127.0.0.1:${debugPort}/json/version`);
 			if (res.ok) return;
