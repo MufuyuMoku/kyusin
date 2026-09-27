@@ -14,8 +14,8 @@
 // Tes memakai folder data sementara (KYUSIN_DATA_DIR untuk SQLite; folder
 // WebView2 disiapkan msedgedriver), jadi data pemain tidak tersentuh (D-040).
 
-import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { execFileSync, spawn } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,7 +43,6 @@ if (native) args.push('--native-driver', native);
 // Folder data sementara: WebView2 (WEBVIEW2_USER_DATA_FOLDER) dan SQLite
 // (KYUSIN_DATA_DIR), jadi data pemain tidak tersentuh (D-040).
 const dataDir = mkdtempSync(join(tmpdir(), 'kyusin-e2e-'));
-const debugPort = 9222;
 const driver = spawn('tauri-driver', args, { stdio: ['ignore', 'inherit', 'inherit'] });
 driver.on('error', (e) => {
 	console.error(`tauri-driver gagal dijalankan: ${e.message}`);
@@ -59,7 +58,8 @@ const app = spawn(application, [], {
 		RUST_BACKTRACE: '1',
 		KYUSIN_DATA_DIR: join(dataDir, 'data'),
 		WEBVIEW2_USER_DATA_FOLDER: join(dataDir, 'webview'),
-		WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${debugPort}`
+		// Port 0: sistem memilih port bebas; nomornya dibaca dari DevToolsActivePort.
+		WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=0'
 	}
 });
 
@@ -70,18 +70,42 @@ app.on('exit', (code, signal) => {
 });
 app.on('error', (e) => console.error(`aplikasi gagal dijalankan: ${e.message}`));
 
+/** Nomor port DevTools dari berkas yang ditulis WebView2 di folder datanya. */
+function activePort() {
+	const file = join(dataDir, 'webview', 'EBWebView', 'DevToolsActivePort');
+	return existsSync(file) ? Number(readFileSync(file, 'utf8').split(/\r?\n/)[0]) : null;
+}
+
 async function devtools() {
-	for (let i = 0; i < 150; i++) {
+	for (let i = 0; i < 450; i++) {
 		if (appExit) throw new Error(`aplikasi berhenti sebelum port DevTools terbuka (${appExit})`);
-		try {
-			const res = await fetch(`http://127.0.0.1:${debugPort}/json/version`);
-			if (res.ok) return;
-		} catch {
-			// WebView2 belum siap
+		const port = activePort();
+		if (port) {
+			try {
+				const res = await fetch(`http://127.0.0.1:${port}/json/version`);
+				if (res.ok) return port;
+			} catch {
+				// belum menerima koneksi
+			}
 		}
 		await new Promise((r) => setTimeout(r, 200));
 	}
 	throw new Error('port DevTools WebView2 tidak terbuka');
+}
+
+/** Diagnostik saat gagal: proses WebView2 dan isi folder data uji. */
+function diagnose() {
+	try {
+		const ps =
+			"Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'kyusin|msedgewebview2' } | " +
+			"ForEach-Object { $_.Name + ' :: ' + $_.CommandLine }";
+		console.error(execFileSync('powershell', ['-NoProfile', '-Command', ps], { encoding: 'utf8' }));
+		const list = (d) => (existsSync(d) ? readdirSync(d, { recursive: true }).slice(0, 40) : '(tidak ada)');
+		console.error('folder webview:', list(join(dataDir, 'webview')));
+		console.error('folder data:', list(join(dataDir, 'data')));
+	} catch (e) {
+		console.error(`diagnostik gagal: ${e.message}`);
+	}
 }
 
 async function ready() {
@@ -100,12 +124,14 @@ async function ready() {
 let code = 0;
 try {
 	await ready();
-	await devtools();
+	const port = await devtools();
+	console.log(`WebView2 DevTools di port ${port}`);
 	console.log('papan Reversi (jendela asli):');
-	await board({ base, debuggerAddress: `127.0.0.1:${debugPort}`, artifacts });
+	await board({ base, debuggerAddress: `127.0.0.1:${port}`, artifacts });
 	console.log(`LULUS. Tangkapan layar di ${artifacts}`);
 } catch (e) {
 	console.error(`GAGAL: ${e.message}`);
+	if (process.platform === 'win32') diagnose();
 	code = 1;
 } finally {
 	app.kill();
