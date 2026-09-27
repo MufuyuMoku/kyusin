@@ -17,8 +17,9 @@
 
 ## Lisensi (wajib)
 - Repo sengaja **tanpa berkas lisensi**. Jangan menambahkan LICENSE.
-- Dependensi hanya MIT, Apache-2.0, BSD, zlib, ISC, OFL (font), atau setara. **Dilarang GPL/LGPL/AGPL.**
-- `cargo-deny` wajib di CI.
+- Dependensi hanya MIT, Apache-2.0, BSD, zlib, ISC, OFL (font), atau setara. **Dilarang GPL/LGPL/AGPL** untuk semua yang dikompilasi/dibundel (crate Rust dan npm produksi).
+- Pengecualian: WebView2 (Windows) dan webkit2gtk/GTK (Linux), ditautkan dinamis dan tidak dibundel. Karena itu paket Linux hanya `.deb`, tanpa AppImage.
+- CI wajib: `cargo-deny` + pemeriksa lisensi dependensi produksi npm.
 - Stockfish hanya alat kalibrasi di mesin developer: tidak masuk repo, tidak ikut dikirim.
 
 ## Aturan kerja (SPEC §11, §9)
