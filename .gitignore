@@ -29,3 +29,6 @@ stockfish*
 
 # Konfigurasi lokal Claude Code
 .claude/
+
+# Tangkapan layar tes jendela asli (artefak CI)
+ui/e2e/artifacts/

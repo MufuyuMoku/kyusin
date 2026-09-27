@@ -6,6 +6,7 @@
 
 import en from './i18n/en.json';
 import id from './i18n/id.json';
+import { format } from './format';
 import { settings, type Lang } from './settings.svelte';
 
 export type Key = keyof typeof id;
@@ -23,10 +24,9 @@ export function lang(): Lang {
 	return settings.lang ?? systemLang();
 }
 
+/** Teks untuk `key`; `{nama}` dan `{nama|tunggal|jamak}` diisi `params`. */
 export function t(key: Key, params: Record<string, string | number> = {}): string {
-	let s = TABLES[lang()][key] ?? key;
-	for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, String(v));
-	return s;
+	return format(TABLES[lang()][key] ?? key, params, lang());
 }
 
 /** Memilih teks backend sesuai bahasa aktif. */

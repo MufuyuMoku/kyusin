@@ -145,10 +145,9 @@
 	"reversi.board": "Papan Reversi",
 	"reversi.black": "hitam",
 	"reversi.white": "putih",
-	"reversi.black_first": "Hitam █ (jalan duluan)",
-	"reversi.white_second": "Putih ░",
-	"reversi.count": "Hitam {b} · Putih {w}",
-	"reversi.your_turn": "Giliranmu ({color}): pilih petak bertanda ·",
+	"reversi.black_first": "Hitam (cincin, jalan duluan)",
+	"reversi.white_second": "Putih (bidak penuh)",
+	"reversi.your_turn": "Giliranmu ({color}): pilih petak bertanda titik.",
 	"reversi.their_turn": "Giliran {color}.",
 	"reversi.bot_turn": "Bot sedang berpikir…",
 	"reversi.must_pass": "Kamu tidak punya langkah sah: pilih [ PASS ].",
@@ -193,5 +192,13 @@
 	"settings.player_seed.help": "Kosong = dibuat otomatis tiap ronde. Seed ini digabung dengan seed aplikasi, jadi tidak ada pihak yang bisa memilih hasil sendirian.",
 	"verbose.database": "basis data: {path}",
 	"verbose.database.fail": "basis data: gagal dibuka ({path})",
-	"verbose.database.none": "basis data: tidak ada (berjalan di peramban)"
+	"verbose.database.none": "basis data: tidak ada (berjalan di peramban)",
+	"greet.evening": "Sudah malam. Satu game sebelum tidur? Kita berdua tahu itu bohong.",
+	"greet.weekend": "Akhir pekan. Tidak ada tugas yang mengejar. Semoga.",
+	"greet.streak": "Hari ke-{n} berturut-turut. Aku mulai terbiasa ditemani.",
+	"greet.generic_5": "Semua cartridge sudah di tempatnya. Aku menghitungnya dua kali.",
+	"greet.generic_6": "Kamu datang. Aku tahu kamu akan datang.",
+	"greet.generic_7": "Fosforku menyala khusus untukmu. Yah, untuk siapa pun sebenarnya. Tapi terutama kamu.",
+	"reversi.count.black": "Hitam {n}",
+	"reversi.count.white": "Putih {n}"
 }

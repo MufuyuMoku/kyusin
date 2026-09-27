@@ -1,9 +1,12 @@
 <!--
-  Baris status Reversi: jumlah bidak dan giliran, dari view_data.
+  Baris status Reversi: jumlah bidak (dengan sprite yang sama seperti di
+  papan) dan giliran, dari view_data.
 -->
 <script lang="ts">
 	import { t } from '$lib/i18n.svelte';
+	import PixelSprite from './PixelSprite.svelte';
 	import { isReversiView } from './reversi';
+	import { DISC_DARK, DISC_LIGHT } from './sprites';
 
 	let {
 		view,
@@ -16,7 +19,10 @@
 </script>
 
 {#if v}
-	<p>{t('reversi.count', { b: v.hitam, w: v.putih })}</p>
+	<p class="count">
+		<span class="side"><PixelSprite pixels={DISC_DARK} size={1} />{t('reversi.count.black', { n: v.hitam })}</span>
+		<span class="side"><PixelSprite pixels={DISC_LIGHT} size={1} />{t('reversi.count.white', { n: v.putih })}</span>
+	</p>
 	<p class="status" role="status">
 		{#if v.selesai}
 			{t('reversi.over')}
@@ -37,5 +43,14 @@
 <style>
 	p {
 		margin: 0;
+	}
+	.count {
+		display: flex;
+		gap: 3ch;
+	}
+	.side {
+		display: inline-flex;
+		align-items: center;
+		gap: 1ch;
 	}
 </style>

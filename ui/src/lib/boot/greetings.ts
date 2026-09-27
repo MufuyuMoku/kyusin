@@ -13,6 +13,10 @@
 export interface GreetingContext {
 	/** Jam sistem, 0–23. */
 	hour: number;
+	/** Hari dalam minggu, 0 = Minggu … 6 = Sabtu. */
+	weekday: number;
+	/** Jumlah hari kalender berturut-turut dengan sesi, termasuk hari ini. */
+	streak: number;
 	/** Jeda sejak sesi terakhir dalam milidetik; `null` = sesi pertama. */
 	gapMs: number | null;
 	/** Nama profil (M3). */
@@ -50,6 +54,9 @@ export const GREETINGS: Greeting[] = [
 	{ id: 'late_night', priority: 2, when: (c) => c.hour >= 0 && c.hour < 4 },
 	{ id: 'early', priority: 2, when: (c) => c.hour >= 4 && c.hour < 7 },
 	{ id: 'lunch', priority: 1, when: (c) => c.hour >= 12 && c.hour < 14 },
+	{ id: 'evening', priority: 1, when: (c) => c.hour >= 18 && c.hour < 22 },
+	{ id: 'weekend', priority: 1, when: (c) => c.weekday === 0 || c.weekday === 6 },
+	{ id: 'streak', priority: 2, when: (c) => c.streak >= 3, params: (c) => ({ n: c.streak }) },
 	{
 		id: 'chips_low',
 		priority: 2,
@@ -74,7 +81,10 @@ export const GREETINGS: Greeting[] = [
 	{ id: 'generic_1', priority: 0 },
 	{ id: 'generic_2', priority: 0 },
 	{ id: 'generic_3', priority: 0 },
-	{ id: 'generic_4', priority: 0 }
+	{ id: 'generic_4', priority: 0 },
+	{ id: 'generic_5', priority: 0 },
+	{ id: 'generic_6', priority: 0 },
+	{ id: 'generic_7', priority: 0 }
 ];
 
 export function greetingKey(id: string): `greet.${string}` {

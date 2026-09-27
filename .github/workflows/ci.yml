@@ -122,3 +122,29 @@ jobs:
       - name: Build application
         working-directory: src-tauri
         run: npx --prefix ../ui tauri build --debug --no-bundle
+
+      # Tes jendela asli (SPEC §11, D-038): tauri-driver + msedgedriver bawaan
+      # runner. Perintah WebDriver hanya masuk ke jendela KyuSin.
+      - name: Install tauri-driver
+        if: runner.os == 'Windows'
+        run: cargo install tauri-driver --locked
+
+      - name: WebView2 and msedgedriver versions
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          (Get-ItemProperty 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -ErrorAction SilentlyContinue).pv
+          & "$env:EdgeWebDriver\msedgedriver.exe" --version
+
+      - name: Native window tests (tauri-driver)
+        if: runner.os == 'Windows'
+        working-directory: ui
+        run: npm run e2e
+
+      - name: Upload window screenshots
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: ui/e2e/artifacts
+          if-no-files-found: warn

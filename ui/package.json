@@ -12,7 +12,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"test": "node --test \"src/lib/**/*.test.ts\"",
 		"licenses": "node ../scripts/check-npm-licenses.mjs",
-		"tauri": "tauri"
+		"tauri": "tauri",
+		"e2e": "node e2e/run.mjs"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2.11.1",

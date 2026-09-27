@@ -3,7 +3,7 @@ judul = { id = "Reversi: dasar", en = "Reversi: basics" }
 
 [man.aturan]
 id = """
-Papan 8×8. Dua pemain: hitam (█) jalan duluan, lalu putih (░), bergantian.
+Papan 8×8. Dua pemain: hitam jalan duluan, lalu putih, bergantian.
 
 Letakkan satu bidak di petak kosong sehingga satu atau lebih garis lurus
 bidak lawan (mendatar, tegak, atau diagonal) terapit di antara bidak baru dan
@@ -15,7 +15,7 @@ Permainan selesai bila kedua pemain tidak bisa melangkah. Yang punya bidak
 terbanyak menang; sama banyak berarti seri.
 """
 en = """
-8×8 board. Two players: black (█) moves first, then white (░), in turn.
+8×8 board. Two players: black moves first, then white, in turn.
 
 Place one disc on an empty square so that one or more straight lines of your
 opponent's discs (horizontal, vertical, or diagonal) are flanked between the
@@ -29,19 +29,21 @@ counts are a draw.
 
 [man.kontrol]
 id = """
-Klik petak bertanda · (langkah sah) untuk meletakkan bidak. Dengan keyboard:
+Di papan, bidak hitam berupa cincin dan bidak putih berupa bidak penuh.
+Klik petak bertanda titik (langkah sah) untuk meletakkan bidak. Dengan keyboard:
 panah memindahkan kursor di papan, Enter atau Spasi meletakkan bidak, Tab
 keluar dari papan. Bila tidak ada langkah, pilih [ PASS ].
 """
 en = """
-Click a square marked · (a legal move) to place a disc. With the keyboard:
+On the board, black discs are rings and white discs are solid.
+Click a square marked with a dot (a legal move) to place a disc. With the keyboard:
 the arrow keys move the cursor on the board, Enter or Space places a disc,
 Tab leaves the board. If you have no move, choose [ PASS ].
 """
 
 [[langkah]]
-teks.id = "Kamu hitam (█) dan jalan duluan. Titik · menandai petak tempat kamu boleh meletakkan bidak."
-teks.en = "You are black (█) and move first. A dot · marks each square where you may place a disc."
+teks.id = "Kamu hitam (bidak cincin) dan jalan duluan. Titik menandai petak tempat kamu boleh meletakkan bidak."
+teks.en = "You are black (ring discs) and move first. A dot marks each square where you may place a disc."
 
 [[langkah]]
 teks.id = "Letakkan bidak di d3. Bidak putih di d4 terapit antara d3 dan d5, jadi dibalik menjadi hitam."

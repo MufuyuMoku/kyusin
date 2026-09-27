@@ -12,7 +12,7 @@ import { app, fonts, marks } from '$lib/app.svelte';
 import { L, lang, t, type Key } from '$lib/i18n.svelte';
 import { EFFECTS, effectOn, motion, settings, settingsReadAt } from '$lib/settings.svelte';
 import { pickGreeting } from './greetings';
-import type { SessionRecord } from './session';
+import { streak, type SessionRecord } from './session';
 
 export const PROJECT_LABEL = 'Project Sinners';
 export const PRODUCT = 'KyuSin';
@@ -153,6 +153,8 @@ export function greeting(previous: SessionRecord): { script: Script; id: string 
 	const g = pickGreeting(
 		{
 			hour: new Date().getHours(),
+			weekday: new Date().getDay(),
+			streak: streak(previous.days, Date.now()),
 			gapMs: previous.last === null ? null : Date.now() - previous.last,
 			profile: profile?.name,
 			lastGame: profile?.last_game,
