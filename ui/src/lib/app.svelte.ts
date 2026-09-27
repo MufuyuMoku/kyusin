@@ -3,12 +3,22 @@
  * sedang berjalan, dan keluaran konsol.
  */
 
-import { api, type AppInfo, type Category, type TutorialState } from './backend';
+import {
+	api,
+	type AppInfo,
+	type Category,
+	type MatchState,
+	type ReplayData,
+	type TutorialState
+} from './backend';
+import { motion, settings } from './settings.svelte';
 
 export type Screen =
 	| { name: 'menu' }
 	| { name: 'game'; id: string }
 	| { name: 'tutorial'; id: string }
+	| { name: 'match'; id: string }
+	| { name: 'replay'; id: number }
 	| { name: 'settings' }
 	| { name: 'help' };
 
@@ -17,6 +27,10 @@ export const app = $state({
 	info: null as AppInfo | null,
 	catalog: [] as Category[],
 	tutorial: null as TutorialState | null,
+	/** Pertandingan yang sedang berjalan melawan bot. */
+	match: null as MatchState | null,
+	/** Replay yang sedang dibuka. */
+	replay: null as ReplayData | null,
 	/** Konsol sedang dibuka lewat `:` atau `` ` ``. */
 	consoleOpen: false,
 	output: [] as string[],
@@ -32,14 +46,22 @@ export function go(screen: Screen) {
 	app.stack.push(screen);
 }
 
+/** Menutup tutorial/pertandingan bila layarnya tidak lagi tampil. */
+function cleanup() {
+	const names = app.stack.map((s) => s.name);
+	if (!names.includes('tutorial') && app.tutorial) stopTutorial();
+	if (!names.includes('match') && app.match) leaveMatch();
+	if (!names.includes('replay')) app.replay = null;
+}
+
 export function back() {
 	if (app.stack.length > 1) app.stack.pop();
-	if (current().name !== 'tutorial' && app.tutorial) stopTutorial();
+	cleanup();
 }
 
 export function home() {
 	app.stack = [{ name: 'menu' }];
-	if (app.tutorial) stopTutorial();
+	cleanup();
 }
 
 export function print(text: string) {
@@ -114,5 +136,53 @@ function stopTutorial() {
 
 /** Perintah game yang sah saat ini (konkret), untuk konsol. */
 export function gameCommands(): string[] {
-	return app.tutorial?.actions.flatMap((a) => a.concrete ?? [a.usage]) ?? [];
+	const actions = current().name === 'match' ? app.match?.actions : app.tutorial?.actions;
+	return actions?.flatMap((a) => a.concrete ?? [a.usage]) ?? [];
+}
+
+/** Jeda sebelum langkah bot, supaya langkahnya terlihat (tanpa jeda saat reduced motion). */
+const BOT_DELAY_MS = 450;
+
+let stepping = false;
+
+/** Menjalankan langkah bot satu per satu selama giliran bot. */
+async function runBots() {
+	if (stepping) return;
+	stepping = true;
+	try {
+		const a = await api();
+		while (app.match?.bot_turn && current().name === 'match') {
+			await new Promise((r) => setTimeout(r, motion.reduced ? 0 : BOT_DELAY_MS));
+			if (current().name !== 'match') break;
+			app.match = await a.match_step();
+		}
+	} finally {
+		stepping = false;
+	}
+}
+
+export async function startMatch(id: string, level: number, seat: number) {
+	const a = await api();
+	const seed = settings.playerSeed.trim() || null;
+	app.match = await a.match_start(id, level, seat, seed);
+	if (current().name === 'match') app.stack.pop();
+	go({ name: 'match', id });
+	runBots();
+}
+
+export async function matchAct(command: string) {
+	const a = await api();
+	app.match = await a.match_act(command);
+	runBots();
+}
+
+function leaveMatch() {
+	app.match = null;
+	api().then((a) => a.match_leave());
+}
+
+export async function openReplay(id: number) {
+	const a = await api();
+	app.replay = await a.replay_open(id);
+	go({ name: 'replay', id });
 }

@@ -100,7 +100,10 @@ test('semua kontrol navigasi lewat NavButton, tanpa atribut disabled asli', () =
 	for (const f of svelteFiles(join(here, '..'))) {
 		const src = readFileSync(f, 'utf8');
 		const isNavButton = f.endsWith('NavButton.svelte');
-		if (!isNavButton && /\bdata-nav\b/.test(src)) problems.push(`${f}: data-nav di luar NavButton`);
+		// Papan game adalah satu kontrol ber-role grid yang juga ikut navigasi.
+		const isBoard = f.endsWith('Board.svelte') && /role="grid"/.test(src);
+		if (!isNavButton && !isBoard && /\bdata-nav\b/.test(src))
+			problems.push(`${f}: data-nav di luar NavButton/papan`);
 		if (!isNavButton && /<button\b/.test(src)) problems.push(`${f}: <button> mentah; pakai NavButton`);
 		if (/<button\b[^>]*\sdisabled[\s={>]/.test(src)) problems.push(`${f}: atribut disabled asli`);
 	}

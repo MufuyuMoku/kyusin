@@ -38,6 +38,8 @@ export interface Game {
 	tutorial: string;
 	perintah: CommandDoc[];
 	rtp_line: Localized | null;
+	/** Jumlah level bot (0 = belum ada). */
+	bot_levels: number;
 }
 
 export interface Category {
@@ -70,8 +72,89 @@ export interface TutorialState {
 	finished: boolean;
 	step: Step | null;
 	view_text: Localized;
+	/** Data tampilan untuk kontrol visual game. */
+	view_data: unknown;
 	actions: ActionView[];
 	feedback: Feedback | null;
+}
+
+export type SeatKind = { kind: 'human' } | { kind: 'bot'; level: number } | { kind: 'remote' };
+
+export interface GameResult {
+	winners: number[];
+	scores: number[];
+	summary: Localized;
+}
+
+export interface Move {
+	seat: number;
+	command: string;
+}
+
+/** Catatan provably fair (SPEC §5.4). */
+export interface FairRecord {
+	host: string;
+	commitments: Record<string, string>;
+	seeds: Record<string, string>;
+	excluded: string[];
+	round_seed: string;
+}
+
+export type VerifyStep = 'commitments' | 'round_seed' | 'moves' | 'result' | 'state_hash';
+
+export interface VerifyReport {
+	ok: boolean;
+	checks: { step: VerifyStep; ok: boolean }[];
+	error: Localized | null;
+}
+
+export interface MatchState {
+	game: string;
+	seat: number;
+	seats: SeatKind[];
+	your_turn: boolean;
+	bot_turn: boolean;
+	over: boolean;
+	view_data: unknown;
+	view_text: Localized;
+	actions: ActionView[];
+	moves: Move[];
+	/** Komitmen yang diumumkan sebelum ronde. */
+	commitments: Record<string, string>;
+	/** Seed yang dibuka; hanya setelah selesai. */
+	reveal: FairRecord | null;
+	result: GameResult | null;
+	verify: VerifyReport | null;
+	replay_id: number | null;
+	save_error: string | null;
+}
+
+export interface ReplaySummary {
+	id: number;
+	game: string;
+	started_at: number;
+	finished: boolean;
+	moves: number;
+	seats: SeatKind[];
+	result: GameResult | null;
+}
+
+export interface Frame {
+	index: number;
+	last: Move | null;
+	view_data: unknown;
+	view_text: Localized;
+}
+
+export interface ReplayData {
+	id: number;
+	game: string;
+	seat: number;
+	seats: SeatKind[];
+	frames: Frame[];
+	fair: FairRecord;
+	result: GameResult | null;
+	verify: VerifyReport;
 }
 
 export interface AppInfo {
@@ -79,6 +162,9 @@ export interface AppInfo {
 	version: string;
 	/** Folder data aplikasi; `null` di luar Tauri. */
 	data_dir: string | null;
+	/** Berkas basis data dan apakah berhasil dibuka. */
+	database: string | null;
+	database_ok: boolean;
 	/**
 	 * Data profil untuk sapaan boot (SPEC §4). Belum dikirim backend; datang
 	 * di M3 (nama, game terakhir) dan M4 (chip). Sapaan yang membutuhkannya
@@ -95,6 +181,12 @@ type Api = {
 	tutorial_act(command: string): Promise<TutorialState>;
 	tutorial_next(): Promise<TutorialState>;
 	tutorial_stop(): Promise<void>;
+	match_start(id: string, level: number, seat: number, playerSeed: string | null): Promise<MatchState>;
+	match_act(command: string): Promise<MatchState>;
+	match_step(): Promise<MatchState>;
+	match_leave(): Promise<void>;
+	replay_list(game: string | null): Promise<ReplaySummary[]>;
+	replay_open(id: number): Promise<ReplayData>;
 };
 
 const tauriApi: Api = {
@@ -104,7 +196,14 @@ const tauriApi: Api = {
 	tutorial_start: (id) => invoke('tutorial_start', { id }),
 	tutorial_act: (command) => invoke('tutorial_act', { command }),
 	tutorial_next: () => invoke('tutorial_next'),
-	tutorial_stop: () => invoke('tutorial_stop')
+	tutorial_stop: () => invoke('tutorial_stop'),
+	match_start: (id, level, seat, playerSeed) =>
+		invoke('match_start', { id, level, seat, playerSeed }),
+	match_act: (command) => invoke('match_act', { command }),
+	match_step: () => invoke('match_step'),
+	match_leave: () => invoke('match_leave'),
+	replay_list: (game) => invoke('replay_list', { game }),
+	replay_open: (id) => invoke('replay_open', { id })
 };
 
 let resolved: Api | null = null;

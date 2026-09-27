@@ -8,7 +8,9 @@
 	import Console from '$lib/components/Console.svelte';
 	import GameScreen from '$lib/components/GameScreen.svelte';
 	import HelpScreen from '$lib/components/HelpScreen.svelte';
+	import MatchScreen from '$lib/components/MatchScreen.svelte';
 	import MenuScreen from '$lib/components/MenuScreen.svelte';
+	import ReplayScreen from '$lib/components/ReplayScreen.svelte';
 	import SettingsScreen from '$lib/components/SettingsScreen.svelte';
 	import TutorialScreen from '$lib/components/TutorialScreen.svelte';
 
@@ -50,8 +52,9 @@
 		void app.tutorial?.index;
 		queueMicrotask(() => {
 			if (app.consoleOpen) return;
-			// Kontrol yang disorot tutorial didahulukan.
+			// Papan game didahulukan, lalu kontrol yang disorot tutorial.
 			const first =
+				main?.querySelector<HTMLElement>(`[role='grid']${NAV_SELECTOR}`) ??
 				main?.querySelector<HTMLElement>(`${NAV_SELECTOR}.sorot`) ??
 				main?.querySelector<HTMLElement>(NAV_SELECTOR);
 			// focusVisible: sorotan tampil walau fokus dipasang lewat skrip.
@@ -117,6 +120,10 @@
 					<GameScreen id={screen.id} />
 				{:else if screen.name === 'tutorial'}
 					<TutorialScreen />
+				{:else if screen.name === 'match'}
+					<MatchScreen />
+				{:else if screen.name === 'replay'}
+					<ReplayScreen />
 				{:else if screen.name === 'settings'}
 					<SettingsScreen />
 				{:else if screen.name === 'help'}

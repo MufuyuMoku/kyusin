@@ -250,8 +250,8 @@ impl TurnGame for Reversi {
             for (col, ch) in row.chars().enumerate() {
                 let sq = format!("{}{}", (b'a' + col as u8) as char, r + 1);
                 let cell = match ch {
-                    'X' => '●',
-                    'O' => '○',
+                    'X' => '█',
+                    'O' => '░',
                     _ if mine && view.legal.contains(&sq) => '·',
                     _ => ' ',
                 };

@@ -17,7 +17,8 @@
 		forcedOff,
 		save,
 		setIntensity,
-		settings
+		settings,
+		validPlayerSeed
 	} from '$lib/settings.svelte';
 	import Frame from './Frame.svelte';
 	import NavButton from './NavButton.svelte';
@@ -25,10 +26,19 @@
 	const BAR = 10;
 
 	function mark(on: boolean) {
-		return on ? '[■]' : '[ ]';
+		return on ? '[█]' : '[ ]';
 	}
 
 	const filled = $derived(Math.round((settings.intensity / 100) * BAR));
+
+	// Seed pemain disimpan hanya bila sah (hex 64 atau kosong).
+	let seedDraft = $state(settings.playerSeed);
+	const seedOk = $derived(validPlayerSeed(seedDraft));
+	function saveSeed() {
+		if (!seedOk) return;
+		settings.playerSeed = seedDraft.trim().toLowerCase();
+		save();
+	}
 </script>
 
 <div class="settings">
@@ -40,7 +50,7 @@
 					onclick={() => {
 						settings.theme = th;
 						save();
-					}}>{settings.theme === th ? '(●)' : '( )'} {t(`settings.theme.${th}` as Key)}</NavButton
+					}}>{settings.theme === th ? '(•)' : '( )'} {t(`settings.theme.${th}` as Key)}</NavButton
 				>
 			</div>
 		{/each}
@@ -68,7 +78,7 @@
 				onclick={() => setIntensity(settings.intensity - INTENSITY_STEP)}>[-]</NavButton
 			>
 			<span aria-hidden="true"
-				>{'■'.repeat(filled)}<span class="dim">{'□'.repeat(BAR - filled)}</span></span
+				>{'█'.repeat(filled)}<span class="dim">{'░'.repeat(BAR - filled)}</span></span
 			>
 			<NavButton
 				label={t('settings.intensity.up')}
@@ -88,7 +98,7 @@
 					onclick={() => {
 						settings.lang = l;
 						save();
-					}}>{lang() === l ? '(●)' : '( )'} {t(`settings.lang.${l}` as Key)}</NavButton
+					}}>{lang() === l ? '(•)' : '( )'} {t(`settings.lang.${l}` as Key)}</NavButton
 				>
 			</div>
 		{/each}
@@ -102,10 +112,29 @@
 					onclick={() => {
 						settings.bootMode = mode;
 						save();
-					}}>{settings.bootMode === mode ? '(●)' : '( )'} {t(`settings.boot.${mode}` as Key)}</NavButton
+					}}>{settings.bootMode === mode ? '(•)' : '( )'} {t(`settings.boot.${mode}` as Key)}</NavButton
 				>
 			</div>
 		{/each}
+	</Frame>
+
+	<Frame title={t('settings.fair')}>
+		<label for="player-seed">{t('settings.player_seed')}</label>
+		<input
+			id="player-seed"
+			class="field"
+			bind:value={seedDraft}
+			oninput={saveSeed}
+			spellcheck="false"
+			autocomplete="off"
+			maxlength="64"
+			aria-invalid={!seedOk}
+			aria-describedby="player-seed-help"
+		/>
+		{#if !seedOk}
+			<p role="alert">{t('settings.player_seed.invalid')}</p>
+		{/if}
+		<p id="player-seed-help" class="dim">{t('settings.player_seed.help')}</p>
 	</Frame>
 
 	<Frame title={t('settings.other')}>
@@ -137,5 +166,27 @@
 	}
 	.intensity > span:first-child {
 		min-width: 12ch;
+	}
+	label {
+		display: block;
+	}
+	.field {
+		width: 66ch;
+		max-width: 100%;
+		font: inherit;
+		color: var(--fg);
+		background: transparent;
+		border: 0;
+		border-bottom: 1px dashed var(--dim);
+		padding: 0 0.5ch;
+		caret-color: var(--fg);
+	}
+	.field:focus-visible {
+		background: transparent;
+		color: var(--fg);
+		border-bottom: 1px solid var(--fg);
+	}
+	p {
+		margin: 0;
 	}
 </style>

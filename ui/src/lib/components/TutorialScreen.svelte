@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
 	import { app, back, tutorialAct, tutorialNext } from '$lib/app.svelte';
+	import { GAME_UI } from '$lib/games';
 	import { L, t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
 	import NavButton from './NavButton.svelte';
@@ -15,6 +16,8 @@
 		new Set((tut?.step?.sorot ?? []).filter((s) => s.startsWith('aksi:')).map((s) => s.slice(5)))
 	);
 	const buttons = $derived(tut?.actions.flatMap((a) => a.concrete ?? []) ?? []);
+	/** Kontrol visual game ini, bila ada (papan Reversi, dsb.). */
+	const ui = $derived(tut ? GAME_UI[tut.game] : undefined);
 </script>
 
 {#if tut}
@@ -27,9 +30,21 @@
 			<NavButton onclick={back}>[ {t('action.exit')} ]</NavButton>
 		</div>
 
-		<Frame title={t('tutorial.board')}>
-			<pre class="view">{L(tut.view_text)}</pre>
-		</Frame>
+		{#if ui}
+			<div>
+				<ui.board
+					view={tut.view_data}
+					interactive={!!tut.step?.aksi}
+					highlight={highlighted}
+					onplay={tutorialAct}
+				/>
+				<ui.status view={tut.view_data} />
+			</div>
+		{:else}
+			<Frame title={t('tutorial.board')}>
+				<pre class="view">{L(tut.view_text)}</pre>
+			</Frame>
+		{/if}
 
 		<Frame title={t('tutorial.frame')}>
 			{#if tut.finished}
@@ -40,7 +55,14 @@
 			{:else if tut.step}
 				<p>{L(tut.step.teks)}</p>
 				<div class="controls">
-					{#if tut.step.aksi}
+					{#if tut.step.aksi && ui}
+						<!-- Aksi lewat papan; tombol hanya untuk perintah di luar papan (pass). -->
+						{#each buttons.filter((b) => b === 'pass') as cmd (cmd)}
+							<NavButton sorot={highlighted.has(cmd)} onclick={() => tutorialAct(cmd)}
+								>[ {cmd.toUpperCase()} ]</NavButton
+							>
+						{/each}
+					{:else if tut.step.aksi}
 						<!-- Label tombol = perintah teks, yang tetap Inggris di kedua bahasa. -->
 						{#each buttons as cmd (cmd)}
 							<NavButton sorot={highlighted.has(cmd)} onclick={() => tutorialAct(cmd)}

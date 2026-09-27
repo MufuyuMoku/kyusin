@@ -35,6 +35,21 @@ test('kunci terjemahan sama di id dan en, tanpa nilai kosong', () => {
 	assert.deepEqual(empty, []);
 });
 
+test('setiap literal berbentuk kunci terjemahan ada di berkas', () => {
+	// Awalan kunci yang dikenal (bagian sebelum titik pertama).
+	const prefixes = new Set(Object.keys(id).map((k) => k.split('.')[0]));
+	const missing: string[] = [];
+	for (const f of files(src, ['.svelte', '.ts'])) {
+		if (f.endsWith('.test.ts') || f.includes('devmock')) continue;
+		const text = readFileSync(f, 'utf8');
+		for (const m of text.matchAll(/'([a-z_]+(?:\.[a-z0-9_]+)+)'/g)) {
+			const key = m[1];
+			if (prefixes.has(key.split('.')[0]) && !(key in id)) missing.push(`${f}: ${key}`);
+		}
+	}
+	assert.deepEqual(missing, []);
+});
+
 test('setiap sapaan punya parameter yang sama di kedua bahasa', () => {
 	for (const g of GREETINGS) {
 		const k = greetingKey(g.id);
@@ -62,6 +77,10 @@ test('setiap kunci yang dipakai kode ada di berkas terjemahan', () => {
 	for (const fx of EFFECT_IDS) used.add(`settings.fx.${fx}`);
 	for (const l of LANG_IDS) used.add(`settings.lang.${l}`);
 	for (const m of ['verbose', 'cinematic', 'greeting', 'off']) used.add(`settings.boot.${m}`);
+	for (const s of ['match', 'replay']) used.add(`crumb.${s}`);
+	for (const l of [1, 2, 3]) used.add(`level.${l}`);
+	for (const s of ['commitments', 'round_seed', 'moves', 'result', 'state_hash'])
+		used.add(`verify.step.${s}`);
 	for (const g of GREETINGS) used.add(greetingKey(g.id));
 
 	const missing = [...used].filter((k) => !(k in id) || !(k in en));

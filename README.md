@@ -6,7 +6,7 @@ Aplikasi desktop berisi banyak game ringan (papan, kartu, casino, arcade) dalam
 satu wadah bergaya terminal retro. Semuanya berjalan lokal: tanpa akun, tanpa
 internet, tanpa iklan, dan tanpa pembelian. Target: Windows dan Linux.
 
-Status: M0 (kerangka). Rencana dan aturan lengkap ada di [SPEC.md](SPEC.md);
+Status: M1 (Reversi melawan bot, provably fair, replay). Rencana dan aturan lengkap ada di [SPEC.md](SPEC.md);
 kemajuan di [PROGRESS.md](PROGRESS.md), keputusan di [DECISIONS.md](DECISIONS.md).
 
 ## Pengembangan

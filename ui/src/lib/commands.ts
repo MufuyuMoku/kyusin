@@ -18,6 +18,8 @@ export const GLOBAL_COMMANDS: CommandDef[] = [
 	{ name: 'ls', args: '[category]', summary: 'cmd.ls' },
 	{ name: 'man', args: '<id>', summary: 'cmd.man' },
 	{ name: 'tutorial', args: '<id>', summary: 'cmd.tutorial' },
+	{ name: 'play', args: '<id> [level]', summary: 'cmd.play' },
+	{ name: 'verify', args: '', summary: 'cmd.verify' },
 	{ name: 'menu', args: '', summary: 'cmd.menu' },
 	{ name: 'back', args: '', summary: 'cmd.back' },
 	{ name: 'settings', args: '', summary: 'cmd.settings' },
@@ -73,6 +75,7 @@ function candidates(done: string[], ctx: Context): string[] {
 			switch (head) {
 				case 'man':
 				case 'tutorial':
+				case 'play':
 					return ctx.gameIds;
 				case 'ls':
 					return ctx.categoryKeys;
@@ -87,6 +90,7 @@ function candidates(done: string[], ctx: Context): string[] {
 			}
 		}
 		if (pos === 2 && head === 'fx') return ['on', 'off'];
+		if (pos === 2 && head === 'play') return ['1', '2', '3'];
 		return [];
 	}
 	return unique(

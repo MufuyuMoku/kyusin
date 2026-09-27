@@ -127,7 +127,7 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: fixture (Nim, "Fixture: Batang") ada di `crates/games/src/fixture/`, dengan manifest berkategori `uji` dan tutorial di samping modulnya. Tes memakai `kyusin_games::with_fixture()`. Registry aplikasi (`builtin()`) kosong di M0; fixture hanya muncul bila dibangun dengan fitur `fixture` (`cargo tauri dev --features fixture`). Build rilis tidak memuatnya.
 - Rujukan: SPEC §9 (M0), D-005.
 
-### D-016 — Kontrak `TurnGame` sementara di M0
+### D-016 — Kontrak `TurnGame` sementara di M0 (digantikan oleh D-034)
 - Tanggal / milestone: 2026-09-27 / M0
 - Diputuskan oleh: developer
 - Konteks: runner tutorial butuh antarmuka game sebelum kontrak final M1.
@@ -258,6 +258,45 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Navigasi panah memakai `lib/nav.ts` (`moveFocus`, melingkar) untuk semua layar, dan melewati item nonaktif seperti item lain.
   - Tes regresi (`ui/src/lib/nav.test.ts`): model fokus yang meniru peramban (`disabled` asli menolak fokus) menjelajahi daftar 1–7 item turun, naik, dan turun-lalu-naik untuk setiap kombinasi item nonaktif; model yang sama membuktikan bug lama muncul dengan `disabled` asli. Tes sumber memastikan tidak ada `<button>` mentah, `data-nav` di luar `NavButton`, atau atribut `disabled` asli di markup.
 - Rujukan: SPEC §4 (aksesibilitas keyboard), D-026.
+
+### D-034 — Kontrak final M1: TurnGame, Player, RNG, provably fair, replay
+- Tanggal / milestone: 2026-09-28 / M1
+- Diputuskan oleh: developer (dalam batas SPEC §5)
+- Keputusan:
+  - `TurnGame` (menggantikan kontrak sementara D-016): `new(config, seed) -> Result` (konfigurasi bisa ditolak), `seats()`, `pending_players`, `legal_actions -> Vec<ActionSpec>`, `apply(player, action)`, `view_for -> View: Serialize`, `to_text(&View, Lang)`, `is_over`, `result`, `parse_command`, `format_action`. Keadaan game wajib `Serialize`; `Session::state_hash` = SHA-256 JSON keadaan, dipakai `verify` dan replay.
+  - `GameResult`: kursi pemenang (kosong = seri), skor per kursi, ringkasan dua bahasa. Chip menyusul di M4.
+  - RNG: `GameRng` membungkus ChaCha20 dengan seed eksplisit; keadaannya (seed + posisi) bisa diserialisasi. Aliran acak terpisah (misalnya bot per kursi) memakai `derive(seed, label)` = SHA-256(seed ‖ label).
+  - Provably fair (`core::fair`): mesin keadaan commit-reveal murni sesuai §5.4 dan D-013 (gagal komitmen = dikeluarkan; gagal pembukaan = ronde dibatalkan, nama peserta dicatat). `FairRecord::verify` memeriksa semua komitmen dan menghitung ulang seed ronde. Batas waktu dan jaringan di M9.
+  - `Player`: `Human` (menunggu UI), bot per game (crate `bots`), `Remote` di M9. `Match` menyatukan sesi, pemain, langkah, dan catatan fair, lalu mengekspor `Replay`.
+  - `Replay` (format 1): konfigurasi, jenis kursi, catatan fair, urutan perintah, hasil, hash keadaan akhir. `Replay::verify` memeriksa komitmen, seed ronde, legalitas setiap langkah saat diputar ulang, hasil, dan hash; `frames` menghasilkan keadaan per langkah untuk penampil.
+- Rujukan: SPEC §2.3, §2.5, §5.2–§5.4.
+
+### D-035 — Glyph UI hanya dari font yang dibundel
+- Tanggal / milestone: 2026-09-28 / M1
+- Diputuskan oleh: developer
+- Konteks: IBM Plex Mono punya box-drawing dan blok (`█ ░ ▐ ▌`), tetapi tidak punya `● ○ ■ □ ▸ ✗`. Peramban mengambil glyph itu dari font cadangan dengan lebar berbeda, sehingga papan Reversi tidak lurus.
+- Keputusan: bidak hitam `█`, putih `░`, langkah sah `·`, langkah terakhir `[█]`; kotak centang `[█]`, pilihan `(•)`, penanda menu `›`, gagal verify `[×]`, bar intensitas `█░`. Tes CI (`ui/src/lib/fonts.test.ts`) membaca tabel `cmap` font yang dibundel dan gagal bila teks UI, terjemahan, tutorial, manifest, atau teks tampilan game memakai karakter di luarnya.
+- Rujukan: SPEC §3 (font dibundel), §4 (grid karakter).
+
+### D-036 — Reversi: notasi, bot, dan tampilan
+- Tanggal / milestone: 2026-09-28 / M1
+- Diputuskan oleh: developer
+- Keputusan:
+  - Aturan standar Othello: posisi awal d4/e5 putih, d5/e4 hitam; hitam (kursi 0) jalan duluan; pass wajib dan hanya saat tidak ada langkah; selesai bila kedua pihak tidak bisa melangkah. Diuji dengan perft kedalaman 1–6 (4, 12, 56, 244, 1396, 8200).
+  - Perintah teks: petak `a1`..`h8` (huruf kecil, baris 1 di atas) dan `pass`. Konfigurasi opsional `posisi` (8 baris `.XO`) dan `giliran` untuk keadaan awal kustom (tutorial dan tes).
+  - Bot: level 1 langkah sah acak; level 2 satu langkah ke depan dengan bobot petak; level 3 alpha-beta 4 langkah (bobot + mobilitas) dan hitungan eksak bila petak kosong ≤ 8. Uji kekuatan saat ini: level 2 menang 18/20 atas level 1; level 3 menang 10/10 atas level 1 dan 10/10 atas level 2. Acak bot dari RNG turunan seed ronde.
+  - UI: papan satu kontrol ber-role grid (klik sel, atau panah + Enter/Spasi), sorotan tutorial di sel, animasi balik singkat yang mati saat reduced motion.
+- Rujukan: SPEC §6.1, §7, §8.
+
+### D-037 — Pertandingan singleplayer, penyimpanan replay, verify otomatis
+- Tanggal / milestone: 2026-09-28 / M1
+- Diputuskan oleh: developer (dalam batas SPEC §5.4, §2.5)
+- Keputusan:
+  - Singleplayer: host = aplikasi (seed dari sumber acak OS), peserta = pemain lokal (seed dari pengaturan "Seed pemain" bila diisi hex 64, selain itu acak). Komitmen keduanya tampil sejak langkah pertama; seed dan seed ronde dibuka setelah selesai, lalu `verify` dijalankan otomatis dan setiap pemeriksaannya ditampilkan.
+  - Replay disimpan di SQLite (`kyusin-store`, berkas `kyusin.sqlite` di folder data aplikasi) untuk setiap pertandingan, termasuk yang ditinggalkan di tengah jalan. Waktu mulai dari jam dinding aplikasi, bukan dari game.
+  - UI: layar game berisi pilihan lawan (level bot) dan posisi, daftar replay terakhir, dan `man`; layar pertandingan dengan panel provably fair dan daftar langkah; penampil replay langkah demi langkah dengan verify. Perintah konsol baru: `play <id> [level]`, `verify`.
+  - Boot Verbose menampilkan lokasi basis data dan apakah berhasil dibuka.
+- Rujukan: SPEC §2.3, §2.5, §5.4, §6.7 (chip menyusul M4).
 
 ## Pertanyaan terbuka
 

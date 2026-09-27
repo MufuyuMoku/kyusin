@@ -46,4 +46,6 @@
 - Menu, `help`, `man`, dan autocomplete dibangkitkan dari manifest, bukan ditulis tangan.
 - Kontrol visual adalah cara utama bermain; perintah teks opsional tapi tetap wajib ada (protokol LAN/agen).
 - Definition of Done per game ada di SPEC §7; jangan menandai game selesai sebelum kesembilan poinnya terpenuhi.
-- Game baru = modul di `crates/games/src/<id>/` (+ `manifest.toml`), tutorial `tutorials/<id>.toml`, satu baris di `kyusin_games::builtin()`.
+- Game baru = modul di `crates/games/src/<id>/` (+ `manifest.toml`, `i18n.toml`), tutorial `tutorials/<id>.toml`, satu baris di `kyusin_games::builtin()`, bot di `crates/bots` (`levels`/`create`), dan kontrol visual di `ui/src/lib/games/` (`GAME_UI`).
+- Tes aturan ditulis dan di-commit sebelum mesin aturannya (contoh: Reversi, commit c73ee05).
+- Glyph UI hanya yang ada di IBM Plex Mono (D-035); `fonts.test.ts` memeriksanya.

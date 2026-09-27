@@ -12,7 +12,9 @@
 		gameCommands,
 		go,
 		home,
+		matchAct,
 		print,
+		startMatch,
 		startTutorial,
 		tutorialAct
 	} from '$lib/app.svelte';
@@ -86,6 +88,10 @@
 					print(t('console.unknown', { name: p.name }));
 					return;
 				case 'game': {
+					if (current().name === 'match' && app.match) {
+						await matchAct(p.command);
+						return;
+					}
 					if (!app.tutorial) {
 						print(t('console.no_game'));
 						return;
@@ -123,6 +129,26 @@
 				if (!findGame(a)) return print(t('console.unknown_game', { command: name, id: a }));
 				if (name === 'man') go({ name: 'game', id: a });
 				else await startTutorial(a);
+				return;
+			}
+			case 'play': {
+				const game = a ? findGame(a) : undefined;
+				if (!a) return print(t('console.play_usage'));
+				if (!game) return print(t('console.unknown_game', { command: name, id: a }));
+				if (!game.bot_levels) return print(t('console.no_bot', { id: a }));
+				const level = Number(b ?? 1);
+				if (!Number.isInteger(level) || level < 1 || level > game.bot_levels)
+					return print(t('console.play_usage'));
+				await startMatch(a, level, 0);
+				return;
+			}
+			case 'verify': {
+				const report =
+					current().name === 'replay' ? app.replay?.verify : current().name === 'match' ? app.match?.verify : null;
+				if (!report) return print(t('console.no_verify'));
+				for (const c of report.checks) print(`${c.ok ? '[✓]' : '[×]'} ${t(`verify.step.${c.step}` as Key)}`);
+				print(report.ok ? t('verify.ok') : t('verify.fail'));
+				if (report.error) print(report.error[lang()]);
 				return;
 			}
 			case 'menu':

@@ -9,7 +9,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M0 | selesai | 2026-09-27 | Kerangka, tema, CRT, navigasi, konsol, registry, runner + tes tutorial, CI lisensi. MPL-2.0 dijawab di Rev. 4 (D-022) |
 | M0b | selesai | 2026-09-27 | Efek CRT samar + slider, reduced motion baru, checkbox jujur, dua bahasa + cek terjemahan di CI |
 | M0c | selesai | 2026-09-27 | Tiga mode boot (Verbose, Sinematik, Sapaan) + Mati |
-| M1 | belum mulai | | |
+| M1 | selesai | 2026-09-28 | Kontrak final, provably fair + verify, replay, Reversi memenuhi §7 |
 | M2 | belum mulai | | |
 | M3 | belum mulai | | |
 | M4 | belum mulai | | |
@@ -30,8 +30,22 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 
 | Game | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | Selesai |
 |------|---|---|---|---|---|---|---|---|---|---------|
+| Reversi | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M1); rating lokal di M3 |
 
 ## Log sesi
+
+### 2026-09-28 — M1: kontrak, provably fair, replay, Reversi
+- Sebelum M1: perbaikan bug hasil uji M0c (D-033, navigasi panah macet di item nonaktif) dan daftar teks Sinematik + 14 sapaan untuk ditinjau klien.
+- Dikerjakan (D-034–D-037):
+  - Kontrak final `TurnGame`/`Session`/`Player`, `GameRng` (ChaCha20), provably fair commit-reveal dengan aturan kegagalan, `Match`, `Replay` + `verify`.
+  - Reversi: tes aturan ditulis dan di-commit lebih dulu (commit c73ee05), lalu mesin bitboard; tutorial dua bahasa, manifest, `man`.
+  - Bot Reversi tiga level; penyimpanan replay SQLite; backend pertandingan (seed OS, komitmen di awal, verify otomatis, replay tersimpan).
+  - UI: papan Reversi (klik dan keyboard), layar pertandingan dengan panel provably fair, penampil replay, pilihan lawan/posisi, seed pemain di pengaturan, konsol `play`/`verify`, tutorial Reversi dengan papan dan sorotan sel.
+  - Glyph UI dibatasi ke font yang dibundel (D-035), dengan tes CI.
+- Tes: 75 tes Rust (inti 31 termasuk fair dan RNG; Reversi 13 termasuk perft 1–6; replay/verify 4 termasuk deteksi manipulasi di tiap tahap; bot 6 termasuk uji kekuatan; store 2; tutorial, runner, fixture, jembatan Tauri) dan 23 tes UI. `scripts/check.sh` lulus.
+- Dicek di peramban (backend tiruan): papan selaras sampai piksel, satu pertandingan penuh lewat klik sel sampai selesai (panel seed terbuka, verify tampil, replay tersimpan), penampil replay maju-mundur, kontrol keyboard papan (panah, Enter di petak tidak sah diabaikan, Spasi meletakkan bidak).
+- Belum/sisa: pertandingan dan tutorial Reversi di jendela Tauri asli (mesin Rust sungguhan, bot sungguhan, SQLite) belum dicek visual; mohon dicek klien. Rating Glicko-2 menyusul di M3.
+- Langkah berikutnya: M2 (catur) di sesi berikutnya.
 
 ### 2026-09-27 — M0c: tiga mode urutan boot
 - Dikerjakan (D-031, D-032):

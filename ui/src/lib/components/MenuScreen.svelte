@@ -24,7 +24,7 @@
 					<ul>
 						{#each cat.games as g (g.id)}
 							<li>
-								<NavButton onclick={() => go({ name: 'game', id: g.id })}>▸ {L(g.nama)}</NavButton>
+								<NavButton onclick={() => go({ name: 'game', id: g.id })}>› {L(g.nama)}</NavButton>
 								<span class="dim"
 									>{players(g.pemain_min, g.pemain_maks)}{g.rtp_line
 										? ` · ${L(g.rtp_line)}`
@@ -41,10 +41,10 @@
 	<Frame title={t('menu.system')}>
 		<ul>
 			<li>
-				<NavButton onclick={() => go({ name: 'settings' })}>▸ {t('menu.settings')}</NavButton>
+				<NavButton onclick={() => go({ name: 'settings' })}>› {t('menu.settings')}</NavButton>
 			</li>
 			<li>
-				<NavButton onclick={() => go({ name: 'help' })}>▸ {t('menu.help')}</NavButton>
+				<NavButton onclick={() => go({ name: 'help' })}>› {t('menu.help')}</NavButton>
 			</li>
 		</ul>
 	</Frame>

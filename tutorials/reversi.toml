@@ -3,7 +3,7 @@ judul = { id = "Reversi: dasar", en = "Reversi: basics" }
 
 [man.aturan]
 id = """
-Papan 8×8. Dua pemain: hitam (●) jalan duluan, lalu putih (○), bergantian.
+Papan 8×8. Dua pemain: hitam (█) jalan duluan, lalu putih (░), bergantian.
 
 Letakkan satu bidak di petak kosong sehingga satu atau lebih garis lurus
 bidak lawan (mendatar, tegak, atau diagonal) terapit di antara bidak baru dan
@@ -15,7 +15,7 @@ Permainan selesai bila kedua pemain tidak bisa melangkah. Yang punya bidak
 terbanyak menang; sama banyak berarti seri.
 """
 en = """
-8×8 board. Two players: black (●) moves first, then white (○), in turn.
+8×8 board. Two players: black (█) moves first, then white (░), in turn.
 
 Place one disc on an empty square so that one or more straight lines of your
 opponent's discs (horizontal, vertical, or diagonal) are flanked between the
@@ -40,8 +40,8 @@ Tab leaves the board. If you have no move, choose [ PASS ].
 """
 
 [[langkah]]
-teks.id = "Kamu hitam (●) dan jalan duluan. Titik · menandai petak tempat kamu boleh meletakkan bidak."
-teks.en = "You are black (●) and move first. A dot · marks each square where you may place a disc."
+teks.id = "Kamu hitam (█) dan jalan duluan. Titik · menandai petak tempat kamu boleh meletakkan bidak."
+teks.en = "You are black (█) and move first. A dot · marks each square where you may place a disc."
 
 [[langkah]]
 teks.id = "Letakkan bidak di d3. Bidak putih di d4 terapit antara d3 dan d5, jadi dibalik menjadi hitam."

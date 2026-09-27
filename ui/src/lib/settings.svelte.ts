@@ -29,6 +29,11 @@ export interface Settings {
 	bootMode: BootMode;
 	/** `null` = ikuti bahasa sistem (D-027). */
 	lang: Lang | null;
+	/**
+	 * Seed pemain untuk provably fair (SPEC §5.4): hex 64 karakter, atau
+	 * kosong untuk dibuat otomatis setiap ronde.
+	 */
+	playerSeed: string;
 }
 
 const KEY = 'kyusin.settings.v2';
@@ -39,8 +44,15 @@ export const DEFAULTS: Settings = {
 	intensity: 30,
 	consoleAlways: false,
 	bootMode: 'cinematic',
-	lang: null
+	lang: null,
+	playerSeed: ''
 };
+
+/** Seed pemain sah: kosong atau tepat 64 digit hex. */
+export function validPlayerSeed(text: string): boolean {
+	const t = text.trim();
+	return t === '' || /^[0-9a-fA-F]{64}$/.test(t);
+}
 
 function load(): Settings {
 	try {

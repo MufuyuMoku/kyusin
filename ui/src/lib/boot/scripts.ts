@@ -92,6 +92,17 @@ export function verbose(previous: SessionRecord, sessionAt: number): Script {
 			'info',
 			app.info?.data_dir ? t('verbose.data', { path: app.info.data_dir }) : t('verbose.data.none')
 		);
+		if (app.info?.database) {
+			log(
+				marks.info,
+				app.info.database_ok ? 'ok' : 'fail',
+				t(app.info.database_ok ? 'verbose.database' : 'verbose.database.fail', {
+					path: app.info.database
+				})
+			);
+		} else {
+			log(marks.info, 'info', t('verbose.database.none'));
+		}
 	}
 	log(
 		sessionAt,

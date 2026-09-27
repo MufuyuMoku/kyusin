@@ -262,7 +262,7 @@ fn text_view_in_both_languages() {
     for t in [&id, &en] {
         assert!(t.contains("a   b   c   d   e   f   g   h"), "{t}");
         assert!(t.contains('┌') && t.contains('┘'));
-        assert!(t.contains('●') && t.contains('○'));
+        assert!(t.contains('█') && t.contains('░'));
     }
     assert!(id.contains("Hitam 2") && id.contains("Putih 2"), "{id}");
     assert!(en.contains("Black 2") && en.contains("White 2"), "{en}");
