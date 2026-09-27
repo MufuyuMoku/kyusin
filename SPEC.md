@@ -66,7 +66,11 @@ Arah: layar CRT fosfor tahun 80-an. Seluruh aplikasi terasa seperti satu sesi te
   - Flicker mati secara bawaan.
   - *Reduced motion* hanya mematikan efek yang **bergerak** (flicker, scanline bergulir, animasi ketik di urutan boot). Efek statis (scanline diam, glow, lengkungan) tetap mengikuti pengaturan pemain.
   - Checkbox selalu mencerminkan keadaan sebenarnya. Efek yang dipaksa mati oleh *reduced motion* tampil nonaktif dengan keterangan alasannya, bukan tampil tercentang.
-- **Tata letak:** grid karakter monospace. Papan, kartu, meja, dan roda digambar dengan karakter box-drawing dan blok, bukan gambar raster. Game dengan animasi kontinu (slot, Plinko, Crash, pachinko, coin pusher, tembak ikan) digambar di canvas **dengan grid karakter yang sama**, supaya tetap satu gaya. Ini soal cara render, bukan jenis kontrak; jenis kontrak mengikuti §6.6.
+- **Tata letak:** grid karakter monospace untuk teks, menu, dan bingkai panel (box-drawing boleh di sini, karena satu blok teks utuh).
+- **Papan dan meja game digambar sebagai grid CSS atau SVG bergaya terminal, bukan teks box-drawing.** Sel berukuran tetap, garis 1px warna fosfor, koordinat dalam font monospace. Alasannya: papan dari baris teks rapuh terhadap font cadangan, `line-height`, perapian spasi, dan perbedaan mesin render (terbukti di M1).
+- **Bidak, kartu, dan simbol game berupa sprite piksel SVG buatan sendiri** (grid piksel kecil, misalnya 12×12, diwarnai token tema), bukan glyph font. Tampilannya seperti grafis komputer tahun 80-an dan tidak bergantung pada font. Bidak "terang" diisi penuh; bidak "gelap" berupa garis tepi atau warna redup, dan keduanya harus jelas terbedakan dari petak kosong di ketiga tema fosfor.
+- **Kursor keyboard, sorotan, hover, dan penanda langkah legal digambar sebagai lapisan di atas sel (misalnya garis tepi atau overlay) dan tidak boleh mengubah ukuran atau posisi sel mana pun.**
+- Game dengan animasi kontinu (slot, Plinko, Crash, pachinko, coin pusher, tembak ikan) digambar di canvas dengan gaya yang sama (sprite piksel, warna fosfor). Ini soal cara render, bukan jenis kontrak; jenis kontrak mengikuti §6.6.
 - **Input visual adalah cara utama.** Setiap game harus bisa dimainkan penuh dengan mouse/sentuh dan kontrol visual yang wajar untuk jenis game-nya (seret bidak, klik kartu, tombol taruhan, tuas slot, bidik-dan-tembak). Pemain tidak pernah dipaksa mengetik.
 - **Mode perintah (opsional).** Konsol `> _` di bawah layar, mati secara bawaan. Dibuka dengan tombol `:` atau `` ` `` dan bisa diatur agar selalu tampil. Memiliki autocomplete dan riwayat (panah atas/bawah). Untuk game real-time, mode perintah hanya mengatur taruhan dan menu, bukan kontrol gerak.
 - **Keselarasan gaya.** Kontrol visual tetap bergaya terminal: tombol berbentuk `[ HIT ]`, sorotan berupa blok terbalik, kursor berupa blok berkedip.
@@ -237,6 +241,7 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M0b | Perbaikan hasil uji klien: efek CRT samar menyala secara bawaan + slider intensitas, perilaku *reduced motion* yang baru, checkbox yang jujur (§4); dua bahasa Indonesia/Inggris untuk semua yang sudah ada, termasuk tutorial fixture dan cek kelengkapan terjemahan di CI |
 | M0c | Tiga mode urutan boot + mati (§4). Kumpulan sapaan menyiapkan syarat untuk data M3/M4 yang otomatis aktif begitu datanya ada |
 | M1 | Kontrak `TurnGame`/`Player`, RNG provably fair + `verify`, replay. Dibuktikan dengan **Reversi** memenuhi §7 |
+| M1b | Papan Reversi dirender ulang sesuai §4 (grid CSS/SVG + sprite piksel), komponen papan bersama untuk papan berpetak berikutnya, tes jendela asli dengan `tauri-driver` di CI Windows |
 | M2 | Catur: mesin, 3+ level, PGN, jam, tutorial. Skrip kalibrasi |
 | M3 | Profil, Glicko-2, riwayat, halaman statistik |
 | M4 | Mesin kartu bersama + ekonomi chip + **Blackjack** |
@@ -280,6 +285,7 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 
 - Git lokal dulu. Repo GitHub `MufuyuMoku/kyusin` dibuat di akun **MufuyuMoku**, privat, tanpa berkas lisensi. Git global di mesin klien masih memakai identitas clownface471, jadi atur `user.name`/`user.email` lokal repo ke identitas MufuyuMoku sebelum commit pertama.
 - **Dilarang otomasi input di tingkat sistem operasi** (SendKeys, xdotool, dan sejenisnya), karena input bisa masuk ke jendela lain. Uji UI lewat browser dengan backend tiruan dan tes otomatis; pengecekan di jendela Tauri asli dilakukan klien.
+- **Pengujian jendela asli:** `tauri-driver` (WebDriver) diizinkan, karena perintahnya hanya masuk ke aplikasi KyuSin, bukan ke sistem operasi. Setiap layar game wajib punya tes jendela asli yang memeriksa keselarasan posisi (misalnya semua sel satu kolom punya koordinat x yang sama) dan menyimpan tangkapan layar sebagai artefak. Pengecekan di browser dengan backend tiruan tidak lagi cukup sebagai bukti visual.
 - Tes aturan ditulis sebelum implementasi untuk mesin aturan dan pembayaran casino.
 - Jangan menambah fitur di luar SPEC. Usulan dicatat di `DECISIONS.md` bagian "Usulan", tidak langsung dikerjakan.
 - **Lokal vs cloud:** M0 dan semua pekerjaan yang butuh dicek secara visual dikerjakan di sesi lokal. Pekerjaan logika murni (mesin aturan, bot, simulasi RTP jutaan ronde, protokol) boleh dikerjakan di sesi cloud setelah repo ada di GitHub. Tes di cloud dijalankan pada crate di `crates/` saja (tanpa crate Tauri), jadi tidak perlu membuka jendela aplikasi.
@@ -292,3 +298,4 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 - **Revisi 5 (27 Sep 2026):** hasil uji klien atas M0 — efek CRT sebagai bumbu samar yang menyala secara bawaan, slider intensitas, *reduced motion* hanya mematikan efek bergerak, checkbox jujur, penjelasan urutan boot (§4); dua bahasa Indonesia/Inggris dengan kata perintah tetap Inggris (§4, §7, §10); milestone M0b (§9).
 - **Revisi 6 (27 Sep 2026):** mengesahkan D-028 — `to_text` menerima parameter bahasa (§5.2).
 - **Revisi 7 (27 Sep 2026):** urutan boot punya tiga mode — Verbose, Sinematik (bawaan), Sapaan (menembus dinding keempat) — plus mati (§4); milestone M0c (§9). Intensitas bawaan efek CRT 30% disahkan klien.
+- **Revisi 8 (28 Sep 2026):** hasil uji klien atas M1 — papan sebagai grid CSS/SVG, bidak dan simbol sebagai sprite piksel SVG (§4); pengujian jendela asli dengan `tauri-driver` (§11); milestone M1b (§9). Ditambahkan atas permintaan klien: kursor, sorotan, hover, dan penanda langkah legal hanya berupa lapisan dan tidak boleh mengubah ukuran atau posisi sel (§4).

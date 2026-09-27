@@ -271,14 +271,14 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - `Replay` (format 1): konfigurasi, jenis kursi, catatan fair, urutan perintah, hasil, hash keadaan akhir. `Replay::verify` memeriksa komitmen, seed ronde, legalitas setiap langkah saat diputar ulang, hasil, dan hash; `frames` menghasilkan keadaan per langkah untuk penampil.
 - Rujukan: SPEC §2.3, §2.5, §5.2–§5.4.
 
-### D-035 — Glyph UI hanya dari font yang dibundel
+### D-035 — Glyph UI hanya dari font yang dibundel (papan: digantikan oleh D-038)
 - Tanggal / milestone: 2026-09-28 / M1
 - Diputuskan oleh: developer
 - Konteks: IBM Plex Mono punya box-drawing dan blok (`█ ░ ▐ ▌`), tetapi tidak punya `● ○ ■ □ ▸ ✗`. Peramban mengambil glyph itu dari font cadangan dengan lebar berbeda, sehingga papan Reversi tidak lurus.
 - Keputusan: bidak hitam `█`, putih `░`, langkah sah `·`, langkah terakhir `[█]`; kotak centang `[█]`, pilihan `(•)`, penanda menu `›`, gagal verify `[×]`, bar intensitas `█░`. Tes CI (`ui/src/lib/fonts.test.ts`) membaca tabel `cmap` font yang dibundel dan gagal bila teks UI, terjemahan, tutorial, manifest, atau teks tampilan game memakai karakter di luarnya.
 - Rujukan: SPEC §3 (font dibundel), §4 (grid karakter).
 
-### D-036 — Reversi: notasi, bot, dan tampilan
+### D-036 — Reversi: notasi, bot, dan tampilan (tampilan papan digantikan oleh D-038)
 - Tanggal / milestone: 2026-09-28 / M1
 - Diputuskan oleh: developer
 - Keputusan:
@@ -297,6 +297,27 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - UI: layar game berisi pilihan lawan (level bot) dan posisi, daftar replay terakhir, dan `man`; layar pertandingan dengan panel provably fair dan daftar langkah; penampil replay langkah demi langkah dengan verify. Perintah konsol baru: `play <id> [level]`, `verify`.
   - Boot Verbose menampilkan lokasi basis data dan apakah berhasil dibuka.
 - Rujukan: SPEC §2.3, §2.5, §5.4, §6.7 (chip menyusul M4).
+
+### D-038 — Revisi 8: papan grid CSS/SVG, sprite piksel, tes jendela asli
+- Tanggal / milestone: 2026-09-28 / M1b
+- Diputuskan oleh: klien (SPEC Rev. 8, hasil uji M1)
+- Konteks: di jendela Tauri asli, baris papan Reversi tempat kursor berada bergeser ke kiri dan garis vertikal putus di antara baris. Pengecekan di peramban dengan tiruan tidak menangkapnya.
+- Keputusan:
+  - Papan dan meja game digambar sebagai grid CSS atau SVG bergaya terminal (sel ukuran tetap, garis 1px warna fosfor, koordinat monospace), bukan baris teks box-drawing. Box-drawing tetap boleh untuk teks, menu, dan bingkai panel.
+  - Bidak, kartu, dan simbol game berupa sprite piksel SVG buatan sendiri yang diwarnai token tema. Bidak terang diisi penuh; bidak gelap berupa garis tepi atau redup; keduanya jelas berbeda dari petak kosong di ketiga tema.
+  - Ditambahkan ke §4 atas permintaan klien: kursor keyboard, sorotan, hover, dan penanda langkah legal hanya berupa lapisan di atas sel dan tidak boleh mengubah ukuran atau posisi sel mana pun.
+  - `tauri-driver` (WebDriver ke aplikasi, bukan ke OS) diizinkan. Setiap layar game wajib punya tes jendela asli yang memeriksa keselarasan dan menyimpan tangkapan layar sebagai artefak. Untuk papan: kursor digerakkan ke setiap sel lewat keyboard dan hover, lalu posisi serta ukuran semua sel harus tetap sama persis.
+  - Komponen papan bersama untuk papan berpetak berikutnya (catur, dam).
+- Rujukan: SPEC §4, §9 (M1b), §11.
+
+### D-039 — Sapaan tambahan dan bentuk jamak
+- Tanggal / milestone: 2026-09-28 / M1b
+- Diputuskan oleh: klien
+- Keputusan:
+  - generic_4 tetap. Sapaan baru (pola syarat sama dengan yang lain): `evening` (prio 1, jam 18:00–21:59), `weekend` (prio 1, Sabtu/Minggu), `streak` (prio 2, sesi di ≥3 hari kalender berturut-turut, parameter `{n}` = jumlah hari), `generic_5`, `generic_6`, `generic_7` (prio 0). Teks persis seperti yang diberikan klien.
+  - Bentuk tunggal/jamak bahasa Inggris ditangani untuk semua sapaan berangka (dan teks berangka lain yang ikut terdampak, misalnya "1 minute ago"), memakai aturan jamak bahasa (`Intl.PluralRules`). Bahasa Indonesia tidak berubah bentuk.
+  - Catatan untuk M4: `chips_low` dipilih dari saldo **sebelum** tunjangan harian, lalu tunjangannya disebut sesudahnya dengan nada yang sama.
+- Rujukan: SPEC §4, D-031, D-032.
 
 ## Pertanyaan terbuka
 
