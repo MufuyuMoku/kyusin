@@ -46,6 +46,7 @@ Target platform: **Windows dan Linux**.
 **Aturan lisensi (wajib):** repo sengaja tanpa lisensi karena klien mungkin menjualnya atau menutup kodenya nanti. Hanya dependensi berlisensi MIT, Apache-2.0, BSD, zlib, ISC, OFL (font), atau yang setara.
 
 - **Dilarang GPL/LGPL/AGPL** untuk semua kode yang dikompilasi ke dalam atau dibundel bersama KyuSin: crate Rust dan paket npm yang masuk build produksi.
+- **MPL-2.0 diizinkan** selama berkasnya tidak diubah (copyleft-nya per berkas, tidak menjangkau kode KyuSin). Bila suatu saat berkas MPL perlu diubah, berhenti dan tanya klien.
 - **Pengecualian:** pustaka sistem operasi yang ditautkan secara dinamis dan **tidak ikut dibundel**, yaitu WebView2 di Windows serta webkit2gtk/GTK di Linux.
 - Karena itu paket Linux berupa **.deb** yang memakai pustaka sistem. Tidak ada AppImage (AppImage membundel pustaka tersebut).
 - CI: `cargo-deny` untuk crate Rust, dan pemeriksa lisensi untuk dependensi produksi npm (alat berlisensi permisif, pilihan developer).
@@ -59,14 +60,25 @@ Arah: layar CRT fosfor tahun 80-an. Seluruh aplikasi terasa seperti satu sesi te
   - Hijau P1: teks `#41FF00`, redup `#1F7A00`, latar `#050A05`.
   - Amber P3: teks `#FFB000`, redup `#7A5400`, latar `#0A0703`.
   - Putih P4: teks `#E6EEFF`, redup `#6B7385`, latar `#06070A`.
-- **Efek CRT:** scanline, glow halus, lengkungan layar, flicker. Semuanya bisa dimatikan satu per satu. Flicker mati secara bawaan, dan semua efek mati otomatis bila sistem meminta *reduced motion*.
+- **Efek CRT adalah bumbu, bukan fokus.** Tema fosfor adalah dasarnya; efek CRT hanya lapisan samar di atasnya.
+  - Scanline, glow, dan lengkungan layar **menyala secara bawaan dengan intensitas samar**: terlihat bila diperhatikan, tidak pernah mengganggu keterbacaan teks.
+  - Selain toggle per efek, ada satu **slider intensitas** (0–100%) dengan bawaan rendah.
+  - Flicker mati secara bawaan.
+  - *Reduced motion* hanya mematikan efek yang **bergerak** (flicker, scanline bergulir, animasi ketik di urutan boot). Efek statis (scanline diam, glow, lengkungan) tetap mengikuti pengaturan pemain.
+  - Checkbox selalu mencerminkan keadaan sebenarnya. Efek yang dipaksa mati oleh *reduced motion* tampil nonaktif dengan keterangan alasannya, bukan tampil tercentang.
 - **Tata letak:** grid karakter monospace. Papan, kartu, meja, dan roda digambar dengan karakter box-drawing dan blok, bukan gambar raster. Game dengan animasi kontinu (slot, Plinko, Crash, pachinko, coin pusher, tembak ikan) digambar di canvas **dengan grid karakter yang sama**, supaya tetap satu gaya. Ini soal cara render, bukan jenis kontrak; jenis kontrak mengikuti §6.6.
 - **Input visual adalah cara utama.** Setiap game harus bisa dimainkan penuh dengan mouse/sentuh dan kontrol visual yang wajar untuk jenis game-nya (seret bidak, klik kartu, tombol taruhan, tuas slot, bidik-dan-tembak). Pemain tidak pernah dipaksa mengetik.
 - **Mode perintah (opsional).** Konsol `> _` di bawah layar, mati secara bawaan. Dibuka dengan tombol `:` atau `` ` `` dan bisa diatur agar selalu tampil. Memiliki autocomplete dan riwayat (panah atas/bawah). Untuk game real-time, mode perintah hanya mengatur taruhan dan menu, bukan kontrol gerak.
 - **Keselarasan gaya.** Kontrol visual tetap bergaya terminal: tombol berbentuk `[ HIT ]`, sorotan berupa blok terbalik, kursor berupa blok berkedip.
-- **Satu momen khas:** urutan *boot* singkat saat aplikasi dibuka (bisa dilewati dengan tombol apa saja, dan bisa dimatikan di pengaturan). Selain itu, animasi hanya sebagai respons aksi pemain: kartu dibagikan, dadu dilempar, reel berputar.
+- **Satu momen khas:** urutan *boot* singkat saat aplikasi dibuka, yaitu beberapa baris teks ala komputer lama yang sedang menyala (memeriksa sistem, memuat cartridge) sebelum menu muncul. Bisa dilewati dengan tombol apa saja dan bisa dimatikan di pengaturan. Saat *reduced motion*, teksnya tampil langsung tanpa animasi ketik. Selain itu, animasi hanya sebagai respons aksi pemain: kartu dibagikan, dadu dilempar, reel berputar.
 - **Aksesibilitas keyboard:** fokus selalu terlihat, dan menu serta game giliran bisa dimainkan dengan keyboard (tanpa harus mengetik perintah).
 - **Suara:** bunyi beep/chiptune sederhana, bisa dimatikan.
+- **Bahasa: Indonesia dan Inggris.**
+  - Pilihan di pengaturan. Bawaan mengikuti bahasa sistem: Indonesia bila sistem berbahasa Indonesia, selain itu Inggris.
+  - Semua teks UI, tutorial, halaman `man`, dan pesan kesalahan tersedia dalam dua bahasa. Tidak ada teks UI yang ditulis langsung di kode; semuanya lewat berkas terjemahan.
+  - **Kata perintah tetap satu bahasa (Inggris)** di kedua bahasa (`hit`, `stand`, `bet`, `spin`, `help`, `man`), supaya protokol LAN/agen tetap stabil. Deskripsi perintah diterjemahkan.
+  - CI gagal bila ada kunci terjemahan yang hilang di salah satu bahasa, termasuk di berkas tutorial.
+  - Protokol (§10): klien menyebut bahasa `state.text` yang diinginkan saat terhubung (`id` atau `en`), bawaan `en`.
 
 ## 5. Arsitektur
 
@@ -129,16 +141,16 @@ Skema sumbangan seed (commit-reveal) untuk **setiap ronde**:
 4. Setelah ronde selesai, host menyiarkan **semua** seed. Setiap klien otomatis menjalankan `verify`: memeriksa komitmen, menghitung ulang seed ronde, memutar ulang ronde, dan membandingkan hasilnya. Hasil verifikasi ditampilkan.
 
 **Sifat yang dijamin:**
-- Tidak ada yang bisa memilih hasil. Seed host terkunci oleh komitmennya sebelum host melihat seed siapa pun, dan seed peserta lain terkunci sebelum mereka melihat apa pun. Paling jauh, host yang curang hanya bisa membatalkan ronde, dan setiap pembatalan selalu terlihat oleh semua pemain.
+- Tidak ada yang bisa **memilih** hasil. Seed host terkunci oleh komitmennya sebelum host melihat seed siapa pun, dan seed peserta lain terkunci sebelum mereka melihat apa pun. Paling jauh, host yang curang hanya bisa **membatalkan** ronde, dan setiap pembatalan selalu terlihat oleh semua pemain (lihat aturan kegagalan di bawah).
 - Peserta non-host tidak bisa mengetahui dek selama ronde, karena seed host baru dibuka setelah ronde. Menyadap seed peserta lain di jaringan tidak berguna, jadi koneksi LAN tidak perlu dienkripsi untuk keperluan ini.
 
 **Batasan yang diterima:** host yang menghitung dek, jadi aplikasi host yang dimodifikasi bisa melihat kartu tertutup. Batasan ini dijelaskan terus terang di tutorial dan `man` untuk mode LAN. Solusi kriptografis (mental poker) di luar cakupan.
 
 **Detail lain:**
-- **Aturan kegagalan** (batas waktu komitmen dan pembukaan seed):
-  - Gagal di tahap komitmen: peserta dikeluarkan dari ronde, dan ronde berjalan tanpa dia.
-  - Gagal di tahap pembukaan seed: ronde dibatalkan untuk semua pemain, semua taruhan dikembalikan, dan ronde berikutnya memakai komitmen baru. Peserta yang dinyatakan gagal dikeluarkan dari meja sampai dia bergabung ulang.
-  - Setiap pembatalan tampil di log meja, riwayat, dan `verify`, lengkap dengan nama peserta yang dinyatakan gagal dan penghitung pembatalan per sesi. Setiap klien mencatat waktu dia sendiri mengirim seed, supaya tuduhan palsu terlihat.
+- **Aturan kegagalan:**
+  - Gagal di **tahap komitmen** (sebelum ada seed yang dibuka): peserta itu dikeluarkan dari ronde, dan ronde berjalan tanpa dia.
+  - Gagal di **tahap pembukaan seed**: ronde **dibatalkan untuk semua pemain**, semua taruhan dikembalikan, dan ronde berikutnya memakai komitmen baru. Peserta yang dinyatakan gagal dikeluarkan dari meja sampai dia bergabung ulang.
+  - Setiap pembatalan tampil di log meja, di riwayat, dan di `verify`, lengkap dengan nama peserta yang dinyatakan gagal dan penghitung pembatalan per sesi. Setiap klien juga mencatat waktu dia sendiri mengirim seed, sehingga peserta yang dituduh gagal padahal sudah mengirim bisa melihat ketidakcocokannya.
 - Untuk agen, sumbangan seed ditangani pustaka klien protokol secara otomatis, jadi tidak bergantung pada kecepatan model.
 - **Singleplayer:** aplikasi berperan sebagai host, dan pemain lokal adalah peserta. Pemain boleh mengisi seed sendiri di pengaturan; bila kosong, dibuat otomatis.
 - Replay menyimpan semua seed ronde.
@@ -198,7 +210,7 @@ Sebuah game belum boleh ditandai selesai sebelum semua poin ini terpenuhi:
 3. Kontrol visual lengkap: seluruh game bisa dimainkan tanpa mengetik.
 4. Perintah teks lengkap (`parse_command`/`format_action`) + tes bolak-balik. Tetap wajib, karena ini protokol LAN/agen dan dipakai mode perintah.
 5. Tampilan terminal retro sesuai §4.
-6. **Tutorial interaktif** di `tutorials/<id>.toml`: langkah berisi keadaan awal, teks penjelasan, aksi yang diharapkan, dan petunjuk bila salah. Tutorial memandu lewat kontrol visual (menyorot bidak/kartu/tombol yang harus disentuh); perintah teks padanannya ditampilkan kecil sebagai info. Plus halaman `man <id>` (aturan lengkap, kontrol, perintah, RTP bila casino).
+6. **Tutorial interaktif** di `tutorials/<id>.toml`, dengan semua teks dalam bahasa Indonesia dan Inggris: langkah berisi keadaan awal, teks penjelasan, aksi yang diharapkan, dan petunjuk bila salah. Tutorial memandu lewat kontrol visual (menyorot bidak/kartu/tombol yang harus disentuh); perintah teks padanannya ditampilkan kecil sebagai info. Plus halaman `man <id>` (aturan lengkap, kontrol, perintah, RTP bila casino).
 7. **Tes tutorial:** CI memutar setiap tutorial terhadap mesin aturan asli dan gagal bila ada langkah yang tidak valid. CI juga gagal bila ada game terdaftar tanpa tutorial. Untuk `TickGame`, langkah tutorial memakai pemicu event ("tunggu event X") dalam skenario ber-seed tetap; tes CI memutar rekaman input yang disimpan bersama tutorial dan memastikan setiap langkah tercapai.
 8. Replay berfungsi.
 9. Manifest lengkap.
@@ -217,6 +229,7 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M | Isi |
 |---|-----|
 | M0 | Kerangka Tauri + workspace Rust, tema fosfor + efek CRT, navigasi visual + mode perintah opsional (help/autocomplete/riwayat), registry manifest, runner tutorial + tes tutorial di CI, `cargo-deny` + pemeriksa lisensi npm. Registry dan runner diuji dengan **game fixture minimal khusus tes** (bukan game katalog); kontrak final dibuat di M1 dan fixture disesuaikan |
+| M0b | Perbaikan hasil uji klien: efek CRT samar menyala secara bawaan + slider intensitas, perilaku *reduced motion* yang baru, checkbox yang jujur (§4); dua bahasa Indonesia/Inggris untuk semua yang sudah ada, termasuk tutorial fixture dan cek kelengkapan terjemahan di CI |
 | M1 | Kontrak `TurnGame`/`Player`, RNG provably fair + `verify`, replay. Dibuktikan dengan **Reversi** memenuhi §7 |
 | M2 | Catur: mesin, 3+ level, PGN, jam, tutorial. Skrip kalibrasi |
 | M3 | Profil, Glicko-2, riwayat, halaman statistik |
@@ -227,7 +240,7 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M8 | Papan & kartu non-casino sisanya (§6.1, §6.2). **→ Poin akhir 1** |
 | M9 | LAN: host/join, penemuan otomatis, lobi, chip meja, provably fair lintas jaringan, reconnect. **→ Poin akhir 2** |
 | M10 | Protokol agen (§10) + agen dummy uji (acak dan heuristik) yang memainkan setiap game giliran sampai selesai. **→ Poin akhir 3 siap, tanpa menunggu Nor-4** |
-| M11 | Installer Windows + paket Linux `.deb` lewat CI, halaman Bantuan |
+| M11 | Installer Windows + paket Linux `.deb` lewat CI, halaman Bantuan, halaman **Lisensi pihak ketiga** yang dibangkitkan otomatis dari dependensi (memenuhi kewajiban atribusi MIT/Apache/BSD dan pemberitahuan sumber MPL-2.0) |
 | M12 | Loader cartridge WASM: game baru bisa ditambah tanpa rebuild aplikasi, dengan satu game contoh dipindah ke WASM sebagai bukti |
 
 Milestone casino yang besar (M5, M6, M7) boleh dipecah menjadi sub-milestone (M5a, M5b, …) per kelompok game.
@@ -260,6 +273,7 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 ## 11. Aturan kerja Claude Code
 
 - Git lokal dulu. Repo GitHub `MufuyuMoku/kyusin` dibuat di akun **MufuyuMoku**, privat, tanpa berkas lisensi. Git global di mesin klien masih memakai identitas clownface471, jadi atur `user.name`/`user.email` lokal repo ke identitas MufuyuMoku sebelum commit pertama.
+- **Dilarang otomasi input di tingkat sistem operasi** (SendKeys, xdotool, dan sejenisnya), karena input bisa masuk ke jendela lain. Uji UI lewat browser dengan backend tiruan dan tes otomatis; pengecekan di jendela Tauri asli dilakukan klien.
 - Tes aturan ditulis sebelum implementasi untuk mesin aturan dan pembayaran casino.
 - Jangan menambah fitur di luar SPEC. Usulan dicatat di `DECISIONS.md` bagian "Usulan", tidak langsung dikerjakan.
 - **Lokal vs cloud:** M0 dan semua pekerjaan yang butuh dicek secara visual dikerjakan di sesi lokal. Pekerjaan logika murni (mesin aturan, bot, simulasi RTP jutaan ronde, protokol) boleh dikerjakan di sesi cloud setelah repo ada di GitHub. Tes di cloud dijalankan pada crate di `crates/` saja (tanpa crate Tauri), jadi tidak perlu membuka jendela aplikasi.
@@ -267,4 +281,6 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 ## 12. Riwayat revisi SPEC
 
 - **Revisi 2 (27 Sep 2026):** menjawab temuan sesi persiapan — skema seed gabungan (§2.3, §5.4); `ActionSpec`, `pending_players`, fase serentak, dan `View: Serialize` (§5.2); field manifest baru; pembagian giliran/real-time di arcade (§6.6); game antar-pemain tanpa rake (§6.3); angka ekonomi chip dan bandar LAN (§6.7); DoD dengan cakupan per jenis game dan toleransi statistik (§7); daftar game kompetitif dan pengecualian rating agen (§8); fixture di M0 dan paket `.deb` (§9); pengecualian lisensi pustaka sistem (§3); aktivasi endpoint dan `hint` khusus agen (§10). Aturan Dam tetap dipilih developer dan dicatat di `DECISIONS.md`.
-- **Revisi 3 (27 Sep 2026):** menjawab Q-001 dan Q-002 — render canvas untuk game beranimasi kontinu dipisahkan dari jenis kontrak (§4); `rtp` berupa angka untuk semua casino melawan rumah termasuk game solo, dan judul DoD §7.1 disesuaikan (§5.2, §7.1); jaminan provably fair dirumuskan ulang menjadi "tidak ada yang bisa memilih hasil", dengan aturan kegagalan: gagal komitmen = dikeluarkan dari ronde, gagal pembukaan seed = ronde dibatalkan dan taruhan dikembalikan, setiap pembatalan terlihat di log meja, riwayat, dan `verify` (§5.4).
+- **Revisi 3 (27 Sep 2026):** menjawab Q-001 dan Q-002 — aturan kegagalan dua tahap dan jaminan "tidak bisa memilih, hanya bisa membatalkan secara terlihat" (§5.4); §4 memakai istilah "animasi kontinu" sebagai soal render, bukan kontrak; `rtp` berupa angka untuk semua casino melawan rumah termasuk game solo (§5.2, §7).
+- **Revisi 4 (27 Sep 2026):** menjawab Q-003 — MPL-2.0 diizinkan tanpa modifikasi (§3); halaman lisensi pihak ketiga di M11 (§9); larangan otomasi input tingkat OS (§11).
+- **Revisi 5 (27 Sep 2026):** hasil uji klien atas M0 — efek CRT sebagai bumbu samar yang menyala secara bawaan, slider intensitas, *reduced motion* hanya mematikan efek bergerak, checkbox jujur, penjelasan urutan boot (§4); dua bahasa Indonesia/Inggris dengan kata perintah tetap Inggris (§4, §7, §10); milestone M0b (§9).

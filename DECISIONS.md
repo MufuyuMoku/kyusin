@@ -147,7 +147,7 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: tema, efek CRT, konsol selalu tampil, dan boot disimpan di localStorage jendela; riwayat konsol juga (maks. 100 baris). Pindah ke profil SQLite di M3.
 - Rujukan: SPEC §4, §9.
 
-### D-019 — Perintah global konsol dan perilaku tampilan
+### D-019 — Perintah global konsol dan perilaku tampilan (efek dan reduced motion digantikan oleh D-025, D-026)
 - Tanggal / milestone: 2026-09-27 / M0
 - Diputuskan oleh: developer
 - Keputusan: perintah global bergaya terminal: `help`, `ls`, `man`, `tutorial`, `menu`, `back`, `settings`, `theme`, `fx`, `clear`. Perintah game dan daftar id datang dari manifest dan `legal_actions`. Efek bawaan: scanline, glow, dan lengkungan menyala; flicker mati. Saat reduced motion: semua efek CRT mati dan urutan boot dilewati. Suara belum ada di M0 (tidak termasuk isi M0).
@@ -160,12 +160,49 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: plugin Vite kecil mencatat paket npm yang benar-benar masuk bundle klien; `scripts/check-npm-licenses.mjs` (tanpa dependensi tambahan) memeriksa lisensi daftar itu terhadap daftar izin. Saat ini: `svelte`, `@sveltejs/kit`, `@tauri-apps/api` (MIT / Apache-2.0 OR MIT).
 - Rujukan: SPEC §3, D-006.
 
-### D-021 — MPL-2.0 diizinkan di `deny.toml` (menunggu konfirmasi klien)
+### D-021 — MPL-2.0 diizinkan di `deny.toml` (digantikan oleh D-022)
 - Tanggal / milestone: 2026-09-27 / M0
 - Diputuskan oleh: developer, sementara; lihat Q-003
 - Konteks: Tauri 2 membawa crate MPL-2.0 (`cssparser`, `cssparser-macros`, `selectors`, `dtoa-short` lewat `tauri-utils`; `option-ext` lewat `dirs`). SPEC §3 tidak menyebut MPL-2.0 di daftar izin, tetapi juga tidak melarangnya; yang dilarang GPL/LGPL/AGPL.
 - Keputusan: MPL-2.0 diizinkan sebagai lisensi "setara". Kewajibannya per berkas (hanya berkas MPL yang diubah yang harus dibuka) dan tidak menjangkau kode KyuSin; kami tidak mengubah crate tersebut. Ini sama dengan kebijakan `deny.toml` Onsa. Tanpa ini, stack wajib SPEC §3 tidak bisa dipakai.
 - Rujukan: SPEC §3, Q-003.
+
+### D-022 — MPL-2.0 diizinkan selama berkasnya tidak diubah (menutup Q-003)
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: klien (SPEC Rev. 4)
+- Keputusan: MPL-2.0 diizinkan selama berkas MPL tidak diubah; copyleft-nya per berkas dan tidak menjangkau kode KyuSin. Bila suatu saat berkas MPL perlu diubah, berhenti dan tanya klien. `deny.toml` tetap mengizinkan MPL-2.0 dengan catatan ini.
+- Rujukan: SPEC §3, D-021, Q-003.
+
+### D-023 — Halaman Lisensi pihak ketiga di M11
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: klien (SPEC Rev. 4)
+- Keputusan: M11 menambah halaman "Lisensi pihak ketiga" yang dibangkitkan otomatis dari dependensi, memenuhi atribusi MIT/Apache/BSD dan pemberitahuan sumber MPL-2.0.
+- Rujukan: SPEC §9 (M11).
+
+### D-024 — Larangan otomasi input tingkat OS
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: klien (SPEC Rev. 4)
+- Konteks: di M0 developer sempat memakai SendKeys ke jendela Tauri; input masuk ke jendela lain.
+- Keputusan: dilarang SendKeys, xdotool, dan sejenisnya. UI diuji lewat browser dengan backend tiruan dan tes otomatis; pengecekan di jendela Tauri asli dilakukan klien.
+- Rujukan: SPEC §11.
+
+### D-025 — Efek CRT samar menyala secara bawaan + slider intensitas
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: klien (SPEC Rev. 5)
+- Keputusan: efek CRT adalah bumbu di atas tema fosfor. Scanline, glow, dan lengkungan menyala secara bawaan dengan intensitas samar yang tidak mengganggu keterbacaan; flicker mati. Ada satu slider intensitas 0–100% dengan bawaan rendah, selain toggle per efek.
+- Rujukan: SPEC §4.
+
+### D-026 — Reduced motion hanya mematikan efek bergerak; checkbox jujur
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: klien (SPEC Rev. 5)
+- Keputusan: saat reduced motion, hanya efek bergerak yang mati (flicker, scanline bergulir, animasi ketik boot); efek statis mengikuti pengaturan pemain. Urutan boot tetap tampil, teksnya langsung tanpa animasi ketik. Checkbox selalu mencerminkan keadaan sebenarnya; efek yang dipaksa mati tampil nonaktif dengan alasannya.
+- Rujukan: SPEC §4.
+
+### D-027 — Dua bahasa: Indonesia dan Inggris
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: klien (SPEC Rev. 5)
+- Keputusan: pilihan bahasa di pengaturan; bawaan Indonesia bila sistem berbahasa Indonesia, selain itu Inggris. Semua teks UI, tutorial, `man`, dan pesan kesalahan tersedia dalam dua bahasa lewat berkas terjemahan. Kata perintah tetap Inggris di kedua bahasa; deskripsinya diterjemahkan. CI gagal bila ada kunci terjemahan yang hilang, termasuk di tutorial. Protokol: klien menyebut bahasa `state.text` (`id`/`en`, bawaan `en`) saat terhubung.
+- Rujukan: SPEC §4, §7.6, §10.
 
 ## Pertanyaan terbuka
 
@@ -176,9 +213,7 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Status: terjawab (lihat D-014).
 
 ### Q-003 — Konfirmasi MPL-2.0 sebagai lisensi "setara"
-- Bagian SPEC: §3 (aturan lisensi)
-- Pertanyaan: apakah klien menerima MPL-2.0 untuk dependensi yang dibawa Tauri (D-021)? Bila tidak, satu-satunya jalan adalah mengganti Tauri, yang bertentangan dengan stack SPEC §3.
-- Status: menunggu klien.
+- Status: terjawab (lihat D-022).
 
 ## Usulan
 

@@ -29,7 +29,7 @@ allow = [
     # Copyleft per berkas: kewajibannya hanya pada berkas MPL itu sendiri bila
     # diubah, tidak menjangkau aplikasi di sekitarnya. Masuk lewat Tauri
     # (cssparser, selectors, dtoa-short lewat tauri-utils; option-ext lewat
-    # dirs), jadi tak terhindarkan dengan stack SPEC §3. D-017.
+    # dirs), jadi tak terhindarkan dengan stack SPEC §3. Diizinkan selama berkasnya tidak diubah (D-022).
     "MPL-2.0",
 ]
 confidence-threshold = 0.9

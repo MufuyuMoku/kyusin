@@ -20,7 +20,7 @@
 - Dependensi hanya MIT, Apache-2.0, BSD, zlib, ISC, OFL (font), atau setara. **Dilarang GPL/LGPL/AGPL** untuk semua yang dikompilasi/dibundel (crate Rust dan npm produksi).
 - Pengecualian: WebView2 (Windows) dan webkit2gtk/GTK (Linux), ditautkan dinamis dan tidak dibundel. Karena itu paket Linux hanya `.deb`, tanpa AppImage.
 - CI wajib: `cargo-deny` + pemeriksa lisensi dependensi produksi npm.
-- MPL-2.0 (dibawa Tauri) sementara diizinkan di `deny.toml`, menunggu konfirmasi klien (D-021, Q-003).
+- MPL-2.0 diizinkan **selama berkasnya tidak diubah**. Bila berkas MPL perlu diubah, berhenti dan tanya klien (D-022).
 - Stockfish hanya alat kalibrasi di mesin developer: tidak masuk repo, tidak ikut dikirim.
 
 ## Aturan kerja (SPEC §11, §9)
@@ -28,7 +28,13 @@
 - Tes aturan ditulis **sebelum** implementasi untuk mesin aturan dan pembayaran casino.
 - Jangan menambah fitur di luar SPEC. Usulan masuk `DECISIONS.md` bagian "Usulan", tidak langsung dikerjakan.
 - Git: repo `MufuyuMoku/kyusin` (privat). Git global mesin klien memakai identitas clownface471; repo ini memakai `user.name`/`user.email` lokal MufuyuMoku. Jangan mengubah konfigurasi global.
+- **Dilarang otomasi input tingkat OS** (SendKeys, xdotool, dsb.). Uji UI lewat browser dengan backend tiruan dan tes otomatis; jendela Tauri asli dicek klien (SPEC §11).
 - **Lokal vs cloud:** M0 dan semua pekerjaan yang perlu dicek visual dikerjakan di sesi lokal. Logika murni (mesin aturan, bot, simulasi RTP, protokol) boleh di sesi cloud; tes cloud hanya pada crate di `crates/` (tanpa crate Tauri).
+
+## Bahasa (SPEC §4, D-027)
+- Indonesia dan Inggris. Tidak ada teks UI langsung di kode: semua lewat berkas terjemahan (UI: `ui/src/lib/i18n/*.json`; Rust: `crates/core/i18n/*.toml`; manifest/tutorial: tabel `{ id, en }`).
+- Kata perintah tetap Inggris (`help`, `take`, `bet`); deskripsinya diterjemahkan.
+- CI gagal bila ada kunci terjemahan yang hilang.
 
 ## Perintah
 - Cek seperti CI: `sh scripts/check.sh` (svelte-check, tes UI, build UI, lisensi npm, fmt, clippy, tes Rust termasuk tes tutorial, cargo-deny).
