@@ -1,10 +1,13 @@
 /**
  * Perintah Tauri yang dipakai antarmuka. Bentuknya mengikuti
  * `src-tauri/src/lib.rs`. Antarmuka tidak menyimpan aturan game apa pun:
- * katalog datang dari registry, aksi dikirim sebagai perintah teks.
+ * katalog datang dari registry, aksi dikirim sebagai perintah teks. Semua
+ * teks untuk pemain datang dalam dua bahasa (`Localized`), begitu juga pesan
+ * kesalahan yang dilempar perintah.
  */
 
 import { invoke, isTauri } from '@tauri-apps/api/core';
+import type { Localized } from './i18n.svelte';
 
 export type ParamKind =
 	| { type: 'int'; min: number; max: number; step: number }
@@ -16,13 +19,13 @@ export type ActionSpec =
 
 export interface CommandDoc {
 	pola: string;
-	ringkas: string;
+	ringkas: Localized;
 }
 
 /** Manifest cartridge (SPEC §5.2); kunci mengikuti SPEC. */
 export interface Game {
 	id: string;
-	nama: string;
+	nama: Localized;
 	kategori: string;
 	pemain_min: number;
 	pemain_maks: number;
@@ -34,24 +37,24 @@ export interface Game {
 	rtp: number | null;
 	tutorial: string;
 	perintah: CommandDoc[];
-	rtp_line: string | null;
+	rtp_line: Localized | null;
 }
 
 export interface Category {
 	key: string;
-	label: string;
+	label: Localized;
 	games: Game[];
 }
 
 export interface Step {
-	teks: string;
+	teks: Localized;
 	sebelum: string[];
 	aksi: string | null;
 	sorot: string[];
-	petunjuk: string | null;
+	petunjuk: Localized | null;
 }
 
-export type Feedback = { kind: 'correct' } | { kind: 'wrong'; hint: string };
+export type Feedback = { kind: 'correct' } | { kind: 'wrong'; hint: Localized };
 
 export interface ActionView {
 	spec: ActionSpec;
@@ -61,12 +64,12 @@ export interface ActionView {
 
 export interface TutorialState {
 	game: string;
-	title: string;
+	title: Localized;
 	index: number;
 	total: number;
 	finished: boolean;
 	step: Step | null;
-	view_text: string;
+	view_text: Localized;
 	actions: ActionView[];
 	feedback: Feedback | null;
 }
@@ -79,7 +82,7 @@ export interface AppInfo {
 type Api = {
 	app_info(): Promise<AppInfo>;
 	catalog(): Promise<Category[]>;
-	man(id: string): Promise<string>;
+	man(id: string): Promise<Localized>;
 	tutorial_start(id: string): Promise<TutorialState>;
 	tutorial_act(command: string): Promise<TutorialState>;
 	tutorial_next(): Promise<TutorialState>;

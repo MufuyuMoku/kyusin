@@ -1,37 +1,56 @@
 game = "fixture"
-judul = "Batang: dasar"
+judul = { id = "Batang: dasar", en = "Sticks: basics" }
 
 [config]
 batang = 7
 
-[man]
-aturan = """
+[man.aturan]
+id = """
 Ada setumpuk batang. Dua pemain bergantian mengambil 1, 2, atau 3 batang.
 Yang mengambil batang terakhir menang.
 
 Game ini hanya fixture untuk menguji registry dan runner tutorial; bukan
 game katalog.
 """
-kontrol = """
-Klik tombol [ TAKE n ] di bawah tumpukan. Dengan keyboard: Tab untuk
-berpindah tombol, Enter untuk memilih.
+en = """
+There is a pile of sticks. Two players take turns taking 1, 2, or 3 sticks.
+Whoever takes the last stick wins.
+
+This game is only a fixture for testing the registry and the tutorial
+runner; it is not a catalog game.
+"""
+
+[man.kontrol]
+id = """
+Klik tombol [ TAKE n ] di bawah tumpukan. Dengan keyboard: Tab atau panah
+untuk berpindah tombol, Enter untuk memilih.
+"""
+en = """
+Click a [ TAKE n ] button below the pile. With the keyboard: Tab or the arrow
+keys to move between buttons, Enter to choose.
 """
 
 [[langkah]]
-teks = "Ada 7 batang. Setiap giliran kamu boleh mengambil 1 sampai 3."
+teks.id = "Ada 7 batang. Setiap giliran kamu boleh mengambil 1 sampai 3."
+teks.en = "There are 7 sticks. Each turn you may take 1 to 3."
 
 [[langkah]]
-teks = "Ambil 3 batang supaya tersisa 4."
+teks.id = "Ambil 3 batang supaya tersisa 4."
+teks.en = "Take 3 sticks so that 4 are left."
 aksi = "take 3"
 sorot = ["aksi:take 3"]
-petunjuk = "Pilih tombol yang mengambil tiga batang."
+petunjuk.id = "Pilih tombol yang mengambil tiga batang."
+petunjuk.en = "Choose the button that takes three sticks."
 
 [[langkah]]
-teks = "Lawan mengambil 1, tersisa 3. Ambil semuanya untuk menang."
+teks.id = "Lawan mengambil 1, tersisa 3. Ambil semuanya untuk menang."
+teks.en = "Your opponent took 1, leaving 3. Take them all to win."
 sebelum = ["take 1"]
 aksi = "take 3"
 sorot = ["aksi:take 3"]
-petunjuk = "Batang terakhir menang: ambil ketiganya."
+petunjuk.id = "Batang terakhir menang: ambil ketiganya."
+petunjuk.en = "The last stick wins: take all three."
 
 [[langkah]]
-teks = "Kamu mengambil batang terakhir dan menang."
+teks.id = "Kamu mengambil batang terakhir dan menang."
+teks.en = "You took the last stick and won."

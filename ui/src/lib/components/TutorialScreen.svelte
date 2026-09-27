@@ -6,60 +6,58 @@
 -->
 <script lang="ts">
 	import { app, back, tutorialAct, tutorialNext } from '$lib/app.svelte';
+	import { L, t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
 
-	const t = $derived(app.tutorial);
+	const tut = $derived(app.tutorial);
 	const highlighted = $derived(
-		new Set((t?.step?.sorot ?? []).filter((s) => s.startsWith('aksi:')).map((s) => s.slice(5)))
+		new Set((tut?.step?.sorot ?? []).filter((s) => s.startsWith('aksi:')).map((s) => s.slice(5)))
 	);
-	const buttons = $derived(t?.actions.flatMap((a) => a.concrete ?? []) ?? []);
-
-	function label(command: string) {
-		return `[ ${command.toUpperCase()} ]`;
-	}
+	const buttons = $derived(tut?.actions.flatMap((a) => a.concrete ?? []) ?? []);
 </script>
 
-{#if t}
+{#if tut}
 	<div class="tut">
 		<div class="head">
-			<span class="display big">{t.title}</span>
+			<span class="display big">{L(tut.title)}</span>
 			<span class="dim">
-				{t.finished ? 'selesai' : `langkah ${t.index + 1}/${t.total}`}
+				{tut.finished ? t('tutorial.done') : t('tutorial.step', { i: tut.index + 1, n: tut.total })}
 			</span>
-			<button class="tbtn" data-nav onclick={back}>[ KELUAR ]</button>
+			<button class="tbtn" data-nav onclick={back}>[ {t('action.exit')} ]</button>
 		</div>
 
-		<Frame title="PAPAN">
-			<pre class="view">{t.view_text}</pre>
+		<Frame title={t('tutorial.board')}>
+			<pre class="view">{L(tut.view_text)}</pre>
 		</Frame>
 
-		<Frame title="TUTORIAL">
-			{#if t.finished}
-				<p>Tutorial selesai.</p>
+		<Frame title={t('tutorial.frame')}>
+			{#if tut.finished}
+				<p>{t('tutorial.finished')}</p>
 				<div class="controls">
-					<button class="tbtn" data-nav onclick={back}>[ KEMBALI ]</button>
+					<button class="tbtn" data-nav onclick={back}>[ {t('action.back')} ]</button>
 				</div>
-			{:else if t.step}
-				<p>{t.step.teks}</p>
+			{:else if tut.step}
+				<p>{L(tut.step.teks)}</p>
 				<div class="controls">
-					{#if t.step.aksi}
+					{#if tut.step.aksi}
+						<!-- Label tombol = perintah teks, yang tetap Inggris di kedua bahasa. -->
 						{#each buttons as cmd (cmd)}
 							<button
 								class="tbtn"
 								class:sorot={highlighted.has(cmd)}
 								data-nav
-								onclick={() => tutorialAct(cmd)}>{label(cmd)}</button
+								onclick={() => tutorialAct(cmd)}>[ {cmd.toUpperCase()} ]</button
 							>
 						{/each}
 					{:else}
-						<button class="tbtn sorot" data-nav onclick={tutorialNext}>[ LANJUT ]</button>
+						<button class="tbtn sorot" data-nav onclick={tutorialNext}>[ {t('action.next')} ]</button>
 					{/if}
 				</div>
-				{#if t.feedback?.kind === 'wrong'}
-					<p class="hint" role="alert">! {t.feedback.hint}</p>
+				{#if tut.feedback?.kind === 'wrong'}
+					<p class="hint" role="alert">! {L(tut.feedback.hint)}</p>
 				{/if}
-				{#if t.step.aksi}
-					<p class="dim small">perintah: {t.step.aksi}</p>
+				{#if tut.step.aksi}
+					<p class="dim small">{t('tutorial.command', { command: tut.step.aksi })}</p>
 				{/if}
 			{/if}
 		</Frame>

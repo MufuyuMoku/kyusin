@@ -8,6 +8,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 use crate::action::{ActionSpec, find_match};
+use crate::i18n::{Lang, Localized, core};
 
 /// Nomor kursi pemain dalam satu permainan, mulai dari 0.
 pub type PlayerId = u8;
@@ -15,19 +16,38 @@ pub type PlayerId = u8;
 /// Seed 32 byte (SPEC §5.4).
 pub type Seed = [u8; 32];
 
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameError {
-    #[error("bukan giliran pemain {0}")]
     NotPending(PlayerId),
-    #[error("`{0}` bukan aksi yang sah saat ini")]
     Illegal(String),
-    #[error("perintah tidak dikenal: `{0}`")]
     Parse(String),
-    #[error("konfigurasi tidak sah: {0}")]
     Config(String),
-    #[error("permainan sudah selesai")]
     Over,
 }
+
+impl GameError {
+    /// Pesan untuk pemain dalam dua bahasa (SPEC §4, D-027).
+    pub fn message(&self) -> Localized {
+        let c = core();
+        match self {
+            GameError::NotPending(p) => {
+                c.localized("error.not_pending", &[("player", &(p + 1).to_string())])
+            }
+            GameError::Illegal(cmd) => c.localized("error.illegal", &[("command", cmd)]),
+            GameError::Parse(cmd) => c.localized("error.parse", &[("command", cmd)]),
+            GameError::Config(d) => c.localized("error.config", &[("detail", d)]),
+            GameError::Over => c.localized("error.over", &[]),
+        }
+    }
+}
+
+impl std::fmt::Display for GameError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.message().get(Lang::Id))
+    }
+}
+
+impl std::error::Error for GameError {}
 
 /// Hasil akhir sementara; bentuk final (termasuk skor dan chip) di M1/M4.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -50,7 +70,9 @@ pub trait TurnGame: Sized {
     /// Dipanggil hanya dengan aksi yang cocok dengan `legal_actions(player)`.
     fn apply(&mut self, player: PlayerId, action: Self::Action) -> Result<(), GameError>;
     fn view_for(&self, player: PlayerId) -> Self::View;
-    fn to_text(view: &Self::View) -> String;
+    /// Bentuk teks untuk manusia (`state.text`) dalam bahasa yang diminta
+    /// (SPEC §10, D-028).
+    fn to_text(view: &Self::View, lang: Lang) -> String;
     fn is_over(&self) -> bool;
     fn result(&self) -> Option<GameResult>;
     fn parse_command(&self, command: &str) -> Result<Self::Action, GameError>;
@@ -65,7 +87,7 @@ pub trait Session: Send {
     /// Memeriksa giliran dan `legal_actions`, lalu menerapkan perintah.
     fn act(&mut self, player: PlayerId, command: &str) -> Result<(), GameError>;
     fn view_data(&self, player: PlayerId) -> serde_json::Value;
-    fn view_text(&self, player: PlayerId) -> String;
+    fn view_text(&self, player: PlayerId, lang: Lang) -> String;
     fn is_over(&self) -> bool;
     fn result(&self) -> Option<GameResult>;
 }
@@ -98,8 +120,8 @@ impl<G: TurnGame + Send> Session for G {
         serde_json::to_value(self.view_for(player)).unwrap_or(serde_json::Value::Null)
     }
 
-    fn view_text(&self, player: PlayerId) -> String {
-        G::to_text(&self.view_for(player))
+    fn view_text(&self, player: PlayerId, lang: Lang) -> String {
+        G::to_text(&self.view_for(player), lang)
     }
 
     fn is_over(&self) -> bool {

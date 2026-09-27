@@ -1,0 +1,16 @@
+# Teks tampilan fixture (to_text) dalam dua bahasa.
+[id]
+"left" = "Batang tersisa: {n}"
+"you_win" = "Kamu menang."
+"player_wins" = "Pemain {p} menang."
+"your_turn" = "Giliranmu."
+"player_turn" = "Giliran pemain {p}."
+"summary" = "Pemain {p} mengambil batang terakhir."
+
+[en]
+"left" = "Sticks left: {n}"
+"you_win" = "You win."
+"player_wins" = "Player {p} wins."
+"your_turn" = "Your turn."
+"player_turn" = "Player {p}'s turn."
+"summary" = "Player {p} took the last stick."

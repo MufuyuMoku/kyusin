@@ -20,7 +20,8 @@ export const app = $state({
 	/** Konsol sedang dibuka lewat `:` atau `` ` ``. */
 	consoleOpen: false,
 	output: [] as string[],
-	error: null as string | null
+	/** Kesalahan memuat katalog (teks backend dua bahasa atau lainnya). */
+	error: null as unknown
 });
 
 export function current(): Screen {

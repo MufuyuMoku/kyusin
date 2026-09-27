@@ -8,9 +8,19 @@ use kyusin_core::game::{GameResult, create_session};
 use kyusin_core::{
     ActionSpec, Cartridge, GameError, Param, ParamKind, PlayerId, RegistryError, Seed, TurnGame,
 };
+use std::sync::OnceLock;
+
+use kyusin_core::i18n::{Catalog, Lang};
 use serde::{Deserialize, Serialize};
 
 pub const ID: &str = "fixture";
+
+/// Teks tampilan fixture dalam dua bahasa.
+pub fn catalog() -> &'static Catalog {
+    static CATALOG: OnceLock<Catalog> = OnceLock::new();
+    CATALOG
+        .get_or_init(|| Catalog::from_toml(include_str!("i18n.toml")).expect("fixture/i18n.toml"))
+}
 
 pub fn cartridge() -> Result<Cartridge, RegistryError> {
     Cartridge::new(
@@ -110,17 +120,19 @@ impl TurnGame for Batang {
         }
     }
 
-    fn to_text(view: &View) -> String {
+    fn to_text(view: &View, lang: Lang) -> String {
+        let c = catalog();
         let sticks = "│ ".repeat(view.batang as usize);
+        let p = |id: PlayerId| (id + 1).to_string();
         let status = match view.pemenang {
-            Some(p) if p == view.kamu => "Kamu menang.".to_string(),
-            Some(p) => format!("Pemain {} menang.", p + 1),
-            None if view.giliran == view.kamu => "Giliranmu.".to_string(),
-            None => format!("Giliran pemain {}.", view.giliran + 1),
+            Some(w) if w == view.kamu => c.text(lang, "you_win", &[]),
+            Some(w) => c.text(lang, "player_wins", &[("p", &p(w))]),
+            None if view.giliran == view.kamu => c.text(lang, "your_turn", &[]),
+            None => c.text(lang, "player_turn", &[("p", &p(view.giliran))]),
         };
         format!(
-            "Batang tersisa: {}\n\n  {}\n\n{status}",
-            view.batang,
+            "{}\n\n  {}\n\n{status}",
+            c.text(lang, "left", &[("n", &view.batang.to_string())]),
             sticks.trim_end()
         )
     }
@@ -132,7 +144,7 @@ impl TurnGame for Batang {
     fn result(&self) -> Option<GameResult> {
         self.winner.map(|w| GameResult {
             winners: vec![w],
-            summary: format!("Pemain {} mengambil batang terakhir.", w + 1),
+            summary: catalog().text(Lang::Id, "summary", &[("p", &(w + 1).to_string())]),
         })
     }
 
@@ -182,6 +194,23 @@ mod tests {
             Session::act(&mut g, 1, "take 1"),
             Err(GameError::NotPending(1))
         );
+    }
+
+    #[test]
+    fn catalog_has_both_languages_and_all_keys_resolve() {
+        assert_eq!(catalog().missing_keys(), Vec::<String>::new());
+        let mut g = game(2);
+        for lang in Lang::ALL {
+            let text = Session::view_text(&g, 0, lang);
+            // Kunci yang tidak ditemukan dikembalikan apa adanya.
+            assert!(
+                !text.contains("your_turn") && !text.starts_with("left"),
+                "{text}"
+            );
+        }
+        Session::act(&mut g, 0, "take 2").unwrap();
+        assert!(Session::view_text(&g, 0, Lang::En).contains("You win."));
+        assert!(Session::view_text(&g, 1, Lang::Id).contains("Pemain 1 menang."));
     }
 
     #[test]

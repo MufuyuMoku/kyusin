@@ -6,13 +6,15 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::i18n::{Lang, Localized, tr};
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub id: String,
-    /// Nama tampilan.
+    /// Nama tampilan dalam dua bahasa.
     #[serde(rename = "nama")]
-    pub name: String,
+    pub name: Localized,
     #[serde(rename = "kategori")]
     pub category: Category,
     #[serde(rename = "pemain_min")]
@@ -45,9 +47,9 @@ pub struct CommandDoc {
     /// Bentuk perintah, misalnya `take <n>`.
     #[serde(rename = "pola")]
     pub usage: String,
-    /// Deskripsi singkat.
+    /// Deskripsi singkat dalam dua bahasa; `pola` tetap Inggris.
     #[serde(rename = "ringkas")]
-    pub summary: String,
+    pub summary: Localized,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -103,16 +105,8 @@ impl Category {
         }
     }
 
-    pub fn label(self) -> &'static str {
-        match self {
-            Category::Papan => "Papan",
-            Category::Kartu => "Kartu & domino",
-            Category::CasinoMeja => "Casino: meja kartu",
-            Category::CasinoDadu => "Casino: dadu, roda, ubin",
-            Category::CasinoLotere => "Casino: lotere & instan",
-            Category::CasinoArcade => "Casino: arcade",
-            Category::Uji => "Uji (fixture)",
-        }
+    pub fn label(self, lang: Lang) -> String {
+        tr(lang, &format!("category.{}", self.key()))
     }
 }
 
@@ -158,8 +152,8 @@ impl Manifest {
                 self.id
             ));
         }
-        if self.name.trim().is_empty() {
-            errs.push("nama kosong".into());
+        if self.name.id.trim().is_empty() || self.name.en.trim().is_empty() {
+            errs.push("nama kosong di salah satu bahasa".into());
         }
         if self.min_players == 0 || self.min_players > self.max_players {
             errs.push(format!(
@@ -196,7 +190,10 @@ impl Manifest {
             errs.push("daftar perintah kosong".into());
         }
         for c in &self.commands {
-            if c.usage.trim().is_empty() || c.summary.trim().is_empty() {
+            if c.usage.trim().is_empty()
+                || c.summary.id.trim().is_empty()
+                || c.summary.en.trim().is_empty()
+            {
                 errs.push("setiap perintah wajib punya `pola` dan `ringkas`".into());
             }
         }
@@ -210,7 +207,7 @@ mod tests {
 
     const BASE: &str = r#"
         id = "contoh"
-        nama = "Contoh"
+        nama = { id = "Contoh", en = "Example" }
         kategori = "papan"
         pemain_min = 2
         pemain_maks = 2
@@ -222,7 +219,7 @@ mod tests {
         tutorial = "tutorials/contoh.toml"
         [[perintah]]
         pola = "move <dari> <ke>"
-        ringkas = "Pindahkan bidak"
+        ringkas = { id = "Pindahkan bidak", en = "Move a piece" }
     "#;
 
     fn with(extra: &str, replace: (&str, &str)) -> Manifest {
@@ -235,6 +232,15 @@ mod tests {
         let m = Manifest::from_toml(BASE).unwrap();
         assert_eq!(m.validate(), Vec::<String>::new());
         assert_eq!(m.rtp, None);
+    }
+
+    #[test]
+    fn name_needs_both_languages() {
+        let src = BASE.replace(
+            "nama = { id = \"Contoh\", en = \"Example\" }",
+            "nama = { id = \"Contoh\" }",
+        );
+        assert!(Manifest::from_toml(&src).is_err());
     }
 
     #[test]

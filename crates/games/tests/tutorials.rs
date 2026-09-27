@@ -36,8 +36,18 @@ fn every_registered_game_has_a_valid_tutorial() {
         if let Err(e) = validate(c.tutorial_src, c) {
             failures.push(format!("{id}: {e}"));
         }
-        if let Err(e) = man_page(c) {
-            failures.push(format!("{id}: man: {e}"));
+        match man_page(c) {
+            Err(e) => failures.push(format!("{id}: man: {e}")),
+            // Kunci terjemahan yang hilang muncul apa adanya (mis. `man.rules`).
+            Ok(page) => {
+                for text in [&page.id, &page.en] {
+                    for prefix in ["man.", "category.", "opponent.", "kind.", "rtp."] {
+                        if text.contains(prefix) {
+                            failures.push(format!("{id}: man memuat kunci mentah `{prefix}…`"));
+                        }
+                    }
+                }
+            }
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));

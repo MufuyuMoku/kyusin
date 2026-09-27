@@ -1,63 +1,108 @@
-//! Halaman `man <id>` yang dibangkitkan dari manifest dan tutorial
-//! (SPEC §5.2, §7.6).
+//! Halaman `man <id>` yang dibangkitkan dari manifest dan tutorial, dalam dua
+//! bahasa (SPEC §5.2, §7.6, D-027).
 
+use crate::i18n::{Lang, Localized, tr, trf};
 use crate::manifest::{Kind, Manifest, Opponent};
 use crate::registry::Cartridge;
 use crate::tutorial::{Tutorial, TutorialError};
 
 /// Baris RTP untuk layar info; `None` untuk game non-casino.
-pub fn rtp_line(m: &Manifest) -> Option<String> {
+pub fn rtp_line(m: &Manifest) -> Option<Localized> {
     if !m.category.is_casino() {
         return None;
     }
-    Some(match m.rtp {
-        Some(rtp) => format!("RTP {rtp:.2}% · house edge {:.2}%", 100.0 - rtp),
-        None => "antar-pemain, tanpa house edge".into(),
-    })
+    Some(Localized::build(|lang| match m.rtp {
+        Some(rtp) => trf(
+            lang,
+            "rtp.house",
+            &[
+                ("rtp", &format!("{rtp:.2}")),
+                ("edge", &format!("{:.2}", 100.0 - rtp)),
+            ],
+        ),
+        None => tr(lang, "rtp.pvp"),
+    }))
 }
 
-fn yes_no(b: bool) -> &'static str {
-    if b { "ya" } else { "tidak" }
+fn yes_no(lang: Lang, b: bool) -> String {
+    tr(lang, if b { "yes" } else { "no" })
 }
 
-pub fn man_page(cartridge: &Cartridge) -> Result<String, TutorialError> {
-    let m = &cartridge.manifest;
+pub fn man_page(cartridge: &Cartridge) -> Result<Localized, TutorialError> {
     let t = Tutorial::from_toml(cartridge.tutorial_src)?;
+    Ok(Localized::build(|lang| {
+        render(&cartridge.manifest, &t, lang)
+    }))
+}
+
+fn render(m: &Manifest, t: &Tutorial, lang: Lang) -> String {
     let players = if m.min_players == m.max_players {
         m.min_players.to_string()
     } else {
         format!("{}–{}", m.min_players, m.max_players)
     };
-    let opponent = match m.opponent {
-        Opponent::Bandar => "bandar",
-        Opponent::Bot => "bot",
-        Opponent::TidakAda => "tidak ada (solo)",
-    };
-    let kind = match m.kind {
-        Kind::Giliran => "giliran",
-        Kind::RealTime => "real-time",
-    };
+    let opponent = tr(
+        lang,
+        match m.opponent {
+            Opponent::Bandar => "opponent.bandar",
+            Opponent::Bot => "opponent.bot",
+            Opponent::TidakAda => "opponent.tidak-ada",
+        },
+    );
+    let kind = tr(
+        lang,
+        match m.kind {
+            Kind::Giliran => "kind.giliran",
+            Kind::RealTime => "kind.real-time",
+        },
+    );
+    let h = |key: &str| tr(lang, key);
 
     let mut out = String::new();
-    out.push_str(&format!("NAMA\n    {} ({})\n\n", m.name, m.id));
     out.push_str(&format!(
-        "RINGKAS\n    Kategori: {}\n    Jenis: {kind} · Pemain: {players} · Lawan: {opponent}\n    Rating lokal: {} · LAN: {} · Agen: {}\n",
-        m.category.label(),
-        yes_no(m.competitive),
-        yes_no(m.lan),
-        yes_no(m.agent),
+        "{}\n    {} ({})\n\n",
+        h("man.name"),
+        m.name.get(lang),
+        m.id
+    ));
+    out.push_str(&format!(
+        "{}\n    {}: {}\n    {}: {kind} · {}: {players} · {}: {opponent}\n    {}: {} · {}: {} · {}: {}\n",
+        h("man.summary"),
+        h("man.category"),
+        m.category.label(lang),
+        h("man.kind"),
+        h("man.players"),
+        h("man.opponent"),
+        h("man.rating"),
+        yes_no(lang, m.competitive),
+        h("man.lan"),
+        yes_no(lang, m.lan),
+        h("man.agent"),
+        yes_no(lang, m.agent),
     ));
     if let Some(rtp) = rtp_line(m) {
-        out.push_str(&format!("    {rtp}\n"));
+        out.push_str(&format!("    {}\n", rtp.get(lang)));
     }
-    out.push_str(&format!("\nATURAN\n{}\n", indent(&t.man.aturan)));
-    out.push_str(&format!("\nKONTROL\n{}\n", indent(&t.man.kontrol)));
-    out.push_str("\nPERINTAH\n");
+    out.push_str(&format!(
+        "\n{}\n{}\n",
+        h("man.rules"),
+        indent(t.man.aturan.get(lang))
+    ));
+    out.push_str(&format!(
+        "\n{}\n{}\n",
+        h("man.controls"),
+        indent(t.man.kontrol.get(lang))
+    ));
+    out.push_str(&format!("\n{}\n", h("man.commands")));
     let width = m.commands.iter().map(|c| c.usage.len()).max().unwrap_or(0);
     for c in &m.commands {
-        out.push_str(&format!("    {:<width$}  {}\n", c.usage, c.summary));
+        out.push_str(&format!(
+            "    {:<width$}  {}\n",
+            c.usage,
+            c.summary.get(lang)
+        ));
     }
-    Ok(out)
+    out
 }
 
 fn indent(text: &str) -> String {

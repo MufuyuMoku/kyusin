@@ -4,11 +4,15 @@
 //! `sebelum` tiap langkah (misalnya langkah lawan), jadi tutorial selalu
 //! dijalankan terhadap mesin aturan asli, bukan tiruan. Runner yang sama
 //! dipakai UI dan tes CI.
+//!
+//! Semua teks untuk pemain berupa tabel `{ id, en }`; bahasa yang hilang
+//! membuat berkas gagal dibaca, jadi CI gagal (SPEC §4, §7.6).
 
 use serde::{Deserialize, Serialize};
 
 use crate::action::{find_match, normalize};
 use crate::game::{GameError, PlayerId, Seed, Session};
+use crate::i18n::{Lang, Localized, core};
 use crate::registry::Cartridge;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -17,7 +21,7 @@ pub struct Tutorial {
     /// Id game yang diajarkan; harus sama dengan manifest.
     pub game: String,
     #[serde(rename = "judul")]
-    pub title: String,
+    pub title: Localized,
     /// Seed hex 64 karakter; kosong = semua nol.
     #[serde(default)]
     pub seed: Option<String>,
@@ -35,8 +39,8 @@ pub struct Tutorial {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ManDoc {
-    pub aturan: String,
-    pub kontrol: String,
+    pub aturan: Localized,
+    pub kontrol: Localized,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -44,7 +48,7 @@ pub struct ManDoc {
 pub struct Step {
     /// Teks penjelasan.
     #[serde(rename = "teks")]
-    pub text: String,
+    pub text: Localized,
     /// Perintah yang diterapkan sebelum langkah ini, masing-masing oleh
     /// satu-satunya pemain yang sedang ditunggu (biasanya lawan).
     #[serde(rename = "sebelum", default)]
@@ -57,31 +61,74 @@ pub struct Step {
     pub highlight: Vec<String>,
     /// Petunjuk bila pemain melakukan aksi lain.
     #[serde(rename = "petunjuk", default)]
-    pub hint: Option<String>,
+    pub hint: Option<Localized>,
 }
 
 /// Prefiks target sorotan untuk tombol aksi generik.
 pub const HIGHLIGHT_ACTION: &str = "aksi:";
 
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+/// Kesalahan tutorial. `Display` (bahasa Indonesia) untuk log dan CI;
+/// pemain melihat [`TutorialError::message`].
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TutorialError {
-    #[error("tutorial tidak bisa dibaca: {0}")]
     Parse(String),
-    #[error("tutorial untuk `{found}`, tetapi dipasang di game `{expected}`")]
-    WrongGame { expected: String, found: String },
-    #[error("seed harus hex 64 karakter")]
+    WrongGame {
+        expected: String,
+        found: String,
+    },
     BadSeed,
-    #[error("tutorial tidak punya langkah")]
     NoSteps,
-    #[error("halaman man belum lengkap (aturan/kontrol kosong)")]
     EmptyMan,
-    #[error("langkah {step}: {message}")]
-    Step { step: usize, message: String },
-    #[error("langkah {step}: {source}")]
-    Game { step: usize, source: GameError },
-    #[error("tutorial sudah selesai")]
+    /// Tutorial tidak valid; pesannya untuk penulis tutorial (CI).
+    Step {
+        step: usize,
+        message: String,
+    },
+    Game {
+        step: usize,
+        source: GameError,
+    },
     Finished,
 }
+
+impl TutorialError {
+    pub fn message(&self) -> Localized {
+        let c = core();
+        match self {
+            TutorialError::Parse(d) => c.localized("error.tutorial_parse", &[("detail", d)]),
+            TutorialError::WrongGame { expected, found } => c.localized(
+                "error.tutorial_wrong_game",
+                &[("expected", expected), ("found", found)],
+            ),
+            TutorialError::BadSeed => c.localized("error.tutorial_seed", &[]),
+            TutorialError::NoSteps => c.localized("error.tutorial_no_steps", &[]),
+            TutorialError::EmptyMan => c.localized("error.tutorial_empty_man", &[]),
+            TutorialError::Step { step, message } => c.localized(
+                "error.tutorial_step",
+                &[("step", &step.to_string()), ("detail", message)],
+            ),
+            TutorialError::Game { step, source } => Localized::build(|lang| {
+                c.text(
+                    lang,
+                    "error.tutorial_step",
+                    &[
+                        ("step", &step.to_string()),
+                        ("detail", source.message().get(lang)),
+                    ],
+                )
+            }),
+            TutorialError::Finished => c.localized("error.tutorial_finished", &[]),
+        }
+    }
+}
+
+impl std::fmt::Display for TutorialError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.message().get(Lang::Id))
+    }
+}
+
+impl std::error::Error for TutorialError {}
 
 impl Tutorial {
     pub fn from_toml(src: &str) -> Result<Self, TutorialError> {
@@ -118,7 +165,7 @@ pub enum Feedback {
     /// Aksi sesuai; langkah maju.
     Correct,
     /// Aksi lain dari yang diminta; keadaan tidak berubah.
-    Wrong { hint: String },
+    Wrong { hint: Localized },
 }
 
 pub struct TutorialRun {
@@ -191,14 +238,14 @@ impl TutorialRun {
         let step = self.step().ok_or(TutorialError::Finished)?;
         let Some(expected) = &step.action else {
             return Ok(Feedback::Wrong {
-                hint: "Langkah ini hanya bacaan; pilih [ LANJUT ].".into(),
+                hint: core().localized("tutorial.readonly", &[]),
             });
         };
         if normalize(command) != normalize(expected) {
             let hint = step
                 .hint
                 .clone()
-                .unwrap_or_else(|| format!("Coba `{expected}`."));
+                .unwrap_or_else(|| core().localized("tutorial.try", &[("command", expected)]));
             return Ok(Feedback::Wrong { hint });
         }
         let learner = self.tutorial.learner;
@@ -253,11 +300,16 @@ impl TutorialRun {
     }
 }
 
+/// Kosong di salah satu bahasa.
+fn blank(t: &Localized) -> bool {
+    t.id.trim().is_empty() || t.en.trim().is_empty()
+}
+
 /// Memutar seluruh tutorial terhadap mesin aturan asli dan melaporkan
 /// langkah pertama yang tidak valid (SPEC §7.7).
 pub fn validate(src: &str, cartridge: &Cartridge) -> Result<(), TutorialError> {
     let tutorial = Tutorial::from_toml(src)?;
-    if tutorial.man.aturan.trim().is_empty() || tutorial.man.kontrol.trim().is_empty() {
+    if blank(&tutorial.title) || blank(&tutorial.man.aturan) || blank(&tutorial.man.kontrol) {
         return Err(TutorialError::EmptyMan);
     }
     let mut run = TutorialRun::start(tutorial, cartridge)?;
@@ -267,8 +319,8 @@ pub fn validate(src: &str, cartridge: &Cartridge) -> Result<(), TutorialError> {
             step: step_no,
             message,
         };
-        if step.text.trim().is_empty() {
-            return Err(fail("teks kosong".into()));
+        if blank(&step.text) {
+            return Err(fail("teks kosong di salah satu bahasa".into()));
         }
         let Some(expected) = &step.action else {
             run.advance()?;
@@ -286,8 +338,10 @@ pub fn validate(src: &str, cartridge: &Cartridge) -> Result<(), TutorialError> {
                 "aksi `{expected}` tidak ada di legal_actions"
             )));
         }
-        if step.hint.as_deref().is_none_or(|h| h.trim().is_empty()) {
-            return Err(fail("langkah beraksi wajib punya `petunjuk`".into()));
+        if step.hint.as_ref().is_none_or(blank) {
+            return Err(fail(
+                "langkah beraksi wajib punya `petunjuk` dalam dua bahasa".into(),
+            ));
         }
         if step.highlight.is_empty() {
             return Err(fail(

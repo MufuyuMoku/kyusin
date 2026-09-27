@@ -1,8 +1,9 @@
 /*
  * Gaya terminal retro (SPEC §4). Tiga tema fosfor; warna hanya lewat token.
- * Efek CRT dipasang sebagai kelas `fx-*` pada .crt dan bisa dimatikan satu
- * per satu. Semua efek mati bila sistem meminta reduced motion (lihat
- * settings.svelte.ts).
+ * Efek CRT adalah bumbu samar di atas tema fosfor (D-025): kelas `fx-*`
+ * pada .crt menyalakan tiap efek, dan `--fx` (0–1, dari slider intensitas)
+ * mengatur kekuatannya. Reduced motion hanya mematikan efek yang bergerak
+ * (flicker, animasi); efek statis mengikuti pengaturan (D-026).
  */
 
 :root {
@@ -120,6 +121,7 @@ pre {
 /* ── Efek CRT ───────────────────────────────────────────────────────── */
 
 .crt {
+	--fx: 0.3;
 	position: fixed;
 	inset: 0;
 	background: var(--bg);
@@ -128,8 +130,8 @@ pre {
 
 .crt.fx-glow {
 	text-shadow:
-		0 0 1px color-mix(in srgb, var(--fg) 80%, transparent),
-		0 0 6px color-mix(in srgb, var(--fg) 35%, transparent);
+		0 0 calc(var(--fx) * 2px) color-mix(in srgb, var(--fg) calc(var(--fx) * 90%), transparent),
+		0 0 calc(var(--fx) * 10px) color-mix(in srgb, var(--fg) calc(var(--fx) * 45%), transparent);
 }
 
 .crt::before,
@@ -141,11 +143,12 @@ pre {
 	z-index: 50;
 }
 
+/* Scanline diam (tidak bergulir), jadi tidak terpengaruh reduced motion. */
 .crt.fx-scanline::after {
 	background: repeating-linear-gradient(
 		to bottom,
-		rgb(0 0 0 / 0.3) 0,
-		rgb(0 0 0 / 0.3) 1px,
+		rgb(0 0 0 / calc(var(--fx) * 0.45)) 0,
+		rgb(0 0 0 / calc(var(--fx) * 0.45)) 1px,
 		transparent 1px,
 		transparent 3px
 	);
@@ -153,11 +156,15 @@ pre {
 
 /* Lengkungan: sudut membulat dan vinyet seperti kaca tabung. */
 .crt.fx-curve {
-	border-radius: 18px / 14px;
+	border-radius: calc(var(--fx) * 36px) / calc(var(--fx) * 28px);
 }
 
 .crt.fx-curve::before {
-	background: radial-gradient(ellipse at center, transparent 62%, rgb(0 0 0 / 0.55) 100%);
+	background: radial-gradient(
+		ellipse at center,
+		transparent 60%,
+		rgb(0 0 0 / calc(var(--fx) * 0.8)) 100%
+	);
 	border-radius: inherit;
 }
 
@@ -166,12 +173,12 @@ pre {
 }
 
 .crt.fx-flicker:not(.fx-scanline)::after {
-	background: rgb(0 0 0 / 0.04);
+	background: rgb(0 0 0 / calc(var(--fx) * 0.12));
 }
 
 @keyframes flicker {
 	0% {
-		opacity: 0.92;
+		opacity: 0.85;
 	}
 	100% {
 		opacity: 1;
@@ -192,9 +199,10 @@ pre {
 	}
 }
 
+/* Reduced motion: hanya yang bergerak yang berhenti (D-026). Flicker sudah
+   dimatikan lewat kelasnya; ini untuk kedipan kursor dan sorotan. */
 @media (prefers-reduced-motion: reduce) {
 	.cursor,
-	.crt::after,
 	.sorot {
 		animation: none !important;
 	}

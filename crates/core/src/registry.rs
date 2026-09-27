@@ -87,14 +87,14 @@ impl Registry {
         self.cartridges.is_empty()
     }
 
-    /// Game per kategori, urut menurut kategori lalu nama tampilan.
+    /// Game per kategori, urut menurut kategori lalu id (nama tampilan bergantung bahasa).
     pub fn by_category(&self) -> Vec<(Category, Vec<&Manifest>)> {
         Category::ALL
             .iter()
             .filter_map(|cat| {
                 let mut games: Vec<&Manifest> =
                     self.manifests().filter(|m| m.category == *cat).collect();
-                games.sort_by(|a, b| a.name.cmp(&b.name));
+                games.sort_by(|a, b| a.id.cmp(&b.id));
                 (!games.is_empty()).then_some((*cat, games))
             })
             .collect()

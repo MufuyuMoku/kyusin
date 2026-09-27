@@ -16,9 +16,18 @@
 		startTutorial,
 		tutorialAct
 	} from '$lib/app.svelte';
-	import { EFFECT_IDS, GLOBAL_COMMANDS, History, THEME_IDS, complete, parse } from '$lib/commands';
+	import {
+		EFFECT_IDS,
+		GLOBAL_COMMANDS,
+		History,
+		LANG_IDS,
+		THEME_IDS,
+		complete,
+		parse
+	} from '$lib/commands';
 	import { helpText, lsText } from '$lib/help';
-	import { save, settings, type Effect, type Theme } from '$lib/settings.svelte';
+	import { errorText, lang, t, type Key } from '$lib/i18n.svelte';
+	import { forcedOff, save, settings, type Effect, type Lang, type Theme } from '$lib/settings.svelte';
 
 	const HISTORY_KEY = 'kyusin.history.v1';
 
@@ -74,23 +83,23 @@
 				case 'empty':
 					return;
 				case 'unknown':
-					print(`${p.name}: perintah tidak dikenal. Ketik \`help\`.`);
+					print(t('console.unknown', { name: p.name }));
 					return;
 				case 'game': {
 					if (!app.tutorial) {
-						print('Tidak ada permainan yang berjalan.');
+						print(t('console.no_game'));
 						return;
 					}
 					await tutorialAct(p.command);
 					const f = app.tutorial?.feedback;
-					if (f?.kind === 'wrong') print(`! ${f.hint}`);
+					if (f?.kind === 'wrong') print(`! ${f.hint[lang()]}`);
 					return;
 				}
 				case 'global':
 					return runGlobal(p.name, p.args);
 			}
 		} catch (e) {
-			print(String(e));
+			print(errorText(e));
 		}
 	}
 
@@ -99,7 +108,7 @@
 		switch (name) {
 			case 'help': {
 				const c = GLOBAL_COMMANDS.find((c) => c.name === a);
-				print(c ? `${c.name} ${c.args}  —  ${c.summary}` : helpText(app.catalog));
+				print(c ? `${c.name} ${c.args}  —  ${t(c.summary as Key)}` : helpText(app.catalog));
 				return;
 			}
 			case 'ls':
@@ -107,8 +116,11 @@
 				return;
 			case 'man':
 			case 'tutorial': {
-				if (!a) return print(`${name}: sebutkan id game. Contoh: ${name} ${ctx().gameIds[0] ?? '<id>'}`);
-				if (!findGame(a)) return print(`${name}: tidak ada game \`${a}\``);
+				if (!a)
+					return print(
+						t('console.need_id', { command: name, example: `${name} ${ctx().gameIds[0] ?? '<id>'}` })
+					);
+				if (!findGame(a)) return print(t('console.unknown_game', { command: name, id: a }));
 				if (name === 'man') go({ name: 'game', id: a });
 				else await startTutorial(a);
 				return;
@@ -121,14 +133,20 @@
 				if (current().name !== 'settings') go({ name: 'settings' });
 				return;
 			case 'theme':
-				if (!THEME_IDS.includes(a)) return print(`theme: pilih ${THEME_IDS.join(', ')}`);
+				if (!THEME_IDS.includes(a)) return print(t('console.theme_usage', { options: THEME_IDS.join(', ') }));
 				settings.theme = a as Theme;
 				save();
 				return;
 			case 'fx':
 				if (!EFFECT_IDS.includes(a) || (b !== 'on' && b !== 'off'))
-					return print(`fx: fx <${EFFECT_IDS.join('|')}> <on|off>`);
+					return print(t('console.fx_usage', { options: EFFECT_IDS.join('|') }));
 				settings.fx[a as Effect] = b === 'on';
+				save();
+				if (b === 'on' && forcedOff(a as Effect)) print(t('console.reduced', { effect: a }));
+				return;
+			case 'lang':
+				if (!LANG_IDS.includes(a)) return print(t('console.lang_usage'));
+				settings.lang = a as Lang;
 				save();
 				return;
 			case 'clear':
@@ -176,7 +194,7 @@
 </script>
 
 {#if visible}
-	<section class="console" aria-label="Konsol perintah">
+	<section class="console" aria-label={t('console.label')}>
 		{#if app.output.length}
 			<div class="output" bind:this={outputEl} aria-live="polite">
 				{#each app.output as line, i (i)}
@@ -200,7 +218,7 @@
 					onfocus={() => (app.consoleOpen = true)}
 					spellcheck="false"
 					autocomplete="off"
-					aria-label="Perintah"
+					aria-label={t('console.input')}
 				/>
 				<span class="mirror" aria-hidden="true"
 					>{value.slice(0, caret)}<span class="cursor">{value[caret] ?? ' '}</span></span

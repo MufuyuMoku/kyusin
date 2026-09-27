@@ -204,6 +204,23 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: pilihan bahasa di pengaturan; bawaan Indonesia bila sistem berbahasa Indonesia, selain itu Inggris. Semua teks UI, tutorial, `man`, dan pesan kesalahan tersedia dalam dua bahasa lewat berkas terjemahan. Kata perintah tetap Inggris di kedua bahasa; deskripsinya diterjemahkan. CI gagal bila ada kunci terjemahan yang hilang, termasuk di tutorial. Protokol: klien menyebut bahasa `state.text` (`id`/`en`, bawaan `en`) saat terhubung.
 - Rujukan: SPEC §4, §7.6, §10.
 
+### D-028 — `to_text` menerima bahasa
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: developer (kontrak masih sementara sampai M1, D-016)
+- Konteks: SPEC §5.2 menulis `to_text(&View)`, sedangkan §10 meminta `state.text` dalam bahasa pilihan klien.
+- Keputusan: `to_text(&View, Lang)`; `Session::view_text(player, Lang)`. `View` (data terstruktur) tidak bergantung bahasa.
+- Rujukan: SPEC §5.2, §10, D-027.
+
+### D-029 — Letak terjemahan dan pemeriksaannya
+- Tanggal / milestone: 2026-09-27 / M0b
+- Diputuskan oleh: developer
+- Keputusan:
+  - UI: `ui/src/lib/i18n/{id,en}.json`, dipakai lewat `t(kunci)`; teks dari backend dipilih dengan `L({ id, en })`. Bahasa bawaan dari `navigator.languages` (Indonesia bila `id*`, selain itu Inggris); pilihan pemain disimpan di pengaturan. Perintah konsol baru `lang <id|en>`.
+  - Rust: teks inti di `crates/core/i18n.toml` (`[id]`/`[en]`), teks tampilan per game di katalog game itu (fixture: `crates/games/src/fixture/i18n.toml`). Manifest (`nama`, `ringkas`) dan tutorial (`judul`, `man`, `teks`, `petunjuk`) berupa tabel `{ id, en }` yang keduanya wajib. Backend mengirim semua teks pemain, termasuk pesan kesalahan, dalam dua bahasa, jadi UI bisa berganti bahasa tanpa memanggil ulang.
+  - Pesan untuk penulis tutorial dan manifest (hanya muncul di CI) tetap satu bahasa.
+  - CI gagal bila: kunci hanya ada di satu bahasa (UI, katalog Rust), kode UI memakai kunci yang tidak ada, markup Svelte berisi teks mentah (dengan uji-diri pemeriksanya), tutorial/manifest kehilangan salah satu bahasa atau berisi teks kosong, atau halaman `man` memuat kunci mentah.
+- Rujukan: SPEC §4, §7.6, D-027.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

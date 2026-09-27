@@ -29,6 +29,7 @@ test('autocomplete argumen dari manifest', () => {
 	assert.equal(complete('fx glow o', ctx).value, 'fx glow o');
 	assert.equal(complete('fx glow of', ctx).value, 'fx glow off ');
 	assert.deepEqual(complete('take ', ctx).options, ['1', '2', '3']);
+	assert.deepEqual(complete('lang ', ctx).options, ['id', 'en']);
 });
 
 test('tanpa kecocokan, input tidak berubah', () => {

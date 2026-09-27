@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { app, back, current, load } from '$lib/app.svelte';
 	import { effectOn, settings } from '$lib/settings.svelte';
+	import { errorText, lang, t, type Key } from '$lib/i18n.svelte';
 	import Boot from '$lib/components/Boot.svelte';
 	import Console from '$lib/components/Console.svelte';
 	import GameScreen from '$lib/components/GameScreen.svelte';
@@ -9,26 +10,30 @@
 	import MenuScreen from '$lib/components/MenuScreen.svelte';
 	import SettingsScreen from '$lib/components/SettingsScreen.svelte';
 	import TutorialScreen from '$lib/components/TutorialScreen.svelte';
-	import { motion } from '$lib/settings.svelte';
 
-	let booting = $state(settings.boot && !motion.reduced);
+	// Saat reduced motion, boot tetap tampil tetapi tanpa animasi ketik (D-026).
+	let booting = $state(settings.boot);
 	let loaded = $state(false);
 	let main: HTMLElement | undefined = $state();
 
 	const screen = $derived(current());
 	const crumbs = $derived(
 		app.stack
-			.map((s) => ('id' in s ? `${s.name} ${s.id}` : s.name))
+			.map((s) => {
+				const name = t(`crumb.${s.name}` as Key);
+				return 'id' in s ? `${name} ${s.id}` : name;
+			})
 			.join(' / ')
 	);
 
 	$effect(() => {
 		document.documentElement.dataset.theme = settings.theme;
+		document.documentElement.lang = lang();
 	});
 
 	onMount(() => {
 		load()
-			.catch((e) => (app.error = String(e)))
+			.catch((e) => (app.error = e))
 			.finally(() => (loaded = true));
 	});
 
@@ -85,6 +90,7 @@
 
 <div
 	class="crt"
+	style:--fx={settings.intensity / 100}
 	class:fx-scanline={effectOn('scanline')}
 	class:fx-glow={effectOn('glow')}
 	class:fx-curve={effectOn('curve')}
@@ -101,12 +107,12 @@
 			<header>
 				<span class="display brand">KyuSin</span>
 				<span class="dim crumbs">{crumbs}</span>
-				<span class="dim keys">[:] perintah · [Esc] kembali</span>
+				<span class="dim keys">{t('keys.header')}</span>
 			</header>
 
 			<main bind:this={main}>
 				{#if app.error}
-					<p role="alert">Gagal memuat katalog: {app.error}</p>
+					<p role="alert">{t('error.load', { error: errorText(app.error) })}</p>
 				{:else if screen.name === 'menu'}
 					<MenuScreen />
 				{:else if screen.name === 'game'}

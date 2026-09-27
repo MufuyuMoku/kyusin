@@ -3,29 +3,32 @@
 -->
 <script lang="ts">
 	import { app, go } from '$lib/app.svelte';
+	import { L, t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
+
+	function players(min: number, max: number) {
+		return t('menu.players', { n: min === max ? min : `${min}–${max}` });
+	}
 </script>
 
 <div class="menu">
-	<Frame title="KATALOG">
+	<Frame title={t('menu.catalog')}>
 		{#if app.catalog.length === 0}
-			<p>Belum ada cartridge terpasang.</p>
-			<p class="dim">Game pertama (Reversi) datang di M1.</p>
+			<p>{t('menu.empty')}</p>
+			<p class="dim">{t('menu.empty_hint')}</p>
 		{:else}
 			{#each app.catalog as cat (cat.key)}
 				<div class="cat">
-					<div class="dim">{cat.label.toUpperCase()}</div>
+					<div class="dim">{L(cat.label).toUpperCase()}</div>
 					<ul>
 						{#each cat.games as g (g.id)}
 							<li>
 								<button class="tbtn" data-nav onclick={() => go({ name: 'game', id: g.id })}
-									>▸ {g.nama}</button
+									>▸ {L(g.nama)}</button
 								>
 								<span class="dim"
-									>{g.pemain_min === g.pemain_maks
-										? g.pemain_min
-										: `${g.pemain_min}–${g.pemain_maks}`} pemain{g.rtp_line
-										? ` · ${g.rtp_line}`
+									>{players(g.pemain_min, g.pemain_maks)}{g.rtp_line
+										? ` · ${L(g.rtp_line)}`
 										: ''}</span
 								>
 							</li>
@@ -36,10 +39,16 @@
 		{/if}
 	</Frame>
 
-	<Frame title="SISTEM">
+	<Frame title={t('menu.system')}>
 		<ul>
-			<li><button class="tbtn" data-nav onclick={() => go({ name: 'settings' })}>▸ Pengaturan</button></li>
-			<li><button class="tbtn" data-nav onclick={() => go({ name: 'help' })}>▸ Bantuan</button></li>
+			<li>
+				<button class="tbtn" data-nav onclick={() => go({ name: 'settings' })}
+					>▸ {t('menu.settings')}</button
+				>
+			</li>
+			<li>
+				<button class="tbtn" data-nav onclick={() => go({ name: 'help' })}>▸ {t('menu.help')}</button>
+			</li>
 		</ul>
 	</Frame>
 </div>

@@ -1,11 +1,15 @@
 //! Jembatan Tauri: UI hanya membaca katalog dari registry dan mengirim
 //! perintah teks; semua aturan ada di crate `kyusin-*` (SPEC §5).
+//!
+//! Semua teks untuk pemain dikirim dalam dua bahasa (`{ id, en }`), jadi UI
+//! bisa berganti bahasa tanpa bertanya ulang ke sini (D-027).
 
 use std::sync::Mutex;
 
 use kyusin_core::help::{man_page, rtp_line};
+use kyusin_core::i18n::core;
 use kyusin_core::tutorial::{Feedback, Step, TutorialRun};
-use kyusin_core::{ActionSpec, Manifest, Registry, Tutorial};
+use kyusin_core::{ActionSpec, Localized, Manifest, Registry, Tutorial};
 use serde::Serialize;
 use tauri::State;
 
@@ -20,7 +24,7 @@ struct AppState {
 #[derive(Serialize)]
 struct CategoryDto {
     key: &'static str,
-    label: &'static str,
+    label: Localized,
     games: Vec<GameDto>,
 }
 
@@ -28,7 +32,7 @@ struct CategoryDto {
 struct GameDto {
     #[serde(flatten)]
     manifest: Manifest,
-    rtp_line: Option<String>,
+    rtp_line: Option<Localized>,
 }
 
 #[derive(Serialize)]
@@ -53,7 +57,7 @@ fn catalog(state: State<'_, AppState>) -> Vec<CategoryDto> {
         .into_iter()
         .map(|(cat, games)| CategoryDto {
             key: cat.key(),
-            label: cat.label(),
+            label: Localized::build(|lang| cat.label(lang)),
             games: games
                 .into_iter()
                 .map(|m| GameDto {
@@ -66,12 +70,17 @@ fn catalog(state: State<'_, AppState>) -> Vec<CategoryDto> {
 }
 
 #[tauri::command]
-fn man(id: String, state: State<'_, AppState>) -> Result<String, String> {
-    let cartridge = state
-        .registry
-        .get(&id)
-        .ok_or_else(|| format!("man: tidak ada game `{id}`"))?;
-    man_page(cartridge).map_err(|e| e.to_string())
+fn man(id: String, state: State<'_, AppState>) -> Result<Localized, Localized> {
+    let cartridge = state.registry.get(&id).ok_or_else(|| unknown_game(&id))?;
+    man_page(cartridge).map_err(|e| e.message())
+}
+
+fn unknown_game(id: &str) -> Localized {
+    core().localized("error.unknown_game", &[("id", id)])
+}
+
+fn no_tutorial() -> Localized {
+    core().localized("error.no_tutorial", &[])
 }
 
 #[derive(Serialize)]
@@ -85,12 +94,12 @@ struct ActionDto {
 #[derive(Serialize)]
 struct TutorialDto {
     game: String,
-    title: String,
+    title: Localized,
     index: usize,
     total: usize,
     finished: bool,
     step: Option<Step>,
-    view_text: String,
+    view_text: Localized,
     actions: Vec<ActionDto>,
     feedback: Option<Feedback>,
 }
@@ -118,38 +127,35 @@ fn snapshot(run: &TutorialRun, feedback: Option<Feedback>) -> TutorialDto {
         total: run.len(),
         finished: run.is_finished(),
         step: run.step().cloned(),
-        view_text: session.view_text(learner),
+        view_text: Localized::build(|lang| session.view_text(learner, lang)),
         actions,
         feedback,
     }
 }
 
 #[tauri::command]
-fn tutorial_start(id: String, state: State<'_, AppState>) -> Result<TutorialDto, String> {
-    let cartridge = state
-        .registry
-        .get(&id)
-        .ok_or_else(|| format!("tutorial: tidak ada game `{id}`"))?;
-    let tutorial = Tutorial::from_toml(cartridge.tutorial_src).map_err(|e| e.to_string())?;
-    let run = TutorialRun::start(tutorial, cartridge).map_err(|e| e.to_string())?;
+fn tutorial_start(id: String, state: State<'_, AppState>) -> Result<TutorialDto, Localized> {
+    let cartridge = state.registry.get(&id).ok_or_else(|| unknown_game(&id))?;
+    let tutorial = Tutorial::from_toml(cartridge.tutorial_src).map_err(|e| e.message())?;
+    let run = TutorialRun::start(tutorial, cartridge).map_err(|e| e.message())?;
     let dto = snapshot(&run, None);
     *state.tutorial.lock().unwrap() = Some(run);
     Ok(dto)
 }
 
 #[tauri::command]
-fn tutorial_act(command: String, state: State<'_, AppState>) -> Result<TutorialDto, String> {
+fn tutorial_act(command: String, state: State<'_, AppState>) -> Result<TutorialDto, Localized> {
     let mut guard = state.tutorial.lock().unwrap();
-    let run = guard.as_mut().ok_or("tidak ada tutorial yang berjalan")?;
-    let feedback = run.submit(&command).map_err(|e| e.to_string())?;
+    let run = guard.as_mut().ok_or_else(no_tutorial)?;
+    let feedback = run.submit(&command).map_err(|e| e.message())?;
     Ok(snapshot(run, Some(feedback)))
 }
 
 #[tauri::command]
-fn tutorial_next(state: State<'_, AppState>) -> Result<TutorialDto, String> {
+fn tutorial_next(state: State<'_, AppState>) -> Result<TutorialDto, Localized> {
     let mut guard = state.tutorial.lock().unwrap();
-    let run = guard.as_mut().ok_or("tidak ada tutorial yang berjalan")?;
-    run.advance().map_err(|e| e.to_string())?;
+    let run = guard.as_mut().ok_or_else(no_tutorial)?;
+    run.advance().map_err(|e| e.message())?;
     Ok(snapshot(run, None))
 }
 
@@ -198,12 +204,39 @@ mod tests {
         assert_eq!(json["finished"], false);
         assert_eq!(json["step"]["aksi"], "take 3");
         assert_eq!(json["step"]["sorot"][0], "aksi:take 3");
+        assert_eq!(
+            json["step"]["teks"]["en"],
+            "Take 3 sticks so that 4 are left."
+        );
+        assert_eq!(json["title"]["id"], "Batang: dasar");
         assert_eq!(json["feedback"]["kind"], "wrong");
-        assert!(json["feedback"]["hint"].as_str().unwrap().contains("tiga"));
+        assert!(
+            json["feedback"]["hint"]["id"]
+                .as_str()
+                .unwrap()
+                .contains("tiga")
+        );
+        assert!(
+            json["feedback"]["hint"]["en"]
+                .as_str()
+                .unwrap()
+                .contains("three")
+        );
         assert_eq!(json["actions"][0]["usage"], "take <n>");
         assert_eq!(json["actions"][0]["spec"]["kind"], "template");
         assert_eq!(json["actions"][0]["concrete"][2], "take 3");
-        assert!(json["view_text"].as_str().unwrap().contains("7"));
+        assert!(
+            json["view_text"]["id"]
+                .as_str()
+                .unwrap()
+                .contains("Batang tersisa: 7")
+        );
+        assert!(
+            json["view_text"]["en"]
+                .as_str()
+                .unwrap()
+                .contains("Sticks left: 7")
+        );
     }
 
     #[test]
@@ -234,5 +267,7 @@ mod tests {
             assert!(json.get(key).is_some(), "kunci `{key}` hilang");
         }
         assert_eq!(json["perintah"][0]["pola"], "take <n>");
+        assert_eq!(json["perintah"][0]["ringkas"]["en"], "Take 1 to 3 sticks");
+        assert_eq!(json["nama"]["en"], "Fixture: Sticks");
     }
 }

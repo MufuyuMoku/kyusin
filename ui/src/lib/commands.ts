@@ -6,26 +6,30 @@
  */
 
 export interface CommandDef {
+	/** Kata perintah; selalu Inggris di kedua bahasa (SPEC §4). */
 	name: string;
 	args: string;
-	summary: string;
+	/** Kunci terjemahan deskripsinya. */
+	summary: `cmd.${string}`;
 }
 
 export const GLOBAL_COMMANDS: CommandDef[] = [
-	{ name: 'help', args: '', summary: 'Daftar perintah dan game' },
-	{ name: 'ls', args: '[kategori]', summary: 'Daftar game per kategori' },
-	{ name: 'man', args: '<id>', summary: 'Aturan, kontrol, perintah, dan RTP sebuah game' },
-	{ name: 'tutorial', args: '<id>', summary: 'Mulai tutorial interaktif' },
-	{ name: 'menu', args: '', summary: 'Kembali ke menu utama' },
-	{ name: 'back', args: '', summary: 'Kembali satu layar' },
-	{ name: 'settings', args: '', summary: 'Buka pengaturan' },
-	{ name: 'theme', args: '<p1|p3|p4>', summary: 'Ganti tema fosfor' },
-	{ name: 'fx', args: '<efek> <on|off>', summary: 'Nyalakan/matikan efek CRT' },
-	{ name: 'clear', args: '', summary: 'Bersihkan keluaran konsol' }
+	{ name: 'help', args: '', summary: 'cmd.help' },
+	{ name: 'ls', args: '[category]', summary: 'cmd.ls' },
+	{ name: 'man', args: '<id>', summary: 'cmd.man' },
+	{ name: 'tutorial', args: '<id>', summary: 'cmd.tutorial' },
+	{ name: 'menu', args: '', summary: 'cmd.menu' },
+	{ name: 'back', args: '', summary: 'cmd.back' },
+	{ name: 'settings', args: '', summary: 'cmd.settings' },
+	{ name: 'theme', args: '<p1|p3|p4>', summary: 'cmd.theme' },
+	{ name: 'fx', args: '<effect> <on|off>', summary: 'cmd.fx' },
+	{ name: 'lang', args: '<id|en>', summary: 'cmd.lang' },
+	{ name: 'clear', args: '', summary: 'cmd.clear' }
 ];
 
 export const THEME_IDS = ['p1', 'p3', 'p4'];
 export const EFFECT_IDS = ['scanline', 'glow', 'curve', 'flicker'];
+export const LANG_IDS = ['id', 'en'];
 
 export interface Context {
 	gameIds: string[];
@@ -76,6 +80,8 @@ function candidates(done: string[], ctx: Context): string[] {
 					return THEME_IDS;
 				case 'fx':
 					return EFFECT_IDS;
+				case 'lang':
+					return LANG_IDS;
 				case 'help':
 					return GLOBAL_COMMANDS.map((c) => c.name);
 			}
