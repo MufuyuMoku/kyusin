@@ -323,7 +323,9 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Tanggal / milestone: 2026-09-28 / M1b
 - Diputuskan oleh: developer
 - Konteks: tes tauri-driver pertama di CI gagal dengan "DevToolsActivePort file doesn't exist". msedgedriver mengeset `WEBVIEW2_USER_DATA_FOLDER` dan menunggu berkas itu di sana, tetapi Tauri memberi WebView2 folder datanya sendiri secara eksplisit, yang menang atas variabel tersebut. Dibuktikan lokal: port DevTools terbuka, berkasnya ditulis di folder aplikasi.
-- Keputusan: jendela utama dibuat di `setup` (bukan otomatis dari konfigurasi); bila `WEBVIEW2_USER_DATA_FOLDER` diset, folder itu dipakai sebagai folder data WebView. Basis data SQLite bisa dialihkan dengan `KYUSIN_DATA_DIR`. Runner tes jendela asli memakai keduanya dengan folder sementara, jadi tes tidak menyentuh pengaturan maupun replay pemain. Pemakaian biasa tidak berubah.
+- Keputusan:
+  - Jendela utama dibuat di `setup` (bukan otomatis dari konfigurasi); bila `WEBVIEW2_USER_DATA_FOLDER` diset, folder itu dipakai sebagai folder data WebView. Basis data SQLite bisa dialihkan dengan `KYUSIN_DATA_DIR`. Pemakaian biasa tidak berubah.
+  - Membiarkan msedgedriver meluncurkan aplikasi tetap gagal di CI (folder profilnya tidak sampai ke WebView2). Karena itu runner tes menjalankan aplikasi sendiri dengan `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` dan folder data sementara, lalu membuat sesi lewat tauri-driver yang meneruskan `ms:edgeOptions.debuggerAddress` ke msedgedriver (cara menempel ke WebView2 yang didokumentasikan Microsoft). Perintah tetap hanya masuk ke jendela KyuSin, dan tes tidak menyentuh pengaturan maupun replay pemain.
 - Rujukan: SPEC §11, D-038.
 
 ## Pertanyaan terbuka

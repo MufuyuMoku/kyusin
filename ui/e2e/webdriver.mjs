@@ -19,10 +19,19 @@ export class Session {
 		this.id = id;
 	}
 
-	static async start(base, application) {
+	/**
+	 * Menempel ke WebView2 aplikasi yang sudah berjalan dengan port DevTools
+	 * `debuggerAddress` (cara WebView2 yang didokumentasikan Microsoft).
+	 * Diteruskan tauri-driver ke msedgedriver apa adanya (D-040).
+	 */
+	static async attach(base, debuggerAddress) {
 		const res = await call(base, 'POST', '/session', {
 			capabilities: {
-				alwaysMatch: { browserName: 'wry', 'tauri:options': { application } }
+				alwaysMatch: {
+					browserName: 'webview2',
+					'ms:edgeChromium': true,
+					'ms:edgeOptions': { debuggerAddress }
+				}
 			}
 		});
 		return new Session(base, res.sessionId);

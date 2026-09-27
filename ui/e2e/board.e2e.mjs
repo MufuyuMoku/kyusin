@@ -61,15 +61,13 @@ function checkAlignment(cells) {
 	return { cell: `${w}×${h}`, pitch: [...steps][0] };
 }
 
-export async function run({ base, application, artifacts }) {
+export async function run({ base, debuggerAddress, artifacts }) {
 	mkdirSync(artifacts, { recursive: true });
-	const s = await Session.start(base, application);
+	const s = await Session.attach(base, debuggerAddress);
 	const log = (m) => console.log(`  ${m}`);
-	let saved = null;
 	try {
 		await s.waitFor(() => !!document.querySelector('.crt'), 'jendela KyuSin');
-		// Mulai bersih tanpa boot; pengaturan pemain dikembalikan di akhir.
-		saved = await s.exec(() => localStorage.getItem('kyusin.settings.v2'));
+		// Folder data sementara (D-040): mulai bersih tanpa boot.
 		await s.exec(() => {
 			localStorage.setItem(
 				'kyusin.settings.v2',
@@ -165,14 +163,6 @@ export async function run({ base, application, artifacts }) {
 		}
 		log('tema P3 dan P4: tetap selaras');
 	} finally {
-		try {
-			await s.exec((v) => {
-				if (v === null) localStorage.removeItem('kyusin.settings.v2');
-				else localStorage.setItem('kyusin.settings.v2', v);
-			}, saved);
-		} catch {
-			// Sesi mungkin sudah rusak; pengaturan lama tetap ada di berkasnya.
-		}
 		await s.end().catch(() => {});
 	}
 }

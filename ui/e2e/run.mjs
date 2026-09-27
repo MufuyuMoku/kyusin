@@ -40,15 +40,40 @@ const native =
 	(process.env.EdgeWebDriver ? join(process.env.EdgeWebDriver, 'msedgedriver.exe') : undefined);
 if (native) args.push('--native-driver', native);
 
+// Folder data sementara: WebView2 (WEBVIEW2_USER_DATA_FOLDER) dan SQLite
+// (KYUSIN_DATA_DIR), jadi data pemain tidak tersentuh (D-040).
 const dataDir = mkdtempSync(join(tmpdir(), 'kyusin-e2e-'));
-const driver = spawn('tauri-driver', args, {
-	stdio: ['ignore', 'inherit', 'inherit'],
-	env: { ...process.env, KYUSIN_DATA_DIR: dataDir }
-});
+const debugPort = 9222;
+const driver = spawn('tauri-driver', args, { stdio: ['ignore', 'inherit', 'inherit'] });
 driver.on('error', (e) => {
 	console.error(`tauri-driver gagal dijalankan: ${e.message}`);
 	process.exit(2);
 });
+
+// Aplikasi dijalankan sendiri dengan port DevTools tetap, lalu msedgedriver
+// menempel lewat debuggerAddress (D-040).
+const app = spawn(application, [], {
+	stdio: 'ignore',
+	env: {
+		...process.env,
+		KYUSIN_DATA_DIR: join(dataDir, 'data'),
+		WEBVIEW2_USER_DATA_FOLDER: join(dataDir, 'webview'),
+		WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${debugPort}`
+	}
+});
+
+async function devtools() {
+	for (let i = 0; i < 150; i++) {
+		try {
+			const res = await fetch(`http://127.0.0.1:${debugPort}/json/version`);
+			if (res.ok) return;
+		} catch {
+			// WebView2 belum siap
+		}
+		await new Promise((r) => setTimeout(r, 200));
+	}
+	throw new Error('port DevTools WebView2 tidak terbuka');
+}
 
 async function ready() {
 	for (let i = 0; i < 100; i++) {
@@ -66,14 +91,17 @@ async function ready() {
 let code = 0;
 try {
 	await ready();
+	await devtools();
 	console.log('papan Reversi (jendela asli):');
-	await board({ base, application, artifacts });
+	await board({ base, debuggerAddress: `127.0.0.1:${debugPort}`, artifacts });
 	console.log(`LULUS. Tangkapan layar di ${artifacts}`);
 } catch (e) {
 	console.error(`GAGAL: ${e.message}`);
 	code = 1;
 } finally {
+	app.kill();
 	driver.kill();
+	await new Promise((r) => setTimeout(r, 500));
 	try {
 		rmSync(dataDir, { recursive: true, force: true });
 	} catch {
