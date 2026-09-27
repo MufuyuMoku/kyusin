@@ -11,7 +11,7 @@ use kyusin_core::i18n::core;
 use kyusin_core::tutorial::{Feedback, Step, TutorialRun};
 use kyusin_core::{ActionSpec, Localized, Manifest, Registry, Tutorial};
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 /// Batas jumlah perintah konkret per templat yang dijadikan tombol.
 const BUTTON_LIMIT: usize = 12;
@@ -39,13 +39,21 @@ struct GameDto {
 struct AppInfo {
     name: &'static str,
     version: &'static str,
+    /// Folder data aplikasi menurut sistem; ditampilkan di boot Verbose
+    /// (SPEC §4). Belum ada yang disimpan di sana sampai SQLite (M1/M3).
+    data_dir: Option<String>,
 }
 
 #[tauri::command]
-fn app_info() -> AppInfo {
+fn app_info(app: AppHandle) -> AppInfo {
     AppInfo {
         name: "KyuSin",
         version: env!("CARGO_PKG_VERSION"),
+        data_dir: app
+            .path()
+            .app_data_dir()
+            .ok()
+            .map(|p| p.display().to_string()),
     }
 }
 

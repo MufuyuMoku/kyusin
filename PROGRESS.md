@@ -8,6 +8,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 |---|--------|--------------|---------|
 | M0 | selesai | 2026-09-27 | Kerangka, tema, CRT, navigasi, konsol, registry, runner + tes tutorial, CI lisensi. MPL-2.0 dijawab di Rev. 4 (D-022) |
 | M0b | selesai | 2026-09-27 | Efek CRT samar + slider, reduced motion baru, checkbox jujur, dua bahasa + cek terjemahan di CI |
+| M0c | selesai | 2026-09-27 | Tiga mode boot (Verbose, Sinematik, Sapaan) + Mati |
 | M1 | belum mulai | | |
 | M2 | belum mulai | | |
 | M3 | belum mulai | | |
@@ -31,6 +32,19 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 |------|---|---|---|---|---|---|---|---|---|---------|
 
 ## Log sesi
+
+### 2026-09-27 — M0c: tiga mode urutan boot
+- Dikerjakan (D-031, D-032):
+  - Pengaturan "Urutan boot": Verbose, Sinematik (bawaan), Sapaan, Mati.
+  - Verbose: baris ala booting Linux dengan stempel waktu dan status sungguhan (pengaturan, tema, efek, reduced motion, bahasa, backend, lokasi data dari Tauri, sesi sebelumnya, registry dan tiap cartridge, font yang termuat).
+  - Sinematik: diketik perlahan dengan jeda, diakhiri nama KyuSin.
+  - Sapaan: 14 sapaan bersyarat berbasis jam dan jeda sejak sesi terakhir; syarat profil, game terakhir, dan chip sudah disiapkan dan aktif sendiri begitu backend mengirim datanya (M3/M4). Tidak mengulang sapaan sesi sebelumnya; selalu ada cadangan.
+  - Semua mode bisa dilewati; tombol/klik yang melewati tidak ikut memilih menu. Saat reduced motion teks tampil langsung. Semua teks dua bahasa.
+  - Backend: `app_info` mengirim `data_dir`.
+- Tes: 16 tes UI (tambahan: pemilih sapaan, parameter sapaan sama di dua bahasa, kunci boot ada), 35 tes Rust. `scripts/check.sh` lulus.
+- Dicek visual (browser + tiruan, reduced motion): Verbose, Sinematik, Sapaan (12 hari tidak datang → sapaan lama tidak datang; dibuka lagi → "baru saja pergi"), Mati, layar pengaturan. Ditemukan dan diperbaiki: Enter/klik untuk melewati boot ikut mengaktifkan tombol menu pertama.
+- Belum/sisa: animasi ketik (tanpa reduced motion) belum terlihat di pane browser karena pane meminta reduced motion; mohon dicek klien di jendela Tauri.
+- Langkah berikutnya: M1 di sesi berikutnya.
 
 ### 2026-09-27 — M0b: hasil uji klien atas M0
 - Dikerjakan:

@@ -104,7 +104,7 @@ const unknown = (id: string): Localized => ({
 });
 
 export const devApi = {
-	app_info: async (): Promise<AppInfo> => ({ name: 'KyuSin', version: '0.1.0-dev' }),
+	app_info: async (): Promise<AppInfo> => ({ name: 'KyuSin', version: '0.1.0-dev', data_dir: null }),
 	catalog: async (): Promise<Category[]> => [
 		{
 			key: 'uji',

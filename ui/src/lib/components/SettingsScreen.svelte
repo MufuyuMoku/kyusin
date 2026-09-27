@@ -1,6 +1,6 @@
 <!--
   Pengaturan (SPEC §4): tema fosfor, efek CRT per efek + intensitas,
-  bahasa, konsol selalu tampil, dan urutan boot. Kotak centang selalu
+  bahasa, mode urutan boot, dan konsol selalu tampil. Kotak centang selalu
   menunjukkan keadaan sebenarnya: efek yang dipaksa mati reduced motion
   tampil nonaktif dengan alasannya (D-026).
 -->
@@ -8,6 +8,7 @@
 	import { back } from '$lib/app.svelte';
 	import { t, lang, type Key } from '$lib/i18n.svelte';
 	import {
+		BOOT_MODES,
 		EFFECTS,
 		INTENSITY_STEP,
 		LANGS,
@@ -102,6 +103,22 @@
 		{/each}
 	</Frame>
 
+	<Frame title={t('settings.boot')}>
+		{#each BOOT_MODES as mode (mode)}
+			<div>
+				<button
+					class="tbtn"
+					data-nav
+					aria-pressed={settings.bootMode === mode}
+					onclick={() => {
+						settings.bootMode = mode;
+						save();
+					}}>{settings.bootMode === mode ? '(●)' : '( )'} {t(`settings.boot.${mode}` as Key)}</button
+				>
+			</div>
+		{/each}
+	</Frame>
+
 	<Frame title={t('settings.other')}>
 		<div>
 			<button
@@ -112,17 +129,6 @@
 					settings.consoleAlways = !settings.consoleAlways;
 					save();
 				}}>{mark(settings.consoleAlways)} {t('settings.console_always')}</button
-			>
-		</div>
-		<div>
-			<button
-				class="tbtn"
-				data-nav
-				aria-pressed={settings.boot}
-				onclick={() => {
-					settings.boot = !settings.boot;
-					save();
-				}}>{mark(settings.boot)} {t('settings.boot')}</button
 			>
 		</div>
 	</Frame>

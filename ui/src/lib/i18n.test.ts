@@ -11,6 +11,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EFFECT_IDS, GLOBAL_COMMANDS, LANG_IDS, THEME_IDS } from './commands.ts';
+import { GREETINGS, greetingKey } from './boot/greetings.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const src = join(here, '..');
@@ -34,12 +35,25 @@ test('kunci terjemahan sama di id dan en, tanpa nilai kosong', () => {
 	assert.deepEqual(empty, []);
 });
 
+test('setiap sapaan punya parameter yang sama di kedua bahasa', () => {
+	for (const g of GREETINGS) {
+		const k = greetingKey(g.id);
+		const params = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+		assert.deepEqual(params(id[k]), params(en[k]), k);
+	}
+});
+
 test('setiap kunci yang dipakai kode ada di berkas terjemahan', () => {
 	const used = new Set<string>();
 	for (const f of files(src, ['.svelte', '.ts'])) {
 		if (f.endsWith('.test.ts')) continue;
 		const text = readFileSync(f, 'utf8');
 		for (const m of text.matchAll(/\bt\(\s*'([^']+)'/g)) used.add(m[1]);
+		// Kunci pilihan di dalam t(kondisi ? 'a' : 'b').
+		for (const m of text.matchAll(/\bt\(\s*[^'()]*\?\s*'([^']+)'\s*:\s*'([^']+)'/g)) {
+			used.add(m[1]);
+			used.add(m[2]);
+		}
 	}
 	// Kunci yang dibentuk dari nilai (template literal).
 	for (const c of GLOBAL_COMMANDS) used.add(c.summary);
@@ -47,6 +61,8 @@ test('setiap kunci yang dipakai kode ada di berkas terjemahan', () => {
 	for (const th of THEME_IDS) used.add(`settings.theme.${th}`);
 	for (const fx of EFFECT_IDS) used.add(`settings.fx.${fx}`);
 	for (const l of LANG_IDS) used.add(`settings.lang.${l}`);
+	for (const m of ['verbose', 'cinematic', 'greeting', 'off']) used.add(`settings.boot.${m}`);
+	for (const g of GREETINGS) used.add(greetingKey(g.id));
 
 	const missing = [...used].filter((k) => !(k in id) || !(k in en));
 	assert.deepEqual(missing, []);

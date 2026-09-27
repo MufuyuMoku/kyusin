@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { app, back, current, load } from '$lib/app.svelte';
 	import { effectOn, settings } from '$lib/settings.svelte';
 	import { errorText, lang, t, type Key } from '$lib/i18n.svelte';
+	import { startSession } from '$lib/boot/session';
 	import Boot from '$lib/components/Boot.svelte';
 	import Console from '$lib/components/Console.svelte';
 	import GameScreen from '$lib/components/GameScreen.svelte';
@@ -11,9 +11,17 @@
 	import SettingsScreen from '$lib/components/SettingsScreen.svelte';
 	import TutorialScreen from '$lib/components/TutorialScreen.svelte';
 
-	// Saat reduced motion, boot tetap tampil tetapi tanpa animasi ketik (D-026).
-	let booting = $state(settings.boot);
-	let loaded = $state(false);
+	// Sesi sebelumnya dibaca sekali saat aplikasi dibuka (untuk sapaan dan
+	// boot Verbose), lalu sesi ini dicatat.
+	const previous = startSession();
+	const sessionAt = performance.now();
+	const bootMode = settings.bootMode;
+	let booting = $state(bootMode !== 'off');
+	// Dimulai saat inisialisasi (bukan onMount) supaya Boot, yang terpasang
+	// lebih dulu, menunggu janji yang sama.
+	const ready = load().catch((e) => {
+		app.error = e;
+	});
 	let main: HTMLElement | undefined = $state();
 
 	const screen = $derived(current());
@@ -29,12 +37,6 @@
 	$effect(() => {
 		document.documentElement.dataset.theme = settings.theme;
 		document.documentElement.lang = lang();
-	});
-
-	onMount(() => {
-		load()
-			.catch((e) => (app.error = e))
-			.finally(() => (loaded = true));
 	});
 
 	// Fokus pindah ke kontrol pertama tiap kali layar berganti, supaya menu
@@ -97,11 +99,9 @@
 	class:fx-flicker={effectOn('flicker')}
 >
 	{#if booting}
-		<Boot
-			cartridges={loaded ? app.catalog.reduce((n, c) => n + c.games.length, 0) : 0}
-			version={app.info?.version ?? ''}
-			ondone={() => (booting = false)}
-		/>
+		{#if bootMode !== 'off'}
+			<Boot mode={bootMode} {ready} {previous} {sessionAt} ondone={() => (booting = false)} />
+		{/if}
 	{:else}
 		<div class="shell">
 			<header>

@@ -55,10 +55,39 @@ export function findGame(id: string) {
 	return games().find((g) => g.id === id);
 }
 
+/**
+ * Waktu (ms sejak jendela dibuka, `performance.now()`) saat tiap langkah
+ * startup benar-benar selesai. Boot Verbose menampilkannya apa adanya
+ * (SPEC §4: baris boot mencerminkan startup sungguhan).
+ */
+export const marks = {
+	settings: 0,
+	mount: 0,
+	info: null as number | null,
+	catalog: null as number | null,
+	fonts: null as number | null
+};
+
+/** Font yang dibundel dan apakah benar-benar termuat. */
+export const fonts: { name: string; ok: boolean }[] = [];
+
+const FONT_FACES = ['VT323', 'IBM Plex Mono'];
+
 export async function load() {
+	marks.mount = performance.now();
 	const a = await api();
 	app.info = await a.app_info();
+	marks.info = performance.now();
 	app.catalog = await a.catalog();
+	marks.catalog = performance.now();
+	await document.fonts.ready;
+	for (const name of FONT_FACES) {
+		// Memuat eksplisit supaya hasilnya tidak bergantung pada apakah teks
+		// dengan font itu sudah tampil.
+		const loaded = await document.fonts.load(`16px "${name}"`).catch(() => []);
+		fonts.push({ name, ok: loaded.length > 0 });
+	}
+	marks.fonts = performance.now();
 }
 
 export async function startTutorial(id: string) {

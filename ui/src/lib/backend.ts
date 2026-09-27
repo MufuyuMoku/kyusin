@@ -77,6 +77,14 @@ export interface TutorialState {
 export interface AppInfo {
 	name: string;
 	version: string;
+	/** Folder data aplikasi; `null` di luar Tauri. */
+	data_dir: string | null;
+	/**
+	 * Data profil untuk sapaan boot (SPEC §4). Belum dikirim backend; datang
+	 * di M3 (nama, game terakhir) dan M4 (chip). Sapaan yang membutuhkannya
+	 * aktif otomatis begitu ada.
+	 */
+	profile?: { name?: string; last_game?: string; chips?: number };
 }
 
 type Api = {

@@ -237,6 +237,18 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Semua mode bisa dilewati; saat reduced motion teks tampil langsung; semua teks dua bahasa.
 - Rujukan: SPEC §4, §9 (M0c).
 
+### D-032 — Rincian penerapan tiga mode boot
+- Tanggal / milestone: 2026-09-27 / M0c
+- Diputuskan oleh: developer (dalam batas D-031)
+- Keputusan:
+  - Pengaturan `bootMode` (`verbose`/`cinematic`/`greeting`/`off`, bawaan `cinematic`) menggantikan toggle `boot`; pengaturan lama dengan boot mati dimigrasikan menjadi `off`.
+  - Verbose menunggu startup selesai (maks. 3 detik) lalu hanya melaporkan hal yang benar-benar terjadi, diurutkan menurut waktu kejadian (`performance.now()` saat langkah selesai): pembacaan pengaturan, tema, efek dan intensitas, reduced motion, bahasa dan sumbernya, antarmuka, backend (Tauri atau tiruan dev), lokasi data dari Tauri (`app_data_dir`; kosong di peramban), sesi sebelumnya, registry dan tiap cartridge, font yang benar-benar termuat (`document.fonts.load`), lalu siap. Langkah yang gagal tampil `[FAILED]`.
+  - Sinematik: label proyek, tiga baris diketik perlahan (jumlah cartridge, tema dan bahasa, siap), diakhiri nama KyuSin.
+  - Sapaan: 14 sapaan bersyarat dengan prioritas (sesi pertama, lama tidak datang, baru saja pergi, larut malam, pagi sekali, jam makan siang; chip rendah/tinggi, game terakhir, nama profil untuk M3/M4; empat cadangan umum). Dipilih yang syaratnya terpenuhi dan prioritasnya tertinggi, acak bila setara, tidak sama dengan sapaan sesi sebelumnya. Data M3/M4 dibaca dari `app_info.profile` yang belum dikirim backend, jadi sapaan itu aktif sendiri begitu backend mengirimnya.
+  - Catatan sesi (waktu sesi terakhir, sapaan terakhir) disimpan di penyimpanan jendela (`kyusin.session.v1`), seperti pengaturan (D-018).
+  - Tombol atau klik yang melewati boot "ditelan" supaya tidak ikut memilih tombol menu yang baru muncul.
+- Rujukan: SPEC §4, D-031.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

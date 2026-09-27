@@ -6,10 +6,12 @@
 export type Theme = 'p1' | 'p3' | 'p4';
 export type Effect = 'scanline' | 'glow' | 'curve' | 'flicker';
 export type Lang = 'id' | 'en';
+export type BootMode = 'verbose' | 'cinematic' | 'greeting' | 'off';
 
 export const THEMES: Theme[] = ['p1', 'p3', 'p4'];
 export const EFFECTS: Effect[] = ['scanline', 'glow', 'curve', 'flicker'];
 export const LANGS: Lang[] = ['id', 'en'];
+export const BOOT_MODES: BootMode[] = ['verbose', 'cinematic', 'greeting', 'off'];
 
 /** Efek yang bergerak; hanya ini yang dimatikan reduced motion (D-026). */
 export const MOVING_EFFECTS: Effect[] = ['flicker'];
@@ -23,8 +25,8 @@ export interface Settings {
 	intensity: number;
 	/** Konsol perintah selalu tampil (bawaan: mati). */
 	consoleAlways: boolean;
-	/** Urutan boot saat aplikasi dibuka. */
-	boot: boolean;
+	/** Mode urutan boot saat aplikasi dibuka (D-031). */
+	bootMode: BootMode;
 	/** `null` = ikuti bahasa sistem (D-027). */
 	lang: Lang | null;
 }
@@ -36,7 +38,7 @@ export const DEFAULTS: Settings = {
 	fx: { scanline: true, glow: true, curve: true, flicker: false },
 	intensity: 30,
 	consoleAlways: false,
-	boot: true,
+	bootMode: 'cinematic',
 	lang: null
 };
 
@@ -44,10 +46,15 @@ function load(): Settings {
 	try {
 		const raw = localStorage.getItem(KEY);
 		if (!raw) return structuredClone(DEFAULTS);
-		const saved = JSON.parse(raw) as Partial<Settings>;
+		const saved = JSON.parse(raw) as Partial<Settings> & { boot?: boolean };
+		// Pengaturan lama (M0/M0b) menyimpan toggle `boot`; mati tetap mati.
+		const migrated: Partial<Settings> =
+			saved.bootMode === undefined && saved.boot === false ? { bootMode: 'off' } : {};
+		delete saved.boot;
 		return {
 			...DEFAULTS,
 			...saved,
+			...migrated,
 			fx: { ...DEFAULTS.fx, ...(saved.fx ?? {}) }
 		};
 	} catch {
@@ -56,6 +63,9 @@ function load(): Settings {
 }
 
 export const settings: Settings = $state(load());
+
+/** Kapan pengaturan dibaca (untuk boot Verbose). */
+export const settingsReadAt = typeof performance === 'undefined' ? 0 : performance.now();
 
 export function save() {
 	try {
