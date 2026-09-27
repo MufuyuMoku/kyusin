@@ -17,6 +17,10 @@ use tauri::{Manager, State, WebviewWindowBuilder};
 mod play;
 mod tutorial;
 
+/// Argumen bawaan wry untuk WebView2 (menghapus menu mini dan SmartScreen);
+/// dipertahankan bila argumen tambahan diset.
+const WRY_DEFAULT_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection";
+
 /// Batas jumlah perintah konkret per templat yang dijadikan tombol.
 const BUTTON_LIMIT: usize = 12;
 
@@ -156,6 +160,16 @@ pub fn run() {
                 std::env::var_os("WEBVIEW2_USER_DATA_FOLDER").filter(|d| !d.is_empty())
             {
                 window = window.data_directory(PathBuf::from(dir));
+            }
+            // Argumen WebView2 yang dikirim wry lewat API bisa menimpa variabel
+            // lingkungan ini (terbukti di runner CI), jadi digabung eksplisit
+            // dengan argumen bawaan wry. Dipakai tes jendela asli untuk membuka
+            // port DevTools (D-040).
+            if let Some(extra) = std::env::var("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS")
+                .ok()
+                .filter(|a| !a.trim().is_empty())
+            {
+                window = window.additional_browser_args(&format!("{WRY_DEFAULT_ARGS} {extra}"));
             }
             window.build()?;
 
