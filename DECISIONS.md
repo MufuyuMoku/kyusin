@@ -106,24 +106,27 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Dampak:
 -->
 
+### D-013 — Aturan kegagalan provably fair (menutup Q-001)
+- Tanggal / milestone: 2026-09-27 / pra-M0
+- Diputuskan oleh: klien (SPEC Rev. 3)
+- Konteks: Q-001. Host bisa mengaku seorang peserta gagal mengirim seed, sehingga seed ronde berubah dan host bisa memilih hasil.
+- Keputusan: jaminannya dirumuskan ulang menjadi "tidak ada yang bisa memilih hasil; paling jauh host curang hanya bisa membatalkan ronde, dan pembatalan selalu terlihat". Gagal komitmen: peserta dikeluarkan dari ronde, dan ronde berjalan tanpa dia. Gagal pembukaan seed: ronde dibatalkan untuk semua pemain, taruhan dikembalikan, ronde berikutnya memakai komitmen baru, dan peserta yang dinyatakan gagal dikeluarkan dari meja sampai bergabung ulang. Setiap pembatalan tampil di log meja, riwayat, dan `verify` (nama peserta dan penghitung pembatalan per sesi); tiap klien mencatat waktu dia mengirim seed.
+- Rujukan: SPEC §5.4.
+
+### D-014 — Render canvas terpisah dari kontrak; `rtp` untuk semua casino melawan rumah (menutup Q-002)
+- Tanggal / milestone: 2026-09-27 / pra-M0
+- Diputuskan oleh: klien (SPEC Rev. 3)
+- Konteks: Q-002.
+- Keputusan: game beranimasi kontinu (slot, Plinko, Crash, pachinko, coin pusher, tembak ikan) dirender di canvas dengan grid karakter; itu soal render, sedangkan jenis kontrak mengikuti §6.6. `rtp` berupa angka untuk semua casino melawan rumah, baik ber-bandar maupun solo (slot, Keno, Bingo, kartu gosok); `null` untuk antar-pemain dan non-casino. Judul DoD §7.1 menjadi "Casino melawan rumah (`rtp` berupa angka)".
+- Rujukan: SPEC §4, §5.2, §6.6, §7.1.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
-- Bagian SPEC: §5.4 langkah 2 dan "Detail lain" vs "Sifat yang dijamin" dan §2.3
-- Pertanyaan: setelah langkah 2, host sudah memegang semua seed dan bisa menghitung hasil ronde. Aplikasi host yang dimodifikasi dapat mengaku seorang peserta "tidak mengirim seed dalam batas waktu", lalu mengeluarkannya. Seed ronde pun berubah, sehingga host bisa memilih di antara beberapa hasil. Ini bertentangan dengan "tidak ada yang bisa menggeser hasil". Usul developer: peserta yang gagal pada tahap komitmen boleh dikeluarkan, tetapi kegagalan pada tahap pembukaan seed membatalkan ronde untuk semua pemain (taruhan dikembalikan) dan dicatat terlihat di `verify`/riwayat. Sisa celah (host bisa membatalkan ronde berulang-ulang, dan pembatalan itu terlihat) dicatat sebagai batasan yang diterima.
-- Status: menunggu klien. Tidak memengaruhi M0 (baru dikerjakan di M1/M9).
+- Status: terjawab (lihat D-013).
 
 ### Q-002 — Kedudukan slot dan game solo casino dalam manifest
-- Bagian SPEC: §4 (slot disebut "game real-time") vs §6.6 (slot = `TurnGame`); §5.2 (`rtp` untuk "casino ber-bandar") vs §7.2 (slot, Keno, Bingo, kartu gosok = game solo tanpa lawan)
-- Pertanyaan: tafsiran developer: (a) di §4 slot hanya berarti *dirender di canvas*; kontraknya tetap `TurnGame`, dan mode perintah penuh berlaku. (b) Game solo casino berisi `lawan: tidak ada` tetapi `rtp` berupa angka; `rtp: null` hanya untuk game antar-pemain dan non-casino. Tafsiran (b) menentukan skema manifest di M0.
-- Status: menunggu klien.
-
-<!--
-### Q-001 — judul singkat
-- Bagian SPEC:
-- Pertanyaan:
-- Status: menunggu klien | terjawab (lihat D-xxx)
--->
+- Status: terjawab (lihat D-014).
 
 ## Usulan
 

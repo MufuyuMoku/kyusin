@@ -60,7 +60,7 @@ Arah: layar CRT fosfor tahun 80-an. Seluruh aplikasi terasa seperti satu sesi te
   - Amber P3: teks `#FFB000`, redup `#7A5400`, latar `#0A0703`.
   - Putih P4: teks `#E6EEFF`, redup `#6B7385`, latar `#06070A`.
 - **Efek CRT:** scanline, glow halus, lengkungan layar, flicker. Semuanya bisa dimatikan satu per satu. Flicker mati secara bawaan, dan semua efek mati otomatis bila sistem meminta *reduced motion*.
-- **Tata letak:** grid karakter monospace. Papan, kartu, meja, dan roda digambar dengan karakter box-drawing dan blok, bukan gambar raster. Game real-time (slot, pachinko, coin pusher, tembak ikan) digambar di canvas **dengan grid karakter yang sama**, supaya tetap satu gaya.
+- **Tata letak:** grid karakter monospace. Papan, kartu, meja, dan roda digambar dengan karakter box-drawing dan blok, bukan gambar raster. Game dengan animasi kontinu (slot, Plinko, Crash, pachinko, coin pusher, tembak ikan) digambar di canvas **dengan grid karakter yang sama**, supaya tetap satu gaya. Ini soal cara render, bukan jenis kontrak; jenis kontrak mengikuti §6.6.
 - **Input visual adalah cara utama.** Setiap game harus bisa dimainkan penuh dengan mouse/sentuh dan kontrol visual yang wajar untuk jenis game-nya (seret bidak, klik kartu, tombol taruhan, tuas slot, bidik-dan-tembak). Pemain tidak pernah dipaksa mengetik.
 - **Mode perintah (opsional).** Konsol `> _` di bawah layar, mati secara bawaan. Dibuka dengan tombol `:` atau `` ` `` dan bisa diatur agar selalu tampil. Memiliki autocomplete dan riwayat (panah atas/bawah). Untuk game real-time, mode perintah hanya mengatur taruhan dan menu, bukan kontrol gerak.
 - **Keselarasan gaya.** Kontrol visual tetap bergaya terminal: tombol berbentuk `[ HIT ]`, sorotan berupa blok terbalik, kursor berupa blok berkedip.
@@ -106,7 +106,7 @@ Dua jenis:
   - `snapshot()`
   - Input direkam per tick, jadi replay tetap persis.
 
-**Manifest cartridge** (per game): id, nama tampilan, kategori, jumlah pemain min/maks, jenis (giliran/real-time), `lawan` (bandar / bot / tidak ada), `kompetitif` (dapat rating dan wajib 3 level bot, lihat §8), `lan`, `agen`, `rtp` (angka untuk casino ber-bandar; `null` untuk game antar-pemain dan non-casino), path tutorial, daftar perintah + deskripsi singkatnya.
+**Manifest cartridge** (per game): id, nama tampilan, kategori, jumlah pemain min/maks, jenis (giliran/real-time), `lawan` (bandar / bot / tidak ada), `kompetitif` (dapat rating dan wajib 3 level bot, lihat §8), `lan`, `agen`, `rtp` (angka untuk semua game casino yang melawan rumah, baik ber-bandar maupun solo seperti slot, Keno, Bingo, dan kartu gosok; `null` untuk game antar-pemain dan non-casino), path tutorial, daftar perintah + deskripsi singkatnya.
 
 Registry membaca semua manifest. Menu, `help`, `man`, dan autocomplete **dibangkitkan dari manifest**, tidak ditulis tangan. Menambah game baru = menambah satu modul + manifest + tutorial, tanpa menyentuh kode menu.
 
@@ -129,13 +129,17 @@ Skema sumbangan seed (commit-reveal) untuk **setiap ronde**:
 4. Setelah ronde selesai, host menyiarkan **semua** seed. Setiap klien otomatis menjalankan `verify`: memeriksa komitmen, menghitung ulang seed ronde, memutar ulang ronde, dan membandingkan hasilnya. Hasil verifikasi ditampilkan.
 
 **Sifat yang dijamin:**
-- Tidak ada yang bisa menggeser hasil. Seed host terkunci oleh komitmennya sebelum host melihat seed siapa pun, dan seed peserta lain terkunci sebelum mereka melihat apa pun.
+- Tidak ada yang bisa memilih hasil. Seed host terkunci oleh komitmennya sebelum host melihat seed siapa pun, dan seed peserta lain terkunci sebelum mereka melihat apa pun. Paling jauh, host yang curang hanya bisa membatalkan ronde, dan setiap pembatalan selalu terlihat oleh semua pemain.
 - Peserta non-host tidak bisa mengetahui dek selama ronde, karena seed host baru dibuka setelah ronde. Menyadap seed peserta lain di jaringan tidak berguna, jadi koneksi LAN tidak perlu dienkripsi untuk keperluan ini.
 
 **Batasan yang diterima:** host yang menghitung dek, jadi aplikasi host yang dimodifikasi bisa melihat kartu tertutup. Batasan ini dijelaskan terus terang di tutorial dan `man` untuk mode LAN. Solusi kriptografis (mental poker) di luar cakupan.
 
 **Detail lain:**
-- Peserta yang tidak mengirim komitmen atau seed dalam batas waktu dikeluarkan dari ronde itu. Untuk agen, sumbangan seed ditangani pustaka klien protokol secara otomatis, jadi tidak bergantung pada kecepatan model.
+- **Aturan kegagalan** (batas waktu komitmen dan pembukaan seed):
+  - Gagal di tahap komitmen: peserta dikeluarkan dari ronde, dan ronde berjalan tanpa dia.
+  - Gagal di tahap pembukaan seed: ronde dibatalkan untuk semua pemain, semua taruhan dikembalikan, dan ronde berikutnya memakai komitmen baru. Peserta yang dinyatakan gagal dikeluarkan dari meja sampai dia bergabung ulang.
+  - Setiap pembatalan tampil di log meja, riwayat, dan `verify`, lengkap dengan nama peserta yang dinyatakan gagal dan penghitung pembatalan per sesi. Setiap klien mencatat waktu dia sendiri mengirim seed, supaya tuduhan palsu terlihat.
+- Untuk agen, sumbangan seed ditangani pustaka klien protokol secara otomatis, jadi tidak bergantung pada kecepatan model.
 - **Singleplayer:** aplikasi berperan sebagai host, dan pemain lokal adalah peserta. Pemain boleh mengisi seed sendiri di pengaturan; bila kosong, dibuat otomatis.
 - Replay menyimpan semua seed ronde.
 
@@ -188,7 +192,7 @@ Game giliran di kelompok ini singleplayer (`lan: false`) tetapi **boleh dimainka
 Sebuah game belum boleh ditandai selesai sebelum semua poin ini terpenuhi:
 
 1. Mesin aturan + tes unit untuk aturan dan pembayaran, ditambah:
-   - **Casino ber-bandar:** RTP di manifest dihitung secara analitis atau enumerasi bila memungkinkan (slot: enumerasi seluruh kombinasi reel; roulette, sic bo, dan sejenisnya: tabel peluang). Game yang bergantung strategi (Blackjack, Video Poker) memakai RTP untuk strategi dasar/optimal yang didokumentasikan, disimulasikan dengan bot yang memainkan strategi itu. Simulasi memverifikasi RTP: **≥100.000 ronde di CI setiap push**, dan **≥10.000.000 ronde di workflow terjadwal/manual**. Toleransi = 4 × σ/√n (σ = simpangan baku pembayaran per ronde dari simulasi itu sendiri), bukan angka tetap.
+   - **Casino melawan rumah (`rtp` berupa angka):** RTP di manifest dihitung secara analitis atau enumerasi bila memungkinkan (slot: enumerasi seluruh kombinasi reel; roulette, sic bo, dan sejenisnya: tabel peluang). Game yang bergantung strategi (Blackjack, Video Poker) memakai RTP untuk strategi dasar/optimal yang didokumentasikan, disimulasikan dengan bot yang memainkan strategi itu. Simulasi memverifikasi RTP: **≥100.000 ronde di CI setiap push**, dan **≥10.000.000 ronde di workflow terjadwal/manual**. Toleransi = 4 × σ/√n (σ = simpangan baku pembayaran per ronde dari simulasi itu sendiri), bukan angka tetap.
    - **Game antar-pemain:** tes peringkat tangan, pembagian pot termasuk side pot, dan *property test* kekekalan chip (total chip meja tidak pernah berubah).
 2. Lawan bila game-nya punya lawan (`lawan` di manifest): bandar untuk casino ber-bandar, bot untuk game ber-lawan. Game dengan `kompetitif: true` wajib minimal 3 tingkat kesulitan. Poin ini **tidak berlaku** untuk game solo (Klondike, Keno, Bingo, kartu gosok, slot, dan arcade dopamin).
 3. Kontrol visual lengkap: seluruh game bisa dimainkan tanpa mengetik.
@@ -263,3 +267,4 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 ## 12. Riwayat revisi SPEC
 
 - **Revisi 2 (27 Sep 2026):** menjawab temuan sesi persiapan — skema seed gabungan (§2.3, §5.4); `ActionSpec`, `pending_players`, fase serentak, dan `View: Serialize` (§5.2); field manifest baru; pembagian giliran/real-time di arcade (§6.6); game antar-pemain tanpa rake (§6.3); angka ekonomi chip dan bandar LAN (§6.7); DoD dengan cakupan per jenis game dan toleransi statistik (§7); daftar game kompetitif dan pengecualian rating agen (§8); fixture di M0 dan paket `.deb` (§9); pengecualian lisensi pustaka sistem (§3); aktivasi endpoint dan `hint` khusus agen (§10). Aturan Dam tetap dipilih developer dan dicatat di `DECISIONS.md`.
+- **Revisi 3 (27 Sep 2026):** menjawab Q-001 dan Q-002 — render canvas untuk game beranimasi kontinu dipisahkan dari jenis kontrak (§4); `rtp` berupa angka untuk semua casino melawan rumah termasuk game solo, dan judul DoD §7.1 disesuaikan (§5.2, §7.1); jaminan provably fair dirumuskan ulang menjadi "tidak ada yang bisa memilih hasil", dengan aturan kegagalan: gagal komitmen = dikeluarkan dari ronde, gagal pembukaan seed = ronde dibatalkan dan taruhan dikembalikan, setiap pembatalan terlihat di log meja, riwayat, dan `verify` (§5.4).
