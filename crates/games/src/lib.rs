@@ -7,12 +7,12 @@
 use kyusin_core::{Registry, RegistryError};
 
 pub mod fixture;
+pub mod reversi;
 
-/// Game katalog yang dikirim bersama aplikasi. Masih kosong di M0; game
-/// pertama (Reversi) datang di M1.
+/// Game katalog yang dikirim bersama aplikasi.
 pub fn builtin() -> Result<Registry, RegistryError> {
-    #[allow(unused_mut)]
     let mut registry = Registry::new();
+    registry.register(reversi::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

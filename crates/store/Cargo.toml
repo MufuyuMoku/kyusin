@@ -1,9 +1,12 @@
 [package]
 name = "kyusin-store"
-description = "Penyimpanan SQLite KyuSin: profil, chip, riwayat, replay (mulai M1/M3)."
+description = "Penyimpanan SQLite KyuSin: replay (M1), profil, chip, riwayat (M3/M4)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+kyusin-core.workspace = true
+rusqlite.workspace = true
+serde_json.workspace = true

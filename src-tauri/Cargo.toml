@@ -22,8 +22,11 @@ fixture = ["kyusin-games/fixture"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+getrandom = "0.4"
+kyusin-bots.workspace = true
 kyusin-core.workspace = true
 kyusin-games.workspace = true
+kyusin-store.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tauri = { version = "2", features = [] }

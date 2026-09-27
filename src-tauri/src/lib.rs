@@ -4,21 +4,28 @@
 //! Semua teks untuk pemain dikirim dalam dua bahasa (`{ id, en }`), jadi UI
 //! bisa berganti bahasa tanpa bertanya ulang ke sini (D-027).
 
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 use kyusin_core::help::{man_page, rtp_line};
 use kyusin_core::i18n::core;
-use kyusin_core::tutorial::{Feedback, Step, TutorialRun};
-use kyusin_core::{ActionSpec, Localized, Manifest, Registry, Tutorial};
+use kyusin_core::{ActionSpec, Localized, Manifest, Registry};
+use kyusin_store::Store;
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State};
+use tauri::{Manager, State};
+
+mod play;
+mod tutorial;
 
 /// Batas jumlah perintah konkret per templat yang dijadikan tombol.
 const BUTTON_LIMIT: usize = 12;
 
-struct AppState {
+pub(crate) struct AppState {
     registry: Registry,
-    tutorial: Mutex<Option<TutorialRun>>,
+    tutorial: Mutex<Option<kyusin_core::TutorialRun>>,
+    play: Mutex<Option<play::Running>>,
+    store: Result<Mutex<Store>, String>,
+    db_path: Option<PathBuf>,
 }
 
 #[derive(Serialize)]
@@ -33,19 +40,46 @@ struct GameDto {
     #[serde(flatten)]
     manifest: Manifest,
     rtp_line: Option<Localized>,
+    /// Jumlah level bot (0 = belum ada).
+    bot_levels: u8,
 }
 
 #[derive(Serialize)]
 struct AppInfo {
     name: &'static str,
     version: &'static str,
-    /// Folder data aplikasi menurut sistem; ditampilkan di boot Verbose
-    /// (SPEC §4). Belum ada yang disimpan di sana sampai SQLite (M1/M3).
+    /// Folder data aplikasi menurut sistem; ditampilkan di boot Verbose.
     data_dir: Option<String>,
+    /// Berkas basis data dan apakah berhasil dibuka.
+    database: Option<String>,
+    database_ok: bool,
+}
+
+#[derive(Serialize)]
+pub(crate) struct ActionDto {
+    spec: ActionSpec,
+    usage: String,
+    /// Perintah konkret untuk tombol, bila jumlahnya kecil.
+    concrete: Option<Vec<String>>,
+}
+
+pub(crate) fn action_dtos(specs: Vec<ActionSpec>) -> Vec<ActionDto> {
+    specs
+        .into_iter()
+        .map(|spec| ActionDto {
+            usage: spec.usage(),
+            concrete: spec.concrete(BUTTON_LIMIT),
+            spec,
+        })
+        .collect()
+}
+
+pub(crate) fn unknown_game(id: &str) -> Localized {
+    core().localized("error.unknown_game", &[("id", id)])
 }
 
 #[tauri::command]
-fn app_info(app: AppHandle) -> AppInfo {
+fn app_info(app: tauri::AppHandle, state: State<'_, AppState>) -> AppInfo {
     AppInfo {
         name: "KyuSin",
         version: env!("CARGO_PKG_VERSION"),
@@ -54,6 +88,8 @@ fn app_info(app: AppHandle) -> AppInfo {
             .app_data_dir()
             .ok()
             .map(|p| p.display().to_string()),
+        database: state.db_path.as_ref().map(|p| p.display().to_string()),
+        database_ok: state.store.is_ok(),
     }
 }
 
@@ -70,6 +106,7 @@ fn catalog(state: State<'_, AppState>) -> Vec<CategoryDto> {
                 .into_iter()
                 .map(|m| GameDto {
                     rtp_line: rtp_line(m),
+                    bot_levels: kyusin_bots::levels(&m.id),
                     manifest: m.clone(),
                 })
                 .collect(),
@@ -83,110 +120,47 @@ fn man(id: String, state: State<'_, AppState>) -> Result<Localized, Localized> {
     man_page(cartridge).map_err(|e| e.message())
 }
 
-fn unknown_game(id: &str) -> Localized {
-    core().localized("error.unknown_game", &[("id", id)])
-}
-
-fn no_tutorial() -> Localized {
-    core().localized("error.no_tutorial", &[])
-}
-
-#[derive(Serialize)]
-struct ActionDto {
-    spec: ActionSpec,
-    usage: String,
-    /// Perintah konkret untuk tombol, bila jumlahnya kecil.
-    concrete: Option<Vec<String>>,
-}
-
-#[derive(Serialize)]
-struct TutorialDto {
-    game: String,
-    title: Localized,
-    index: usize,
-    total: usize,
-    finished: bool,
-    step: Option<Step>,
-    view_text: Localized,
-    actions: Vec<ActionDto>,
-    feedback: Option<Feedback>,
-}
-
-fn snapshot(run: &TutorialRun, feedback: Option<Feedback>) -> TutorialDto {
-    let session = run.session();
-    let learner = run.learner();
-    let actions = if run.step().is_some_and(|s| s.action.is_some()) {
-        session
-            .legal_actions(learner)
-            .into_iter()
-            .map(|spec| ActionDto {
-                usage: spec.usage(),
-                concrete: spec.concrete(BUTTON_LIMIT),
-                spec,
-            })
-            .collect()
-    } else {
-        Vec::new()
+fn open_store(app: &tauri::App) -> (Result<Mutex<Store>, String>, Option<PathBuf>) {
+    let dir = match app.path().app_data_dir() {
+        Ok(d) => d,
+        Err(e) => return (Err(e.to_string()), None),
     };
-    TutorialDto {
-        game: run.tutorial().game.clone(),
-        title: run.tutorial().title.clone(),
-        index: run.index(),
-        total: run.len(),
-        finished: run.is_finished(),
-        step: run.step().cloned(),
-        view_text: Localized::build(|lang| session.view_text(learner, lang)),
-        actions,
-        feedback,
-    }
-}
-
-#[tauri::command]
-fn tutorial_start(id: String, state: State<'_, AppState>) -> Result<TutorialDto, Localized> {
-    let cartridge = state.registry.get(&id).ok_or_else(|| unknown_game(&id))?;
-    let tutorial = Tutorial::from_toml(cartridge.tutorial_src).map_err(|e| e.message())?;
-    let run = TutorialRun::start(tutorial, cartridge).map_err(|e| e.message())?;
-    let dto = snapshot(&run, None);
-    *state.tutorial.lock().unwrap() = Some(run);
-    Ok(dto)
-}
-
-#[tauri::command]
-fn tutorial_act(command: String, state: State<'_, AppState>) -> Result<TutorialDto, Localized> {
-    let mut guard = state.tutorial.lock().unwrap();
-    let run = guard.as_mut().ok_or_else(no_tutorial)?;
-    let feedback = run.submit(&command).map_err(|e| e.message())?;
-    Ok(snapshot(run, Some(feedback)))
-}
-
-#[tauri::command]
-fn tutorial_next(state: State<'_, AppState>) -> Result<TutorialDto, Localized> {
-    let mut guard = state.tutorial.lock().unwrap();
-    let run = guard.as_mut().ok_or_else(no_tutorial)?;
-    run.advance().map_err(|e| e.message())?;
-    Ok(snapshot(run, None))
-}
-
-#[tauri::command]
-fn tutorial_stop(state: State<'_, AppState>) {
-    *state.tutorial.lock().unwrap() = None;
+    let path = dir.join("kyusin.sqlite");
+    let store = std::fs::create_dir_all(&dir)
+        .map_err(|e| e.to_string())
+        .and_then(|_| Store::open(&path).map_err(|e| e.to_string()))
+        .map(Mutex::new);
+    (store, Some(path))
 }
 
 pub fn run() {
     let registry = kyusin_games::builtin().expect("registry cartridge bawaan tidak sah");
     tauri::Builder::default()
-        .manage(AppState {
-            registry,
-            tutorial: Mutex::new(None),
+        .setup(move |app| {
+            let (store, db_path) = open_store(app);
+            app.manage(AppState {
+                registry,
+                tutorial: Mutex::new(None),
+                play: Mutex::new(None),
+                store,
+                db_path,
+            });
+            Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             app_info,
             catalog,
             man,
-            tutorial_start,
-            tutorial_act,
-            tutorial_next,
-            tutorial_stop,
+            tutorial::tutorial_start,
+            tutorial::tutorial_act,
+            tutorial::tutorial_next,
+            tutorial::tutorial_stop,
+            play::match_start,
+            play::match_act,
+            play::match_step,
+            play::match_leave,
+            play::replay_list,
+            play::replay_open,
         ])
         .run(tauri::generate_context!())
         .expect("KyuSin gagal dijalankan");
@@ -196,57 +170,6 @@ pub fn run() {
 mod tests {
     use super::*;
 
-    /// Bentuk JSON yang dibaca `ui/src/lib/backend.ts`.
-    #[test]
-    fn tutorial_dto_matches_ui_shape() {
-        let registry = kyusin_games::with_fixture().unwrap();
-        let c = registry.get("fixture").unwrap();
-        let mut run = TutorialRun::start(Tutorial::from_toml(c.tutorial_src).unwrap(), c).unwrap();
-        run.advance().unwrap();
-        let feedback = run.submit("take 1").unwrap();
-        let json = serde_json::to_value(snapshot(&run, Some(feedback))).unwrap();
-
-        assert_eq!(json["game"], "fixture");
-        assert_eq!(json["index"], 1);
-        assert_eq!(json["total"], 4);
-        assert_eq!(json["finished"], false);
-        assert_eq!(json["step"]["aksi"], "take 3");
-        assert_eq!(json["step"]["sorot"][0], "aksi:take 3");
-        assert_eq!(
-            json["step"]["teks"]["en"],
-            "Take 3 sticks so that 4 are left."
-        );
-        assert_eq!(json["title"]["id"], "Batang: dasar");
-        assert_eq!(json["feedback"]["kind"], "wrong");
-        assert!(
-            json["feedback"]["hint"]["id"]
-                .as_str()
-                .unwrap()
-                .contains("tiga")
-        );
-        assert!(
-            json["feedback"]["hint"]["en"]
-                .as_str()
-                .unwrap()
-                .contains("three")
-        );
-        assert_eq!(json["actions"][0]["usage"], "take <n>");
-        assert_eq!(json["actions"][0]["spec"]["kind"], "template");
-        assert_eq!(json["actions"][0]["concrete"][2], "take 3");
-        assert!(
-            json["view_text"]["id"]
-                .as_str()
-                .unwrap()
-                .contains("Batang tersisa: 7")
-        );
-        assert!(
-            json["view_text"]["en"]
-                .as_str()
-                .unwrap()
-                .contains("Sticks left: 7")
-        );
-    }
-
     #[test]
     fn game_dto_flattens_manifest_with_spec_keys() {
         let registry = kyusin_games::with_fixture().unwrap();
@@ -254,6 +177,7 @@ mod tests {
         let json = serde_json::to_value(GameDto {
             manifest: m.clone(),
             rtp_line: None,
+            bot_levels: 0,
         })
         .unwrap();
         for key in [
@@ -271,6 +195,7 @@ mod tests {
             "tutorial",
             "perintah",
             "rtp_line",
+            "bot_levels",
         ] {
             assert!(json.get(key).is_some(), "kunci `{key}` hilang");
         }

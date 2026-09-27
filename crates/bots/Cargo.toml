@@ -1,9 +1,12 @@
 [package]
 name = "kyusin-bots"
-description = "Bot per game dan mesin catur KyuSin (mulai M1/M2)."
+description = "Bot per game KyuSin, dengan level kesulitan."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+kyusin-core.workspace = true
+kyusin-games.workspace = true
+serde_json.workspace = true

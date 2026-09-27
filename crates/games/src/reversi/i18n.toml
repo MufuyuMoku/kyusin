@@ -1,0 +1,20 @@
+# Teks tampilan Reversi (to_text, hasil) dalam dua bahasa.
+[id]
+"black" = "hitam"
+"white" = "putih"
+"count" = "Hitam {b} · Putih {w}"
+"your_turn" = "Giliranmu ({color})."
+"their_turn" = "Giliran {color}."
+"must_pass" = "Kamu ({color}) tidak punya langkah: pass."
+"wins" = "Selesai: {color} menang, {b}–{w}."
+"draw" = "Selesai: seri, {b}–{w}."
+
+[en]
+"black" = "black"
+"white" = "white"
+"count" = "Black {b} · White {w}"
+"your_turn" = "Your turn ({color})."
+"their_turn" = "{color} to move."
+"must_pass" = "You ({color}) have no move: pass."
+"wins" = "Game over: {color} wins, {b}–{w}."
+"draw" = "Game over: draw, {b}–{w}."

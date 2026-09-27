@@ -277,6 +277,7 @@ fn same_moves_same_state_hash() {
         Session::act(&mut b, seat, m).unwrap();
     }
     assert_eq!(Session::state_hash(&a), Session::state_hash(&b));
-    Session::act(&mut a, 1, &TurnGame::legal_actions(&a, 1)[0].usage()).unwrap();
+    let next = TurnGame::legal_actions(&a, 1)[0].usage();
+    Session::act(&mut a, 1, &next).unwrap();
     assert_ne!(Session::state_hash(&a), Session::state_hash(&b));
 }
