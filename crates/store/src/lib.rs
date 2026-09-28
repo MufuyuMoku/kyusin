@@ -2,16 +2,21 @@
 //!
 //! M1: replay setiap pertandingan (SPEC §2.5).
 //! Rev. 9: pertandingan yang ditunda (SPEC §4), satu per game.
-//! Profil, chip, dan riwayat menyusul sebagai migrasi berikutnya.
+//! M3: profil, rating lokal, dan riwayat hasil ([`profile`]).
+//! Chip menyusul di M4 sebagai migrasi berikutnya.
 
 use std::path::Path;
+
+pub mod profile;
+
+pub use profile::{GameRecord, GameStats, HistoryRow, NAME_MAX, Profile, StoredRating};
 
 use kyusin_core::replay::Replay;
 use kyusin_core::{GameResult, SeatKind};
 use rusqlite::{Connection, OptionalExtension, params};
 
 /// Versi skema; dinaikkan tiap migrasi.
-const SCHEMA_VERSION: i32 = 2;
+const SCHEMA_VERSION: i32 = 3;
 
 pub struct Store {
     conn: Connection,
@@ -114,6 +119,9 @@ impl Store {
                  PRAGMA user_version = 2;
                  COMMIT;",
             )?;
+        }
+        if version < 3 {
+            profile::migrate_v3(&conn)?;
         }
         Ok(Store { conn })
     }
@@ -241,6 +249,7 @@ impl Store {
 mod tests {
     use super::*;
     use kyusin_core::fair::FairRecord;
+    use kyusin_core::rating::{Outcome, Rating};
     use kyusin_core::replay::{Move, REPLAY_FORMAT};
 
     fn replay(game: &str, moves: usize, finished: bool) -> Replay {
@@ -299,6 +308,94 @@ mod tests {
         assert_eq!(s.list_replays(None, 1).unwrap().len(), 1);
     }
 
+    fn rated(before: f64, after: f64) -> Option<(Rating, Rating)> {
+        let r = |x| Rating {
+            rating: x,
+            rd: 200.0,
+            vol: 0.06,
+        };
+        Some((r(before), r(after)))
+    }
+
+    #[test]
+    fn single_profile_with_renamable_name() {
+        let s = Store::open_in_memory().unwrap();
+        let p = s.profile(100).unwrap();
+        assert_eq!(p.name, None);
+        assert_eq!(p.created_at, 100);
+        // Tetap satu profil: waktu buat tidak berubah.
+        assert_eq!(s.profile(999).unwrap().created_at, 100);
+        let p = s.set_profile_name("  Mufuyu  ", 5).unwrap();
+        assert_eq!(p.name.as_deref(), Some("Mufuyu"));
+        let long = "x".repeat(40);
+        assert_eq!(
+            s.set_profile_name(&long, 5)
+                .unwrap()
+                .name
+                .unwrap()
+                .chars()
+                .count(),
+            NAME_MAX
+        );
+        assert_eq!(s.set_profile_name("   ", 5).unwrap().name, None);
+        let n: i64 = s
+            .conn
+            .query_row("SELECT COUNT(*) FROM profile", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 1);
+    }
+
+    #[test]
+    fn results_history_ratings_and_stats() {
+        let mut s = Store::open_in_memory().unwrap();
+        assert_eq!(s.last_game().unwrap(), None);
+        let rec = |game: &str, at: i64, outcome, rating| GameRecord {
+            game: game.into(),
+            finished_at: at,
+            replay_id: Some(at),
+            opponent_level: Some(1),
+            outcome,
+            rating,
+        };
+        s.record_result(&rec("catur", 10, Outcome::Win, rated(1500.0, 1580.0)))
+            .unwrap();
+        s.record_result(&rec("catur", 20, Outcome::Loss, rated(1580.0, 1540.0)))
+            .unwrap();
+        s.record_result(&rec("reversi", 30, Outcome::Draw, None))
+            .unwrap();
+        s.record_result(&rec("catur", 40, Outcome::Draw, None))
+            .unwrap();
+
+        let r = s.rating("catur").unwrap().unwrap();
+        assert_eq!(r.rating.rating, 1540.0);
+        assert_eq!(r.games, 2, "hasil tanpa rating tidak dihitung");
+        assert_eq!(r.best, 1580.0);
+        assert_eq!(s.rating("reversi").unwrap(), None);
+
+        let h = s.history(Some("catur"), 10).unwrap();
+        assert_eq!(h.len(), 3);
+        assert_eq!(h[0].record.finished_at, 40);
+        assert_eq!(h[1].record.rating.unwrap().1.rating, 1540.0);
+        assert_eq!(s.history(None, 2).unwrap().len(), 2);
+
+        let stats = s.game_stats().unwrap();
+        assert_eq!(stats[0].game, "catur");
+        assert_eq!(
+            (
+                stats[0].played,
+                stats[0].wins,
+                stats[0].draws,
+                stats[0].losses
+            ),
+            (3, 1, 1, 1)
+        );
+        assert_eq!(stats[0].last_played, 40);
+        assert!(stats[0].rating.is_some());
+        assert_eq!(stats[1].game, "reversi");
+        assert!(stats[1].rating.is_none());
+        assert_eq!(s.last_game().unwrap().as_deref(), Some("catur"));
+    }
+
     #[test]
     fn suspended_one_per_game_taken_once() {
         let s = Store::open_in_memory().unwrap();
@@ -337,15 +434,24 @@ mod tests {
             let s = Store::open(&path).unwrap();
             s.save_replay(&replay("reversi", 2, true), 5).unwrap();
         }
-        // Basis data versi 1 (sebelum Rev. 9) dimigrasikan tanpa kehilangan replay.
+        // Basis data versi 1 (sebelum Rev. 9) dimigrasikan tanpa kehilangan
+        // replay; replay yang selesai masuk riwayat M3 tanpa rating.
         {
             let conn = Connection::open(&path).unwrap();
-            conn.execute_batch("DROP TABLE suspended; PRAGMA user_version = 1;")
-                .unwrap();
+            conn.execute_batch(
+                "DROP TABLE suspended; DROP TABLE profile; DROP TABLE ratings;
+                 DROP TABLE results; PRAGMA user_version = 1;",
+            )
+            .unwrap();
         }
         let s = Store::open(&path).unwrap();
         assert_eq!(s.list_replays(None, 10).unwrap().len(), 1);
         assert!(s.list_suspended().unwrap().is_empty());
+        let h = s.history(None, 10).unwrap();
+        assert_eq!(h.len(), 1);
+        assert_eq!(h[0].record.outcome, Outcome::Win);
+        assert_eq!(h[0].record.opponent_level, Some(2));
+        assert_eq!(h[0].record.rating, None);
         let v: i32 = s
             .conn
             .query_row("PRAGMA user_version", [], |r| r.get(0))
