@@ -386,6 +386,17 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: kalibrasi pertama (Stockfish 19, `UCI_Elo` 1320/1500/1700/1900, 16 partai per pasangan, 100 ms/langkah) disimpan apa adanya di `data/calibration/catur.json`. Level 1 kalah semua (0/64) melawan tingkat terendah Stockfish, jadi taksirannya murni ekstrapolasi. Rating ekstrapolasi tidak ditampilkan di pilihan level; yang ditampilkan hanya level 2–4 (≈1283, ≈1459, ≈1604). Angka ini skala `UCI_Elo` Stockfish, bukan rating FIDE. Kalibrasi ulang cukup dengan menjalankan workflow lagi dan meng-commit berkasnya.
 - Rujukan: D-041, D-046.
 
+### D-048 — Revisi 9: menu jeda, penundaan, aturan kursor; M2b
+- Tanggal / milestone: 2026-09-28 / M2 (perbaikan hasil uji) → M3
+- Diputuskan oleh: klien (SPEC Rev. 9, hasil uji M2)
+- Konteks: dua bug di jendela asli. (a) `Esc` di tengah permainan langsung keluar tanpa peringatan dan pertandingan hilang. (b) Kursor keyboard kembali ke a2 atau ke petak pilihan lama setelah pemain melangkah (pilih A, pindah pilih B, melangkah → kursor di titik lama).
+- Keputusan (§4):
+  - `Esc` atau tombol kembali saat pertandingan berjalan membuka menu jeda dengan fokus awal di Lanjutkan, plus Tunda & keluar dan Menyerah. Pertandingan yang ditunda tersimpan dan bisa dilanjutkan dari layar game; jam catur berhenti selama ditunda. Menutup jendela saat pertandingan berjalan otomatis menunda. Di LAN tidak ada jeda, hanya konfirmasi keluar.
+  - Kursor keyboard mengikuti interaksi terakhir: klik/seret memindahkan kursor ke petak itu; setelah pemain melangkah kursor di petak tujuan; langkah lawan tidak memindahkan kursor; kursor disembunyikan saat memakai mouse dan muncul lagi di posisi terakhir saat panah ditekan; posisi awal wajar per game (catur e2/e7, Reversi tengah); tidak ada pilihan lama yang tertinggal.
+  - §9: milestone M2b (level catur 5–6, target ≥2000 pada skala kalibrasi yang sama), dikerjakan setelah M3.
+  - Aturan lapisan kursor dari Rev. 8 dipindah ke butir papan di §4 (isi sama).
+- Rujukan: SPEC §4, §9, §12 Rev. 9.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
