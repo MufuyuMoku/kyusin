@@ -230,6 +230,7 @@ Sebuah game belum boleh ditandai selesai sebelum semua poin ini terpenuhi:
 - **Game kompetitif** (`kompetitif: true`: dapat rating dan wajib 3 level bot): Catur, Reversi, Dam, Gaple, Cangkulan, Remi, kartu ala Uno, Hearts, Texas Hold'em, Omaha, Capsa Susun, Domino QiuQiu, Teen Patti. Game melawan bandar dan game solo tidak punya rating.
 - **Rating pemain:** Glicko-2 (implementasi sendiri), per game kompetitif, dihitung dari hasil melawan bot yang kekuatannya diketahui dan lawan LAN. UI menyebutnya "rating lokal", bukan Elo resmi.
 - **Pertandingan yang melibatkan agen tidak dihitung ke rating siapa pun**, karena kekuatan agen tidak diketahui dan agen boleh memakai `hint`.
+- **Tangga level merata:** untuk setiap game kompetitif, selisih rating antara dua level bot berurutan paling besar 400 pada skala rating lokal game itu (level terbawah yang hanya punya batas atas dikecualikan). CI gagal bila data kalibrasi melanggar aturan ini. Bila jaraknya terlalu lebar, tambahkan level di antaranya atau setel ulang kekuatan level yang ada.
 - **Kalibrasi catur:** skrip dev (di luar build) mengadu tiap level bot melawan Stockfish dengan batasan kekuatan yang diketahui. Hasilnya menjadi perkiraan rating tiap level. Hasil kalibrasi disimpan sebagai data di repo; Stockfish-nya tidak.
 
 ## 9. Milestone (berurutan)
@@ -244,7 +245,7 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M1 | Kontrak `TurnGame`/`Player`, RNG provably fair + `verify`, replay. Dibuktikan dengan **Reversi** memenuhi §7 |
 | M1b | Papan Reversi dirender ulang sesuai §4 (grid CSS/SVG + sprite piksel), komponen papan bersama untuk papan berpetak berikutnya, tes jendela asli dengan `tauri-driver` di CI Windows |
 | M2 | Catur: mesin, 3+ level, PGN, jam, tutorial. Skrip kalibrasi |
-| M2b | Level catur 5–6 yang lebih kuat (target ≥2000 pada skala kalibrasi yang sama): iterative deepening, tabel transposisi, evaluasi lebih baik, waktu berpikir lebih lama; diukur ulang dengan `calibrate.yml`. Dikerjakan setelah M3 |
+| M2b | Level catur 5–6 yang lebih kuat (target ≥2000 pada skala kalibrasi yang sama): iterative deepening, tabel transposisi, evaluasi lebih baik, waktu berpikir lebih lama; diukur ulang dengan `calibrate.yml`. Tangga level Reversi dirapikan sesuai aturan tangga level merata (§8). Dikerjakan setelah M3 |
 | M3 | Profil, Glicko-2, riwayat, halaman statistik |
 | M4 | Mesin kartu bersama + ekonomi chip + **Blackjack** |
 | M5 | Casino meja kartu (§6.3) |
@@ -302,3 +303,4 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 - **Revisi 7 (27 Sep 2026):** urutan boot punya tiga mode — Verbose, Sinematik (bawaan), Sapaan (menembus dinding keempat) — plus mati (§4); milestone M0c (§9). Intensitas bawaan efek CRT 30% disahkan klien.
 - **Revisi 8 (28 Sep 2026):** hasil uji klien atas M1 — papan sebagai grid CSS/SVG, bidak dan simbol sebagai sprite piksel SVG (§4); pengujian jendela asli dengan `tauri-driver` (§11); milestone M1b (§9).
 - **Revisi 9 (28 Sep 2026):** hasil uji klien atas M2 — menu jeda dan penundaan pertandingan, aturan kursor keyboard mengikuti interaksi terakhir (§4); milestone M2b untuk level catur yang lebih kuat (§9).
+- **Revisi 10 (29 Sep 2026):** hasil uji klien atas perbaikan M2 dan M3 — aturan tangga level merata: selisih rating dua level bot berurutan paling besar 400, diperiksa CI (§8); M2b diperluas dengan perapian tangga level Reversi (§9).

@@ -438,6 +438,15 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Halaman statistik: tabel per game (rating ±RD, jumlah partai, menang–seri–kalah, rating terbaik) dan riwayat 30 pertandingan terakhir (perubahan rating, tautan ke replay). Ringkasan menang/kalah terhadap bandar (§2.2) menyusul bersama game casino di M4.
 - Rujukan: SPEC §8, D-047, D-050.
 
+### D-053 — Revisi 10: tangga level merata; D-048–D-052 disetujui
+- Tanggal / milestone: 2026-09-29 / M2b
+- Diputuskan oleh: klien (hasil uji perbaikan M2 dan M3)
+- Keputusan:
+  - D-048 sampai D-052 disetujui.
+  - §8: untuk setiap game kompetitif, selisih rating dua level bot berurutan paling besar 400 pada skala rating lokal game itu; level terbawah yang hanya punya batas atas dikecualikan. CI gagal bila data kalibrasi melanggar. Bila terlalu lebar: tambah level di antaranya atau setel ulang level yang ada.
+  - §9: M2b = level catur 5–6 (target ≥2000) + perapian tangga level Reversi. Kalibrasi catur tetap lewat `calibrate.yml` di GitHub Actions; kalibrasi Reversi boleh lokal.
+- Rujukan: SPEC §8, §9, §12 Rev. 10.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
