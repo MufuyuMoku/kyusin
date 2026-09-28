@@ -6,6 +6,8 @@
 //! punya langkah sah wajib `pass`, dan `pass` hanya boleh saat itu.
 //! Permainan selesai bila kedua pemain tidak bisa melangkah; pemenang =
 //! bidak terbanyak, sama banyak = seri.
+//! Pemain yang sedang melangkah boleh `resign` kapan saja (menu jeda,
+//! SPEC §4 Rev. 9): lawan menang, skor tetap jumlah bidak di papan.
 
 use kyusin_core::{GameError, Lang, Session, TurnGame};
 use kyusin_games::reversi::{Config, Move, Reversi, Square};
@@ -25,13 +27,19 @@ fn from(rows: [&str; 8], black_to_move: bool) -> Reversi {
     .unwrap()
 }
 
+/// Langkah papan sah (tanpa `resign`, yang selalu tersedia bagi yang melangkah).
 fn legal(g: &Reversi, seat: u8) -> Vec<String> {
-    let mut v: Vec<String> = TurnGame::legal_actions(g, seat)
-        .iter()
-        .map(|a| a.usage())
-        .collect();
+    let mut v: Vec<String> = board_moves(g, seat);
     v.sort();
     v
+}
+
+fn board_moves(g: &Reversi, seat: u8) -> Vec<String> {
+    TurnGame::legal_actions(g, seat)
+        .iter()
+        .map(|a| a.usage())
+        .filter(|a| a != "resign")
+        .collect()
 }
 
 fn view(g: &Reversi) -> serde_json::Value {
@@ -185,11 +193,11 @@ fn perft(g: &Reversi, depth: u32) -> u64 {
         return 1;
     }
     let seat = TurnGame::pending_players(g)[0];
-    TurnGame::legal_actions(g, seat)
+    board_moves(g, seat)
         .iter()
         .map(|a| {
             let mut next = g.clone();
-            Session::act(&mut next, seat, &a.usage()).unwrap();
+            Session::act(&mut next, seat, a).unwrap();
             perft(&next, depth - 1)
         })
         .sum()
@@ -215,6 +223,8 @@ fn command_round_trip_for_every_square_and_pass() {
     }
     assert_eq!(g.format_action(&Move::Pass), "pass");
     assert_eq!(g.parse_command("pass").unwrap(), Move::Pass);
+    assert_eq!(g.format_action(&Move::Resign), "resign");
+    assert_eq!(g.parse_command("resign").unwrap(), Move::Resign);
     assert_eq!(
         g.format_action(&Move::Place(Square::parse("a1").unwrap())),
         "a1"
@@ -223,7 +233,7 @@ fn command_round_trip_for_every_square_and_pass() {
         g.format_action(&Move::Place(Square::parse("h8").unwrap())),
         "h8"
     );
-    for bad in ["", "i1", "a9", "a0", "aa", "d3 d4", "PASS"] {
+    for bad in ["", "i1", "a9", "a0", "aa", "d3 d4", "PASS", "RESIGN"] {
         assert!(g.parse_command(bad).is_err(), "{bad}");
     }
 }
@@ -237,8 +247,8 @@ fn random_playouts_conserve_discs_and_terminate() {
         let mut plies = 0;
         while !TurnGame::is_over(&g) {
             let seat = TurnGame::pending_players(&g)[0];
-            let moves = TurnGame::legal_actions(&g, seat);
-            let pick = moves[rng.below(moves.len() as u32) as usize].usage();
+            let moves = board_moves(&g, seat);
+            let pick = moves[rng.below(moves.len() as u32) as usize].clone();
             if pick != "pass" {
                 placed += 1;
             }
@@ -280,4 +290,56 @@ fn same_moves_same_state_hash() {
     let next = TurnGame::legal_actions(&a, 1)[0].usage();
     Session::act(&mut a, 1, &next).unwrap();
     assert_ne!(Session::state_hash(&a), Session::state_hash(&b));
+}
+
+#[test]
+fn resign_is_available_to_the_mover_only_and_ends_the_game() {
+    let mut g = start();
+    let all = |g: &Reversi, seat| -> Vec<String> {
+        TurnGame::legal_actions(g, seat)
+            .iter()
+            .map(|a| a.usage())
+            .collect()
+    };
+    assert_eq!(all(&g, 0).last().map(String::as_str), Some("resign"));
+    assert!(all(&g, 1).is_empty());
+    assert_eq!(
+        Session::act(&mut g, 1, "resign"),
+        Err(GameError::NotPending(1))
+    );
+    Session::act(&mut g, 0, "d3").unwrap();
+    // Putih menyerah di gilirannya: hitam menang, skor = bidak di papan.
+    Session::act(&mut g, 1, "resign").unwrap();
+    assert!(TurnGame::is_over(&g));
+    assert!(TurnGame::pending_players(&g).is_empty());
+    let r = TurnGame::result(&g).unwrap();
+    assert_eq!(r.winners, vec![0]);
+    assert_eq!(r.scores, vec![4, 1]);
+    assert!(r.summary.id.contains("menyerah"), "{}", r.summary.id);
+    assert!(r.summary.en.contains("resign"), "{}", r.summary.en);
+    let v = view(&g);
+    assert_eq!(v["selesai"], true);
+    assert_eq!(v["pemenang"], serde_json::json!([0]));
+    assert_eq!(v["legal"], serde_json::json!([]));
+    assert_eq!(Session::act(&mut g, 0, "c5"), Err(GameError::Over));
+    let text = Session::view_text(&g, 0, Lang::Id);
+    assert!(text.contains("menyerah"), "{text}");
+}
+
+#[test]
+fn resign_is_also_available_when_a_pass_is_forced() {
+    let mut g = from(
+        [
+            "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXO", "XXXXXXX.", "XXXXXXX.",
+            "XXXXXX..",
+        ],
+        false,
+    );
+    let all: Vec<String> = TurnGame::legal_actions(&g, 1)
+        .iter()
+        .map(|a| a.usage())
+        .collect();
+    assert_eq!(all, vec!["pass", "resign"]);
+    Session::act(&mut g, 1, "resign").unwrap();
+    assert_eq!(TurnGame::result(&g).unwrap().winners, vec![0]);
 }
