@@ -136,7 +136,8 @@ export const devApi = {
 						{ pola: 'pass', ringkas: { id: 'Lewati giliran', en: 'Pass' } }
 					],
 					rtp_line: null,
-					bot_levels: 3
+					bot_levels: 3,
+					bot_ratings: [null, null, null]
 				}
 			]
 		},
@@ -164,7 +165,8 @@ export const devApi = {
 						}
 					],
 					rtp_line: null,
-					bot_levels: 0
+					bot_levels: 0,
+					bot_ratings: []
 				}
 			]
 		}

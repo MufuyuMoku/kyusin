@@ -1,12 +1,15 @@
 <!--
   Papan berpetak bersama (SPEC §4, D-038): grid CSS dengan sel berukuran
   tetap, garis 1px warna fosfor, koordinat monospace. Isi sel (bidak) lewat
-  snippet `piece`. Kursor keyboard, hover, sorotan tutorial, penanda langkah
-  sah, dan penanda langkah terakhir semuanya lapisan absolut di atas sel:
-  tidak ada yang mengubah ukuran atau posisi sel mana pun.
+  snippet `piece`. Kursor keyboard, hover, sorotan tutorial, titik sasaran,
+  petak terpilih, langkah terakhir, penanda skak, dan sasaran seret semuanya
+  lapisan absolut di atas sel: tidak ada yang mengubah ukuran atau posisi
+  sel mana pun. Bidak yang diseret digambar di lapisan `fixed` terpisah.
 
   Satu kontrol ber-role grid (ikut navigasi bersama): panah memindahkan
-  kursor, Enter/Spasi memilih sel, Tab keluar; klik sel juga memilih.
+  kursor, Enter/Spasi memilih sel, Tab keluar; klik sel juga memilih. Seret
+  (penunjuk atau sentuh) dari petak `draggable` ke petak lain memanggil
+  `ondrop`.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -20,34 +23,51 @@
 		label,
 		ariaLabel,
 		legal = new Set<string>(),
+		targets = undefined,
 		highlight = new Set<string>(),
 		flipped = new Set<string>(),
 		last = null,
+		selected = null,
+		alert = null,
 		start = null,
 		onplay = () => {},
+		draggable = undefined,
+		ondrop = undefined,
 		piece
 	}: {
 		colLabels: readonly string[];
 		rowLabels: readonly string[];
-		/** Nama petak (juga perintah teksnya), misalnya `d3`. */
+		/** Nama petak, misalnya `d3`. */
 		squareOf: (row: number, col: number) => string;
 		/** Label aksesibel per petak. */
 		label: (square: string) => string;
 		ariaLabel: string;
-		/** Petak yang boleh dipilih sekarang. */
+		/** Petak yang bisa dipilih sekarang (klik/Enter). */
 		legal?: Set<string>;
+		/** Petak yang diberi titik sasaran; bawaan sama dengan `legal`. */
+		targets?: Set<string>;
 		/** Petak yang disorot tutorial. */
 		highlight?: Set<string>;
 		flipped?: Set<string>;
-		last?: string | null;
+		/** Petak langkah terakhir (satu atau dua). */
+		last?: string | readonly string[] | null;
+		/** Petak yang sedang dipilih (bidak yang akan dijalankan). */
+		selected?: string | null;
+		/** Petak peringatan, misalnya raja yang diskak. */
+		alert?: string | null;
 		/** Petak awal kursor. */
 		start?: string | null;
 		onplay?: (square: string) => void;
+		/** Petak yang bidaknya boleh diseret. */
+		draggable?: (square: string) => boolean;
+		ondrop?: (from: string, to: string) => void;
 		piece: Snippet<[string]>;
 	} = $props();
 
 	const rows = $derived(rowLabels.length);
 	const cols = $derived(colLabels.length);
+	const dots = $derived(targets ?? legal);
+	const lastSet = $derived(new Set(last === null ? [] : typeof last === 'string' ? [last] : last));
 	const uid = `gb-${Math.random().toString(36).slice(2, 8)}`;
 
 	let cursor = $state({ row: 0, col: 0 });
@@ -63,7 +83,49 @@
 		if (legal.has(sq)) onplay(sq);
 	}
 
+	// --- Seret-lepas ------------------------------------------------------
+	let drag = $state<{ from: string; x0: number; y0: number; x: number; y: number; active: boolean } | null>(
+		null
+	);
+	let over = $state<string | null>(null);
+	let suppressClick = false;
+
+	function cellAt(x: number, y: number): HTMLElement | null {
+		return (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>('[data-sq]') ?? null;
+	}
+
+	function onpointerdown(e: PointerEvent) {
+		if (e.button !== 0 || !draggable || !ondrop) return;
+		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]');
+		const sq = cell?.dataset.sq;
+		if (!sq || !draggable(sq)) return;
+		drag = { from: sq, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, active: false };
+		(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+	}
+
+	function onpointermove(e: PointerEvent) {
+		if (!drag) return;
+		drag.x = e.clientX;
+		drag.y = e.clientY;
+		if (!drag.active && Math.hypot(drag.x - drag.x0, drag.y - drag.y0) > 4) drag.active = true;
+		if (drag.active) over = cellAt(e.clientX, e.clientY)?.dataset.sq ?? null;
+	}
+
+	function onpointerup(e: PointerEvent) {
+		const was = drag;
+		drag = null;
+		over = null;
+		if (!was?.active) return;
+		suppressClick = true;
+		const to = cellAt(e.clientX, e.clientY)?.dataset.sq;
+		if (to && to !== was.from) ondrop?.(was.from, to);
+	}
+
 	function onclick(e: MouseEvent) {
+		if (suppressClick) {
+			suppressClick = false;
+			return;
+		}
 		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]');
 		if (!cell) return;
 		cursor = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };
@@ -110,6 +172,13 @@
 		aria-activedescendant={`${uid}-${squareOf(cursor.row, cursor.col)}`}
 		{onkeydown}
 		{onclick}
+		{onpointerdown}
+		{onpointermove}
+		{onpointerup}
+		onpointercancel={() => {
+			drag = null;
+			over = null;
+		}}
 		onfocus={() => (focused = true)}
 		onblur={() => (focused = false)}
 	>
@@ -128,10 +197,15 @@
 						aria-label={label(sq)}
 						aria-selected={cursor.row === r && cursor.col === c}
 					>
-						<div class="content" class:flip={flipped.has(sq)}>{@render piece(sq)}</div>
-						{#if legal.has(sq)}<div class="layer dot"><PixelSprite pixels={DOT} size={2} /></div>{/if}
-						{#if last === sq}<div class="layer last"></div>{/if}
+						<div class="content" class:flip={flipped.has(sq)} class:lifted={drag?.active && drag.from === sq}>
+							{@render piece(sq)}
+						</div>
+						{#if dots.has(sq)}<div class="layer dot"><PixelSprite pixels={DOT} size={2} /></div>{/if}
+						{#if lastSet.has(sq)}<div class="layer last"></div>{/if}
+						{#if selected === sq}<div class="layer selected"></div>{/if}
+						{#if alert === sq}<div class="layer alert"></div>{/if}
 						{#if highlight.has(sq)}<div class="layer sorot"></div>{/if}
+						{#if over === sq}<div class="layer drop"></div>{/if}
 						<div class="layer hover"></div>
 						{#if focused && cursor.row === r && cursor.col === c}<div class="layer cursor-ring"></div>{/if}
 					</div>
@@ -139,6 +213,11 @@
 			</div>
 		{/each}
 	</div>
+	{#if drag?.active}
+		<div class="ghost" aria-hidden="true" style:left={`${drag.x}px`} style:top={`${drag.y}px`}>
+			{@render piece(drag.from)}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -173,6 +252,8 @@
 		background: var(--dim);
 		outline: none;
 		width: max-content;
+		touch-action: none;
+		user-select: none;
 	}
 	.grid:focus-visible {
 		background: var(--dim);
@@ -202,15 +283,28 @@
 		place-items: center;
 		pointer-events: none;
 	}
-	.dot {
-		color: var(--dim);
+	.lifted {
+		opacity: 0.25;
 	}
-	.cell.can .dot {
+	.dot {
 		color: var(--fg);
 	}
 	.last {
 		inset: 3px;
 		border: 1px dotted var(--fg);
+	}
+	.selected {
+		inset: 0;
+		border: 3px double var(--fg);
+	}
+	.alert {
+		inset: 4px;
+		border: 2px dashed var(--fg);
+		animation: blink 0.8s steps(1) infinite;
+	}
+	.drop {
+		inset: 2px;
+		border: 2px solid var(--fg);
 	}
 	.hover {
 		inset: 2px;
@@ -235,6 +329,13 @@
 	.flip {
 		animation: flip 0.35s steps(3) 1;
 	}
+	.ghost {
+		position: fixed;
+		z-index: 60;
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+		color: var(--fg);
+	}
 	@keyframes blink {
 		50% {
 			border-color: transparent;
@@ -250,7 +351,8 @@
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.sorot,
-		.flip {
+		.flip,
+		.alert {
 			animation: none;
 		}
 	}

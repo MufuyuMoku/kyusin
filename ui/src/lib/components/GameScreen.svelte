@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import { api, type ReplaySummary } from '$lib/backend';
-	import { back, findGame, openReplay, startMatch, startTutorial } from '$lib/app.svelte';
+	import { back, findGame, go, openReplay, startMatch, startTutorial } from '$lib/app.svelte';
 	import { GAME_UI } from '$lib/games';
 	import { L, errorText, lang, t, type Key, type Localized } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
@@ -15,6 +15,19 @@
 	const game = $derived(findGame(id));
 	const levels = $derived(game?.bot_levels ?? 0);
 	const seatKeys = $derived(GAME_UI[id]?.seats ?? []);
+	const clocks = $derived(GAME_UI[id]?.clocks ?? []);
+	const hasPgn = $derived(!!GAME_UI[id]?.pgn);
+	let clockIndex = $state(0);
+
+	function levelLabel(l: number): string {
+		const name = t(`level.${Math.min(l, 4)}` as Key, { n: l });
+		const elo = game?.bot_ratings?.[l - 1];
+		return elo ? `${name} · ${t('play.rating', { elo })}` : name;
+	}
+
+	function clockLabel(c: { minutes: number; increment: number } | null): string {
+		return c ? t('clock.option', { m: c.minutes, s: c.increment }) : t('clock.none');
+	}
 
 	let page = $state<Localized | null>(null);
 	let error = $state<unknown>(null);
@@ -76,7 +89,7 @@
 					{#each Array.from({ length: levels }, (_, i) => i + 1) as l (l)}
 						<div>
 							<NavButton pressed={level === l} onclick={() => (level = l)}
-								>{level === l ? '(•)' : '( )'} {t(`level.${Math.min(l, 3)}` as Key, { n: l })}</NavButton
+								>{level === l ? '(•)' : '( )'} {levelLabel(l)}</NavButton
 							>
 						</div>
 					{/each}
@@ -93,15 +106,34 @@
 						{/each}
 					</div>
 				{/if}
+				{#if clocks.length}
+					<div>
+						<p class="dim">{t('play.clock')}</p>
+						{#each clocks as c, i (i)}
+							<div>
+								<NavButton pressed={clockIndex === i} onclick={() => (clockIndex = i)}
+									>{clockIndex === i ? '(•)' : '( )'} {clockLabel(c)}</NavButton
+								>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 			<div class="start">
-				<NavButton onclick={() => startMatch(id, level, seat)}>[ {t('play.start')} ]</NavButton>
+				<NavButton onclick={() => startMatch(id, level, seat, clocks[clockIndex] ?? null)}
+					>[ {t('play.start')} ]</NavButton
+				>
 			</div>
 		</Frame>
 	{/if}
 
 	{#if levels > 0}
 		<Frame title={t('replay.list')}>
+			{#if hasPgn}
+				<div class="import">
+					<NavButton onclick={() => go({ name: 'pgn' })}>[ {t('action.import_pgn')} ]</NavButton>
+				</div>
+			{/if}
 			{#if replays.length === 0}
 				<p class="dim">{t('replay.none')}</p>
 			{:else}
@@ -135,6 +167,9 @@
 		display: flex;
 		gap: 6ch;
 		flex-wrap: wrap;
+	}
+	.import {
+		margin-bottom: calc(var(--cell-h) / 2);
 	}
 	.start {
 		margin-top: var(--cell-h);

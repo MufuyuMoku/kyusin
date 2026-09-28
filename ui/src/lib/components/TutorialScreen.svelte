@@ -13,7 +13,11 @@
 
 	const tut = $derived(app.tutorial);
 	const highlighted = $derived(
-		new Set((tut?.step?.sorot ?? []).filter((s) => s.startsWith('aksi:')).map((s) => s.slice(5)))
+		new Set(
+			(tut?.step?.sorot ?? [])
+				.filter((s) => s.startsWith('aksi:') || s.startsWith('petak:'))
+				.map((s) => s.slice(s.indexOf(':') + 1))
+		)
 	);
 	const buttons = $derived(tut?.actions.flatMap((a) => a.concrete ?? []) ?? []);
 	/** Kontrol visual game ini, bila ada (papan Reversi, dsb.). */

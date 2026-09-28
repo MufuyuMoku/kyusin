@@ -4,7 +4,8 @@
   selesai: hasil, seed yang dibuka, verify otomatis, dan tautan replay.
 -->
 <script lang="ts">
-	import { app, back, findGame, matchAct, openReplay, startMatch } from '$lib/app.svelte';
+	import { app, back, findGame, matchAct, matchFlag, openReplay, startMatch } from '$lib/app.svelte';
+	import ClockPanel from './ClockPanel.svelte';
 	import { GAME_UI } from '$lib/games';
 	import { L, t } from '$lib/i18n.svelte';
 	import FairPanel from './FairPanel.svelte';
@@ -13,6 +14,7 @@
 
 	/** Kata perintah; sama di kedua bahasa (SPEC §4). */
 	const PASS = 'pass';
+	const RESIGN = 'resign';
 
 	const m = $derived(app.match);
 	const ui = $derived(m ? GAME_UI[m.game] : undefined);
@@ -21,6 +23,15 @@
 	const level = $derived(bot && bot.kind === 'bot' ? bot.level : 1);
 	const buttons = $derived(m?.actions.flatMap((a) => a.concrete ?? []) ?? []);
 	const canPass = $derived(m?.your_turn && buttons.length === 1 && buttons[0] === PASS);
+	const canResign = $derived(!!m && !m.over && m.your_turn && buttons.includes(RESIGN));
+	let confirmResign = $state(false);
+
+	const names = $derived<[string, string]>(
+		(m?.seats ?? []).map((s) => (s.kind === 'bot' ? t('match.bot_name', { level: s.level }) : t('match.you'))) as [
+			string,
+			string
+		]
+	);
 
 	const outcome = $derived.by(() => {
 		if (!m?.result) return '';
@@ -59,15 +70,28 @@
 					{#if canPass}
 						<NavButton sorot onclick={() => matchAct(PASS)}>[ {PASS.toUpperCase()} ]</NavButton>
 					{:else if !ui && m.your_turn}
-						{#each buttons as cmd (cmd)}
+						{#each buttons.filter((b) => b !== RESIGN) as cmd (cmd)}
 							<NavButton onclick={() => matchAct(cmd)}>[ {cmd.toUpperCase()} ]</NavButton>
 						{/each}
+					{/if}
+					{#if canResign && !confirmResign}
+						<NavButton onclick={() => (confirmResign = true)}>[ {t('action.resign')} ]</NavButton>
+					{:else if canResign}
+						<NavButton
+							onclick={() => {
+								confirmResign = false;
+								matchAct(RESIGN);
+							}}>[ {t('action.resign_confirm')} ]</NavButton
+						>
+						<NavButton onclick={() => (confirmResign = false)}>[ {t('action.cancel')} ]</NavButton>
 					{/if}
 				</div>
 				{#if m.over}
 					<p class="result" role="status">{outcome} {m.result ? L(m.result.summary) : ''}</p>
 					<div class="controls">
-						<NavButton onclick={() => startMatch(m.game, level, m.seat)}>[ {t('action.again')} ]</NavButton>
+						<NavButton onclick={() => startMatch(m.game, level, m.seat, app.lastClock)}
+							>[ {t('action.again')} ]</NavButton
+						>
 						{#if m.replay_id !== null}
 							<NavButton onclick={() => m.replay_id !== null && openReplay(m.replay_id)}
 								>[ {t('action.view_replay')} ]</NavButton
@@ -84,6 +108,9 @@
 			</div>
 
 			<div class="right">
+				{#if m.clock}
+					<ClockPanel clock={m.clock} seat={m.seat} {names} onexpired={matchFlag} />
+				{/if}
 				<FairPanel commitments={m.commitments} reveal={m.reveal} verify={m.verify} />
 				{#if moveList}
 					<Frame title={t('match.moves')}>

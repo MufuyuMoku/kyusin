@@ -585,7 +585,11 @@ mod tests {
             since: Instant::now() - std::time::Duration::from_millis(1_500),
         };
         c.after_move(0, Some(1));
-        assert!((60_400..=60_600).contains(&c.remaining[0]), "{:?}", c.remaining);
+        assert!(
+            (60_400..=60_600).contains(&c.remaining[0]),
+            "{:?}",
+            c.remaining
+        );
         assert_eq!(c.remaining[1], 60_000);
         assert_eq!(c.running, Some(1));
         c.since = Instant::now() - std::time::Duration::from_millis(700);

@@ -10,6 +10,7 @@
 	import HelpScreen from '$lib/components/HelpScreen.svelte';
 	import MatchScreen from '$lib/components/MatchScreen.svelte';
 	import MenuScreen from '$lib/components/MenuScreen.svelte';
+	import PgnScreen from '$lib/components/PgnScreen.svelte';
 	import ReplayScreen from '$lib/components/ReplayScreen.svelte';
 	import SettingsScreen from '$lib/components/SettingsScreen.svelte';
 	import TutorialScreen from '$lib/components/TutorialScreen.svelte';
@@ -124,6 +125,8 @@
 					<MatchScreen />
 				{:else if screen.name === 'replay'}
 					<ReplayScreen />
+				{:else if screen.name === 'pgn'}
+					<PgnScreen />
 				{:else if screen.name === 'settings'}
 					<SettingsScreen />
 				{:else if screen.name === 'help'}

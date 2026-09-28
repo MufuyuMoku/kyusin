@@ -160,7 +160,8 @@ function state(g: Game): MatchState {
 		result: done ? summary(g) : null,
 		verify: done ? verifyOk : null,
 		replay_id: done ? replays.length : null,
-		save_error: null
+		save_error: null,
+		clock: null
 	};
 }
 
@@ -181,6 +182,16 @@ function save(g: Game) {
 }
 
 export const reversiMock = {
+	match_flag: async (): Promise<MatchState> => {
+		if (!game) throw { id: 'Tidak ada permainan yang berjalan.', en: 'No game is running.' };
+		return state(game);
+	},
+	replay_pgn: async (): Promise<string> => {
+		throw { id: 'PGN hanya untuk replay catur.', en: 'PGN is only for chess replays.' };
+	},
+	pgn_open: async (): Promise<ReplayData> => {
+		throw { id: 'Tiruan dev tidak punya mesin catur.', en: 'The dev mock has no chess engine.' };
+	},
 	match_start: async (_id: string, level: number, seat: number): Promise<MatchState> => {
 		if (game && !over(game) && game.moves.length) save(game);
 		game = { board: initial(), turn: 0, last: null, flipped: [], moves: [], human: seat, level };
@@ -223,7 +234,8 @@ export const reversiMock = {
 			frames,
 			fair: fair(),
 			result: r.summary.result,
-			verify: verifyOk
+			verify: verifyOk,
+			tags: []
 		};
 	}
 };

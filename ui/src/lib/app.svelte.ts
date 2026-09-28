@@ -19,6 +19,7 @@ export type Screen =
 	| { name: 'tutorial'; id: string }
 	| { name: 'match'; id: string }
 	| { name: 'replay'; id: number }
+	| { name: 'pgn' }
 	| { name: 'settings' }
 	| { name: 'help' };
 
@@ -31,6 +32,8 @@ export const app = $state({
 	match: null as MatchState | null,
 	/** Replay yang sedang dibuka. */
 	replay: null as ReplayData | null,
+	/** Jam pertandingan terakhir, untuk "main lagi". */
+	lastClock: null as { minutes: number; increment: number } | null,
 	/** Konsol sedang dibuka lewat `:` atau `` ` ``. */
 	consoleOpen: false,
 	output: [] as string[],
@@ -161,10 +164,13 @@ async function runBots() {
 	}
 }
 
-export async function startMatch(id: string, level: number, seat: number) {
+export type Clock = { minutes: number; increment: number } | null;
+
+export async function startMatch(id: string, level: number, seat: number, clock: Clock = null) {
 	const a = await api();
 	const seed = settings.playerSeed.trim() || null;
-	app.match = await a.match_start(id, level, seat, seed);
+	app.lastClock = clock;
+	app.match = await a.match_start(id, level, seat, seed, clock);
 	if (current().name === 'match') app.stack.pop();
 	go({ name: 'match', id });
 	runBots();
@@ -174,6 +180,20 @@ export async function matchAct(command: string) {
 	const a = await api();
 	app.match = await a.match_act(command);
 	runBots();
+}
+
+/** Jam pemain di layar habis; host memeriksa dengan jamnya sendiri. */
+export async function matchFlag() {
+	const a = await api();
+	app.match = await a.match_flag();
+	runBots();
+}
+
+/** Membuka teks PGN di penampil replay (tidak disimpan). */
+export async function openPgn(text: string) {
+	const a = await api();
+	app.replay = await a.pgn_open(text);
+	go({ name: 'replay', id: 0 });
 }
 
 function leaveMatch() {

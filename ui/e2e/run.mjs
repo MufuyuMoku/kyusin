@@ -20,6 +20,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run as board } from './board.e2e.mjs';
+import { run as chess } from './chess.e2e.mjs';
+import { Session } from './webdriver.mjs';
+import { mkdirSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..', '..');
@@ -126,8 +129,18 @@ try {
 	await ready();
 	const port = await devtools();
 	console.log(`WebView2 DevTools di port ${port}`);
-	console.log('papan Reversi (jendela asli):');
-	await board({ base, debuggerAddress: `127.0.0.1:${port}`, artifacts });
+	mkdirSync(artifacts, { recursive: true });
+	const s = await Session.attach(base, `127.0.0.1:${port}`);
+	const log = (m) => console.log(`  ${m}`);
+	try {
+		await s.waitFor(() => !!document.querySelector('.crt'), 'jendela KyuSin');
+		console.log('papan Reversi (jendela asli):');
+		await board(s, artifacts, log);
+		console.log('papan catur (jendela asli):');
+		await chess(s, artifacts, log);
+	} finally {
+		await s.end().catch(() => {});
+	}
 	console.log(`LULUS. Tangkapan layar di ${artifacts}`);
 } catch (e) {
 	console.error(`GAGAL: ${e.message}`);

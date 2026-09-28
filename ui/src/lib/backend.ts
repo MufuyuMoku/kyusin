@@ -40,6 +40,8 @@ export interface Game {
 	rtp_line: Localized | null;
 	/** Jumlah level bot (0 = belum ada). */
 	bot_levels: number;
+	/** Perkiraan rating tiap level dari kalibrasi, bila ada. */
+	bot_ratings: (number | null)[];
 }
 
 export interface Category {
@@ -127,6 +129,14 @@ export interface MatchState {
 	verify: VerifyReport | null;
 	replay_id: number | null;
 	save_error: string | null;
+	/** Jam (catur), dihitung host. */
+	clock: ClockState | null;
+}
+
+export interface ClockState {
+	remaining_ms: [number, number];
+	running: number | null;
+	increment_ms: number;
 }
 
 export interface ReplaySummary {
@@ -147,14 +157,18 @@ export interface Frame {
 }
 
 export interface ReplayData {
-	id: number;
+	/** `null` untuk partai impor PGN (tidak tersimpan). */
+	id: number | null;
 	game: string;
 	seat: number;
 	seats: SeatKind[];
 	frames: Frame[];
-	fair: FairRecord;
+	/** Tidak ada untuk impor PGN. */
+	fair: FairRecord | null;
 	result: GameResult | null;
-	verify: VerifyReport;
+	verify: VerifyReport | null;
+	/** Tag PGN (impor). */
+	tags: [string, string][];
 }
 
 export interface AppInfo {
@@ -181,7 +195,16 @@ type Api = {
 	tutorial_act(command: string): Promise<TutorialState>;
 	tutorial_next(): Promise<TutorialState>;
 	tutorial_stop(): Promise<void>;
-	match_start(id: string, level: number, seat: number, playerSeed: string | null): Promise<MatchState>;
+	match_start(
+		id: string,
+		level: number,
+		seat: number,
+		playerSeed: string | null,
+		clock: { minutes: number; increment: number } | null
+	): Promise<MatchState>;
+	match_flag(): Promise<MatchState>;
+	replay_pgn(id: number, lang: 'id' | 'en'): Promise<string>;
+	pgn_open(text: string): Promise<ReplayData>;
 	match_act(command: string): Promise<MatchState>;
 	match_step(): Promise<MatchState>;
 	match_leave(): Promise<void>;
@@ -197,8 +220,11 @@ const tauriApi: Api = {
 	tutorial_act: (command) => invoke('tutorial_act', { command }),
 	tutorial_next: () => invoke('tutorial_next'),
 	tutorial_stop: () => invoke('tutorial_stop'),
-	match_start: (id, level, seat, playerSeed) =>
-		invoke('match_start', { id, level, seat, playerSeed }),
+	match_start: (id, level, seat, playerSeed, clock) =>
+		invoke('match_start', { id, level, seat, playerSeed, clock }),
+	match_flag: () => invoke('match_flag'),
+	replay_pgn: (id, lang) => invoke('replay_pgn', { id, lang }),
+	pgn_open: (text) => invoke('pgn_open', { text }),
 	match_act: (command) => invoke('match_act', { command }),
 	match_step: () => invoke('match_step'),
 	match_leave: () => invoke('match_leave'),
