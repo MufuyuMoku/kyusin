@@ -98,3 +98,19 @@ fn stronger_levels_score_more() {
     eprintln!("level 4 vs 3: {}/{}", p43 as f64 / 2.0, 6);
     assert!(p43 >= 7, "level 4 hanya {} dari 6 poin", p43 as f64 / 2.0);
 }
+
+#[test]
+fn ratings_from_calibration() {
+    let r = kyusin_bots::ratings(kyusin_games::catur::ID);
+    assert_eq!(r.len(), 4);
+    // Level 1 hanya punya taksiran ekstrapolasi: tidak ditampilkan.
+    assert_eq!(r[0], None);
+    let known: Vec<i64> = r[1..]
+        .iter()
+        .map(|x| x.expect("level 2-4 terkalibrasi"))
+        .collect();
+    assert!(
+        known.windows(2).all(|w| w[0] < w[1]),
+        "rating naik per level: {known:?}"
+    );
+}

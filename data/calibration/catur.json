@@ -1,6 +1,135 @@
 {
+  "date": "2026-09-28",
   "game": "catur",
-  "date": "",
-  "opponent": "",
-  "levels": []
+  "games_per_pairing": 16,
+  "levels": [
+    {
+      "ci95": [
+        640.0,
+        1136.0
+      ],
+      "elo": 888.0,
+      "extrapolated": true,
+      "level": 1,
+      "results": [
+        {
+          "games": 16,
+          "opponent_elo": 1320,
+          "points": 0.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1500,
+          "points": 0.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1700,
+          "points": 0.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1900,
+          "points": 0.0
+        }
+      ]
+    },
+    {
+      "ci95": [
+        1166.0,
+        1401.0
+      ],
+      "elo": 1283.0,
+      "extrapolated": false,
+      "level": 2,
+      "results": [
+        {
+          "games": 16,
+          "opponent_elo": 1320,
+          "points": 6.5
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1500,
+          "points": 5.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1700,
+          "points": 1.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1900,
+          "points": 0.0
+        }
+      ]
+    },
+    {
+      "ci95": [
+        1357.0,
+        1562.0
+      ],
+      "elo": 1459.0,
+      "extrapolated": false,
+      "level": 3,
+      "results": [
+        {
+          "games": 16,
+          "opponent_elo": 1320,
+          "points": 10.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1500,
+          "points": 5.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1700,
+          "points": 5.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1900,
+          "points": 2.5
+        }
+      ]
+    },
+    {
+      "ci95": [
+        1504.0,
+        1703.0
+      ],
+      "elo": 1604.0,
+      "extrapolated": false,
+      "level": 4,
+      "results": [
+        {
+          "games": 16,
+          "opponent_elo": 1320,
+          "points": 12.5
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1500,
+          "points": 12.0
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1700,
+          "points": 5.5
+        },
+        {
+          "games": 16,
+          "opponent_elo": 1900,
+          "points": 2.0
+        }
+      ]
+    }
+  ],
+  "method": "UCI_LimitStrength + UCI_Elo; taksiran kemungkinan maksimum model Elo logistik; selang 95% dari informasi Fisher",
+  "movetime_ms": 100,
+  "openings": 8,
+  "opponent": "Stockfish 19"
 }

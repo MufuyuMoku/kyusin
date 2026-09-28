@@ -30,7 +30,9 @@ pub fn ratings(game: &str) -> Vec<Option<i64>> {
             doc["levels"]
                 .as_array()?
                 .iter()
-                .find(|l| l["level"] == level)?["elo"]
+                .find(|l| l["level"] == level)
+                // Taksiran ekstrapolasi (semua kalah/menang) tidak ditampilkan.
+                .filter(|l| l["extrapolated"] != true)?["elo"]
                 .as_f64()
                 .map(|e| e as i64)
         })

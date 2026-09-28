@@ -105,14 +105,18 @@
 		const sq = cell?.dataset.sq;
 		if (!sq || !draggable(sq)) return;
 		drag = { from: sq, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, active: false };
-		(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
 	}
 
 	function onpointermove(e: PointerEvent) {
 		if (!drag) return;
 		drag.x = e.clientX;
 		drag.y = e.clientY;
-		if (!drag.active && Math.hypot(drag.x - drag.x0, drag.y - drag.y0) > 4) drag.active = true;
+		if (!drag.active && Math.hypot(drag.x - drag.x0, drag.y - drag.y0) > 4) {
+			drag.active = true;
+			// Tangkap penunjuk hanya saat seret benar-benar dimulai: tangkapan
+			// pada klik biasa membelokkan target klik ke papan, bukan ke sel.
+			(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+		}
 		if (drag.active) over = cellAt(e.clientX, e.clientY)?.dataset.sq ?? null;
 	}
 
@@ -128,7 +132,7 @@
 
 	function onclick(e: MouseEvent) {
 		if (performance.now() < suppressUntil) return;
-		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]');
+		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]') ?? cellAt(e.clientX, e.clientY);
 		if (!cell) return;
 		cursor = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };
 		choose(cell.dataset.sq!);
