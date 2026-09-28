@@ -51,7 +51,7 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
   - Hasil dan rating dicatat saat pertandingan selesai (termasuk menyerah dan pertandingan tertunda yang dibuang); yang masih tertunda tidak dihitung.
   - UI: layar Profil (ganti nama), layar Statistik (tabel rating lokal ±RD, partai, M–S–K, terbaik; riwayat 30 terakhir dengan perubahan rating dan tautan replay), perubahan rating di akhir pertandingan, "rating lokal ≈…" di pilihan level, perintah konsol `profile` dan `stats`. Sapaan `name` dan `last_game` aktif dari data profil.
   - Tes jendela asli baru (`profile.e2e.mjs`): ganti nama, tetap setelah muat ulang; tabel statistik berisi catur dan Reversi dengan rating lokal, kolom selaras dan tidak meluber di tiga tema; riwayat berisi perubahan rating dan membuka replay.
-- Tes: 126 tes Rust, 34 tes UI. Tes jendela asli (CI Windows): E2E_RESULT
+- Tes: 126 tes Rust, 34 tes UI. Tes jendela asli (CI Windows, run 36421347259) lulus: Reversi, catur, menu jeda/penundaan/kursor, profil dan statistik (tabel berisi catur 751 ±249 dan Reversi 812 ±237 setelah partai uji yang kalah dari bot level 1). Satu run sebelumnya (36420598006) gagal sekali di langkah klik catur yang lama dan tidak terulang; tes kini mencetak event dan keadaan papan bila itu terjadi lagi.
 - Belum/sisa: RD tidak bertambah selama tidak bermain (belum diperlukan). Ringkasan menang/kalah terhadap bandar di statistik menyusul bersama game casino (M4). Menu jeda LAN (hanya konfirmasi keluar) menyusul saat LAN ada.
 - Langkah berikutnya: M2b (level catur 5–6) sesuai urutan §9 Rev. 9, lalu M4.
 
