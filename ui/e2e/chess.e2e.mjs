@@ -25,12 +25,33 @@ const movesText = () => document.querySelector('.moves')?.textContent ?? '';
 /** Pilih petak asal lalu tujuan sah pertamanya lewat klik. */
 async function clickMove(s) {
 	const from = await s.exec(() => document.querySelector('[role="gridcell"].can').dataset.sq);
+	// Perekam event untuk diagnosis bila pemilihan gagal.
+	await s.exec(() => {
+		const log = (window.__e2eEvents = []);
+		const t0 = performance.now();
+		const where = (el) => (el instanceof Element ? el.closest('[data-sq]')?.dataset.sq ?? el.tagName : String(el));
+		for (const type of ['pointerdown', 'pointerup', 'pointermove', 'click'])
+			document.addEventListener(
+				type,
+				(e) => log.push(`${Math.round(performance.now() - t0)} ${type} ${where(e.target)} (${e.clientX},${e.clientY})`),
+				true
+			);
+		new MutationObserver(() =>
+			log.push(`${Math.round(performance.now() - t0)} selected=${document.querySelector('.layer.selected')?.closest('[data-sq]')?.dataset.sq ?? null}`)
+		).observe(document.querySelector('[role="grid"]'), { childList: true, subtree: true });
+	});
 	await s.click(await s.find('css selector', `[data-sq="${from}"]`));
+	await s.waitFor(() => !!document.querySelector('.layer.selected'), 'petak terpilih', 2000).catch(() => {});
 	const picked = await s.exec(() => ({
 		selected: document.querySelector('.layer.selected')?.closest('[data-sq]')?.dataset.sq,
-		dots: [...document.querySelectorAll('.layer.dot')].map((d) => d.closest('[data-sq]').dataset.sq)
+		dots: [...document.querySelectorAll('.layer.dot')].map((d) => d.closest('[data-sq]').dataset.sq),
+		events: window.__e2eEvents.filter((l) => !l.includes('pointermove')).slice(0, 30),
+		moves: window.__e2eEvents.filter((l) => l.includes('pointermove')).length
 	}));
-	if (picked.selected !== from) fail(`petak terpilih ${picked.selected}, seharusnya ${from}`);
+	if (picked.selected !== from) {
+		console.log(`  event: ${picked.moves} pointermove\n    ${picked.events.join('\n    ')}`);
+		fail(`petak terpilih ${picked.selected}, seharusnya ${from}`);
+	}
 	if (picked.dots.length === 0) fail(`tidak ada titik tujuan untuk ${from}`);
 	const before = await s.exec(movesText);
 	await s.click(await s.find('css selector', `[data-sq="${picked.dots[0]}"]`));
