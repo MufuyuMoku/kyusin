@@ -89,17 +89,19 @@
 	);
 	let over = $state<string | null>(null);
 	/**
-	 * Klik yang menyusul pelepasan seret diabaikan, tetapi hanya sesaat:
-	 * peramban tidak selalu mengirim klik penutup seret, dan klik pemain
-	 * berikutnya tidak boleh ikut tertelan.
+	 * Klik penutup seret (datang tepat setelah `pointerup`) diabaikan. Tanda
+	 * ini dihapus oleh klik itu sendiri atau oleh tekanan berikutnya, karena
+	 * peramban tidak selalu mengirim klik penutup seret; klik pemain
+	 * berikutnya tidak boleh ikut tertelan, secepat apa pun datangnya.
 	 */
-	let suppressUntil = 0;
+	let afterDrag = false;
 
 	function cellAt(x: number, y: number): HTMLElement | null {
 		return (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>('[data-sq]') ?? null;
 	}
 
 	function onpointerdown(e: PointerEvent) {
+		afterDrag = false;
 		if (e.button !== 0 || !draggable || !ondrop) return;
 		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]');
 		const sq = cell?.dataset.sq;
@@ -122,18 +124,19 @@
 
 	function onpointerup(e: PointerEvent) {
 		const was = drag;
-		((window as any).__dbg ??= []).push(`up t=${Math.round(performance.now())} was=${JSON.stringify(was)}`);
 		drag = null;
 		over = null;
 		if (!was?.active) return;
-		suppressUntil = performance.now() + 150;
+		afterDrag = true;
 		const to = cellAt(e.clientX, e.clientY)?.dataset.sq;
 		if (to && to !== was.from) ondrop?.(was.from, to);
 	}
 
 	function onclick(e: MouseEvent) {
-		((window as any).__dbg ??= []).push(`click t=${Math.round(performance.now())} sup=${Math.round(suppressUntil)} drag=${JSON.stringify(drag)} tgt=${(e.target as Element).closest?.("[data-sq]")?.getAttribute("data-sq")} legal=${[...legal]}`);
-		if (performance.now() < suppressUntil) return;
+		if (afterDrag) {
+			afterDrag = false;
+			return;
+		}
 		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]') ?? cellAt(e.clientX, e.clientY);
 		if (!cell) return;
 		cursor = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };

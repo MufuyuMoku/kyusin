@@ -46,12 +46,10 @@ async function clickMove(s) {
 		selected: document.querySelector('.layer.selected')?.closest('[data-sq]')?.dataset.sq,
 		dots: [...document.querySelectorAll('.layer.dot')].map((d) => d.closest('[data-sq]').dataset.sq),
 		events: window.__e2eEvents.filter((l) => !l.includes('pointermove')).slice(0, 30),
-		moves: window.__e2eEvents.filter((l) => l.includes('pointermove')).length,
-		dbg: (window.__dbg ?? []).slice(-25)
+		moves: window.__e2eEvents.filter((l) => l.includes('pointermove')).length
 	}));
 	if (picked.selected !== from) {
 		console.log(`  event: ${picked.moves} pointermove\n    ${picked.events.join('\n    ')}`);
-		console.log(`  jejak:\n    ${picked.dbg.join('\n    ')}`);
 		fail(`petak terpilih ${picked.selected}, seharusnya ${from}`);
 	}
 	if (picked.dots.length === 0) fail(`tidak ada titik tujuan untuk ${from}`);
