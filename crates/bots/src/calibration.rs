@@ -10,6 +10,9 @@ use kyusin_core::rating::Rating;
 /// Rating level 1 untuk game yang dikalibrasi antar-bot.
 pub const ANCHOR: f64 = 1000.0;
 
+/// Selisih rating terbesar antara dua level berurutan (SPEC §8, Rev. 10).
+pub const MAX_STEP: f64 = 400.0;
+
 /// RD minimum untuk lawan bot: level dengan selang sangat sempit (atau
 /// jangkar) tetap dianggap punya sedikit ketidakpastian.
 pub const MIN_BOT_RD: f64 = 30.0;
@@ -102,6 +105,29 @@ pub fn bot_rating(game: &str, lvl: u8) -> Option<Rating> {
     })
 }
 
+/// Pelanggaran aturan tangga level merata (SPEC §8): selisih dua level
+/// berurutan lebih dari [`MAX_STEP`]. Level terbawah yang taksirannya
+/// ekstrapolasi (hanya punya batas atas) dikecualikan.
+pub fn ladder_violations(levels: &[LevelRating]) -> Vec<String> {
+    let skip = usize::from(levels.first().is_some_and(|l| l.extrapolated));
+    levels
+        .windows(2)
+        .enumerate()
+        .skip(skip)
+        .filter(|(_, w)| w[1].elo - w[0].elo > MAX_STEP)
+        .map(|(i, w)| {
+            format!(
+                "level {} → {}: {:.0} → {:.0} (selisih {:.0} > {MAX_STEP})",
+                i + 1,
+                i + 2,
+                w[0].elo,
+                w[1].elo,
+                w[1].elo - w[0].elo
+            )
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,6 +167,62 @@ mod tests {
                 last = r.rating;
             }
         }
+    }
+
+    fn lr(elo: f64, extrapolated: bool) -> LevelRating {
+        LevelRating {
+            elo,
+            half_ci: 50.0,
+            extrapolated,
+        }
+    }
+
+    #[test]
+    fn ladder_rule_flags_wide_steps_except_an_upper_bound_bottom() {
+        assert!(
+            ladder_violations(&[lr(1000.0, false), lr(1400.0, false), lr(1790.0, false)])
+                .is_empty()
+        );
+        let v = ladder_violations(&[lr(1000.0, false), lr(1344.0, false), lr(2133.0, false)]);
+        assert_eq!(v.len(), 1, "{v:?}");
+        assert!(v[0].starts_with("level 2 → 3"), "{v:?}");
+        // Level terbawah ekstrapolasi (mis. catur level 1, 0/64) dikecualikan…
+        assert!(ladder_violations(&[lr(888.0, true), lr(1400.0, false)]).is_empty());
+        // …tetapi hanya yang terbawah.
+        assert_eq!(
+            ladder_violations(&[lr(1000.0, false), lr(1500.0, true)]).len(),
+            1
+        );
+    }
+
+    /// SPEC §8 Rev. 10: data kalibrasi setiap game kompetitif memenuhi
+    /// aturan tangga level merata.
+    #[test]
+    fn every_competitive_game_has_an_even_level_ladder() {
+        let registry = kyusin_games::builtin().unwrap();
+        let mut problems = Vec::new();
+        for m in registry.manifests() {
+            if !m.competitive || crate::levels(&m.id) == 0 {
+                continue;
+            }
+            let levels: Vec<LevelRating> = (1..=crate::levels(&m.id))
+                .filter_map(|l| level(&m.id, l))
+                .collect();
+            problems.extend(
+                ladder_violations(&levels)
+                    .into_iter()
+                    .map(|p| format!("{}: {p}", m.id)),
+            );
+        }
+        assert!(
+            problems.is_empty(),
+            "tangga level tidak merata:
+{}",
+            problems.join(
+                "
+"
+            )
+        );
     }
 
     #[test]
