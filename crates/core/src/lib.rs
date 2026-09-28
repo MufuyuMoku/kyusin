@@ -4,6 +4,7 @@
 //! Kontrak [`game::TurnGame`] final sejak M1 (D-034), bersama RNG yang
 //! disuntikkan ([`rng`]), provably fair ([`fair`]), pemain ([`player`]),
 //! pertandingan ([`game_match`]), dan replay + `verify` ([`replay`]).
+//! Rating lokal Glicko-2 ([`rating`]) sejak M3.
 
 pub mod action;
 pub mod fair;
@@ -14,6 +15,7 @@ pub mod help;
 pub mod i18n;
 pub mod manifest;
 pub mod player;
+pub mod rating;
 pub mod registry;
 pub mod replay;
 pub mod rng;
