@@ -10,6 +10,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M0b | selesai | 2026-09-27 | Efek CRT samar + slider, reduced motion baru, checkbox jujur, dua bahasa + cek terjemahan di CI |
 | M0c | selesai | 2026-09-27 | Tiga mode boot (Verbose, Sinematik, Sapaan) + Mati |
 | M1 | selesai | 2026-09-28 | Kontrak final, provably fair + verify, replay, Reversi memenuhi §7 |
+| M1b | selesai | 2026-09-28 | Papan grid CSS + sprite piksel, komponen papan bersama, tes jendela asli tauri-driver di CI Windows, sapaan baru + bentuk jamak |
 | M2 | belum mulai | | |
 | M3 | belum mulai | | |
 | M4 | belum mulai | | |
@@ -33,6 +34,19 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Reversi | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M1); rating lokal di M3 |
 
 ## Log sesi
+
+### 2026-09-28 — M1b: papan ulang dan tes jendela asli
+- Konteks: uji klien M1 di jendela Tauri asli: baris papan tempat kursor berada bergeser dan garis vertikal putus. SPEC Revisi 8 (+ aturan lapisan kursor di §4).
+- Dikerjakan (D-038–D-040):
+  - `GridBoard` bersama: grid CSS, sel 40×40 tetap, garis 1px, koordinat monospace; kursor keyboard, hover, sorotan tutorial, penanda langkah sah, dan penanda langkah terakhir semuanya lapisan absolut.
+  - Sprite piksel SVG buatan sendiri (`PixelSprite`): putih = bidak penuh, hitam = cincin, titik langkah sah. Status memakai sprite yang sama.
+  - Tes jendela asli (`ui/e2e`, klien WebDriver tanpa paket tambahan) lewat tauri-driver di CI Windows: keselarasan kolom/baris/jarak, kursor keyboard ke 64 sel, hover ke 64 sel, satu langkah + balasan bot, tema P3 dan P4; tangkapan layar diunggah sebagai artefak `e2e-screenshots`.
+  - Agar tes bisa menempel ke WebView2: aplikasi mengikuti `WEBVIEW2_USER_DATA_FOLDER`, `KYUSIN_DATA_DIR`, dan menggabungkan `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` ke argumen WebView2; tes memakai folder data sementara.
+  - Sapaan `evening`, `weekend`, `streak`, `generic_5`–`generic_7`; hari berturut-turut dicatat per tanggal lokal. Bentuk tunggal/jamak bahasa Inggris untuk semua teks berangka (`{n|one|other}`).
+- Temuan lewat tangkapan layar tes jendela asli: kelas lapisan kursor bentrok dengan kursor blok konsol (balok terang di sel); diganti `cursor-ring`, dan tes kini memeriksa kursor tergambar sebagai garis tepi.
+- Tes: 75 tes Rust, 30 tes UI, tes jendela asli di CI Windows lulus.
+- Catatan M4: `chips_low` memakai saldo sebelum tunjangan harian; tunjangan disebut sesudahnya (D-039).
+- Langkah berikutnya: M2 (catur) memakai `GridBoard`.
 
 ### 2026-09-28 — M1: kontrak, provably fair, replay, Reversi
 - Sebelum M1: perbaikan bug hasil uji M0c (D-033, navigasi panah macet di item nonaktif) dan daftar teks Sinematik + 14 sapaan untuk ditinjau klien.

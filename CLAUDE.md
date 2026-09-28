@@ -39,7 +39,8 @@
 ## Perintah
 - Cek seperti CI: `sh scripts/check.sh` (svelte-check, tes UI, build UI, lisensi npm, fmt, clippy, tes Rust termasuk tes tutorial, cargo-deny).
 - Aplikasi dev: `cd src-tauri && npx --prefix ../ui tauri dev` (tambah `--features fixture` untuk menampilkan game fixture, D-015).
-- UI saja di peramban: `npm --prefix ui run dev` (backend tiruan fixture, hanya mode dev).
+- UI saja di peramban: `npm --prefix ui run dev` (backend tiruan, hanya mode dev; bukan bukti visual, SPEC §11).
+- Tes jendela asli: `npx tauri build --debug --no-bundle` lalu `npm --prefix ui run e2e` (butuh `tauri-driver` dan msedgedriver versi WebView2; lihat `ui/e2e/run.mjs`).
 
 ## Pengingat arsitektur
 - Game = mesin keadaan murni: tanpa IO, tanpa jam dinding, tanpa RNG global; acak lewat RNG yang disuntikkan.
@@ -49,3 +50,5 @@
 - Game baru = modul di `crates/games/src/<id>/` (+ `manifest.toml`, `i18n.toml`), tutorial `tutorials/<id>.toml`, satu baris di `kyusin_games::builtin()`, bot di `crates/bots` (`levels`/`create`), dan kontrol visual di `ui/src/lib/games/` (`GAME_UI`).
 - Tes aturan ditulis dan di-commit sebelum mesin aturannya (contoh: Reversi, commit c73ee05).
 - Glyph UI hanya yang ada di IBM Plex Mono (D-035); `fonts.test.ts` memeriksanya.
+- Papan/meja game: grid CSS/SVG (`ui/src/lib/games/GridBoard.svelte`) + sprite piksel SVG (`PixelSprite`), bukan teks box-drawing. Kursor/hover/sorotan hanya lapisan absolut (SPEC §4, D-038).
+- Setiap layar game wajib punya tes jendela asli di `ui/e2e/` (tauri-driver, CI Windows) yang memeriksa keselarasan dan menyimpan tangkapan layar (SPEC §11).
