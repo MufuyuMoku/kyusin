@@ -15,6 +15,7 @@ use serde::Serialize;
 use tauri::{Manager, State, WebviewWindowBuilder};
 
 mod play;
+mod profile;
 mod tutorial;
 
 /// Argumen bawaan wry untuk WebView2 (menghapus menu mini dan SmartScreen);
@@ -59,6 +60,8 @@ struct AppInfo {
     /// Berkas basis data dan apakah berhasil dibuka.
     database: Option<String>,
     database_ok: bool,
+    /// Profil untuk sapaan boot (M3): nama dan game terakhir.
+    profile: Option<profile::ProfileDto>,
 }
 
 #[derive(Serialize)]
@@ -96,6 +99,7 @@ fn app_info(app: tauri::AppHandle, state: State<'_, AppState>) -> AppInfo {
             .map(|p| p.display().to_string()),
         database: state.db_path.as_ref().map(|p| p.display().to_string()),
         database_ok: state.store.is_ok(),
+        profile: profile::profile_dto(&state).ok(),
     }
 }
 
@@ -206,6 +210,9 @@ pub fn run() {
             play::match_resume,
             play::suspended_forfeit,
             play::suspended_list,
+            profile::profile_get,
+            profile::profile_set_name,
+            profile::stats,
             play::replay_pgn,
             play::pgn_open,
             play::replay_list,

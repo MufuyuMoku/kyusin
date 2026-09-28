@@ -107,6 +107,8 @@ pub(crate) struct Running {
     save_error: Option<String>,
     clock: Option<HostClock>,
     paused: bool,
+    /// Perubahan rating lokal setelah selesai (M3).
+    rating: Option<crate::profile::RatingChange>,
 }
 
 impl Running {
@@ -185,6 +187,8 @@ pub(crate) struct MatchDto {
     started_at: i64,
     /// Menu jeda terbuka: jam dan bot berhenti.
     paused: bool,
+    /// Perubahan rating lokal bila pertandingan ini dihitung.
+    rating: Option<crate::profile::RatingChange>,
 }
 
 /// Isi pertandingan tertunda di store: replay sejauh ini (konfigurasi,
@@ -274,6 +278,7 @@ fn dto(r: &Running) -> MatchDto {
         clock: r.clock.as_ref().map(HostClock::snapshot),
         started_at: r.started_at,
         paused: r.paused,
+        rating: r.rating,
     }
 }
 
@@ -299,6 +304,9 @@ fn finish(state: &AppState, r: &mut Running) {
         Ok(id) => r.replay_id = Some(id),
         Err(e) => r.save_error = Some(e),
     }
+    // Riwayat + rating lokal (M3). Pertandingan tertunda sampai di sini
+    // hanya setelah benar-benar selesai.
+    r.rating = crate::profile::record(state, &replay, r.replay_id, now_ms());
 }
 
 fn store_of(state: &AppState) -> Result<&std::sync::Mutex<kyusin_store::Store>, Localized> {
@@ -409,6 +417,7 @@ fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
             .clock
             .map(|c| HostClock::new(c.remaining_ms, c.increment_ms, pending)),
         paused: false,
+        rating: None,
     })
 }
 
@@ -490,6 +499,7 @@ pub(crate) fn match_start(
             )
         }),
         paused: false,
+        rating: None,
     };
     let dto = dto(&running);
     if let Some(old) = state.play.lock().unwrap().replace(running) {
@@ -925,6 +935,7 @@ mod tests {
             save_error: None,
             clock: clock.then(|| HostClock::new([300_000; 2], 0, Some(0))),
             paused: false,
+            rating: None,
         }
     }
 
@@ -939,6 +950,12 @@ mod tests {
         let hash = r.m.session().state_hash();
         let moves = r.m.moves().to_vec();
         suspend(&st, r).unwrap();
+        // Ditunda: belum masuk riwayat maupun rating.
+        {
+            let s = store_of(&st).unwrap().lock().unwrap();
+            assert!(s.history(None, 10).unwrap().is_empty());
+            assert!(s.rating("catur").unwrap().is_none());
+        }
 
         let list = store_of(&st)
             .unwrap()
@@ -1005,6 +1022,52 @@ mod tests {
         assert_eq!(r.m.moves().last().unwrap().command, "resign");
         finish(&st, &mut r);
         assert!(r.replay_id.is_some() && r.verify.as_ref().unwrap().ok);
+        // Kalah dari bot level 1 (rating 1000): rating lokal turun dari 1500.
+        let change = r.rating.expect("dihitung ke rating");
+        assert_eq!(change.before, 1500.0);
+        assert!(change.after < 1500.0, "{change:?}");
+        let s = store_of(&st).unwrap().lock().unwrap();
+        let stored = s.rating("reversi").unwrap().unwrap();
+        assert_eq!(stored.games, 1);
+        assert_eq!(stored.rating.rating, change.after);
+        let h = s.history(None, 10).unwrap();
+        assert_eq!(h[0].record.replay_id, r.replay_id);
+        assert_eq!(s.last_game().unwrap().as_deref(), Some("reversi"));
+    }
+
+    #[test]
+    fn non_competitive_games_are_recorded_without_rating() {
+        let st = AppState {
+            registry: kyusin_games::with_fixture().unwrap(),
+            ..state()
+        };
+        let fair = fair_record(None).unwrap();
+        let players: Vec<Box<dyn Player>> = vec![Box::new(Human), Box::new(Human)];
+        let mut m = Match::new(
+            st.registry.get("fixture").unwrap(),
+            serde_json::json!({ "batang": 1 }),
+            fair,
+            players,
+        )
+        .unwrap();
+        m.act(0, "take 1").unwrap();
+        let mut r = Running {
+            game: "fixture".into(),
+            m,
+            human: 0,
+            started_at: 1,
+            replay_id: None,
+            verify: None,
+            save_error: None,
+            clock: None,
+            paused: false,
+            rating: None,
+        };
+        finish(&st, &mut r);
+        assert!(r.rating.is_none());
+        let s = store_of(&st).unwrap().lock().unwrap();
+        assert_eq!(s.history(None, 10).unwrap().len(), 1);
+        assert!(s.rating("fixture").unwrap().is_none());
     }
 
     #[test]
