@@ -43,10 +43,8 @@
 		return parts.join(', ');
 	}
 
-	/** Kursor mulai di langkah yang disorot, lalu langkah sah pertama. */
-	const start = $derived(
-		[...highlight].find((h) => legal.has(h)) ?? [...legal][0] ?? v?.terakhir ?? 'd4'
-	);
+	/** Posisi awal kursor (SPEC §4): petak tengah. */
+	const start = 'd4';
 </script>
 
 {#if v}

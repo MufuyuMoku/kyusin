@@ -34,6 +34,8 @@ export const app = $state({
 	replay: null as ReplayData | null,
 	/** Jam pertandingan terakhir, untuk "main lagi". */
 	lastClock: null as { minutes: number; increment: number } | null,
+	/** Menu jeda pertandingan terbuka (SPEC §4). */
+	pauseMenu: false,
 	/** Konsol sedang dibuka lewat `:` atau `` ` ``. */
 	consoleOpen: false,
 	output: [] as string[],
@@ -60,6 +62,67 @@ function cleanup() {
 export function back() {
 	if (app.stack.length > 1) app.stack.pop();
 	cleanup();
+}
+
+/**
+ * `Esc`, tombol kembali, atau perintah `back`. Di tengah pertandingan yang
+ * belum selesai ini membuka menu jeda, bukan keluar (SPEC §4 Rev. 9); saat
+ * menu jeda terbuka, ini sama dengan Lanjutkan.
+ */
+export function requestBack() {
+	if (current().name === 'match' && app.match && !app.match.over) {
+		if (app.pauseMenu) resumePlay();
+		else openPause();
+		return;
+	}
+	back();
+}
+
+export async function openPause() {
+	app.pauseMenu = true;
+	const a = await api();
+	app.match = await a.match_pause();
+}
+
+/** Lanjutkan: menu jeda ditutup, jam dan bot berjalan lagi. */
+export async function resumePlay() {
+	app.pauseMenu = false;
+	const a = await api();
+	app.match = await a.match_unpause();
+	runBots();
+}
+
+/** Tunda & keluar: kembali ke layar game, pertandingan bisa dilanjutkan. */
+export async function suspendMatch() {
+	const a = await api();
+	await a.match_suspend();
+	app.pauseMenu = false;
+	app.match = null;
+	back();
+}
+
+/** Menyerah dari menu jeda. */
+export async function resignMatch() {
+	app.pauseMenu = false;
+	const a = await api();
+	app.match = await a.match_resign();
+}
+
+/** Melanjutkan pertandingan tertunda dari layar game. */
+export async function resumeSuspended(id: string) {
+	const a = await api();
+	app.pauseMenu = false;
+	app.match = await a.match_resume(id);
+	if (current().name === 'match') app.stack.pop();
+	go({ name: 'match', id });
+	runBots();
+}
+
+/** Pertandingan tertunda dihitung menyerah, lalu pertandingan baru dimulai. */
+export async function forfeitAndStart(id: string, level: number, seat: number, clock: Clock = null) {
+	const a = await api();
+	await a.suspended_forfeit(id);
+	await startMatch(id, level, seat, clock);
 }
 
 export function home() {
@@ -154,7 +217,7 @@ async function runBots() {
 	stepping = true;
 	try {
 		const a = await api();
-		while (app.match?.bot_turn && current().name === 'match') {
+		while (app.match?.bot_turn && !app.match.paused && current().name === 'match') {
 			await new Promise((r) => setTimeout(r, motion.reduced ? 0 : BOT_DELAY_MS));
 			if (current().name !== 'match') break;
 			app.match = await a.match_step();
@@ -170,6 +233,7 @@ export async function startMatch(id: string, level: number, seat: number, clock:
 	const a = await api();
 	const seed = settings.playerSeed.trim() || null;
 	app.lastClock = clock;
+	app.pauseMenu = false;
 	app.match = await a.match_start(id, level, seat, seed, clock);
 	if (current().name === 'match') app.stack.pop();
 	go({ name: 'match', id });
@@ -198,6 +262,7 @@ export async function openPgn(text: string) {
 
 function leaveMatch() {
 	app.match = null;
+	app.pauseMenu = false;
 	api().then((a) => a.match_leave());
 }
 

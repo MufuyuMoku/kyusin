@@ -1,10 +1,21 @@
 <!--
-  Layar info game: main melawan bot (level dan posisi), tutorial, replay
-  terakhir, dan halaman `man <id>` dari manifest + tutorial (SPEC §7.6).
+  Layar info game: pertandingan tertunda (SPEC §4), main melawan bot (level
+  dan posisi), tutorial, replay terakhir, dan halaman `man <id>` dari
+  manifest + tutorial (SPEC §7.6).
 -->
 <script lang="ts">
-	import { api, type ReplaySummary } from '$lib/backend';
-	import { back, findGame, go, openReplay, startMatch, startTutorial } from '$lib/app.svelte';
+	import { api, type ReplaySummary, type SuspendedMatch } from '$lib/backend';
+	import {
+		back,
+		findGame,
+		forfeitAndStart,
+		go,
+		openReplay,
+		resumeSuspended,
+		startMatch,
+		startTutorial
+	} from '$lib/app.svelte';
+	import { clockText } from '$lib/format';
 	import { GAME_UI } from '$lib/games';
 	import { L, errorText, lang, t, type Key, type Localized } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
@@ -34,6 +45,8 @@
 	let level = $state(1);
 	let seat = $state(0);
 	let replays = $state<ReplaySummary[]>([]);
+	let suspended = $state<SuspendedMatch | null>(null);
+	let confirmNew = $state(false);
 
 	$effect(() => {
 		const target = id;
@@ -46,7 +59,31 @@
 			.then((a) => a.replay_list(target))
 			.then((list) => (replays = list.slice(0, 8)))
 			.catch(() => (replays = []));
+		api()
+			.then((a) => a.suspended_list())
+			.then((list) => (suspended = list.find((s) => s.game === target) ?? null))
+			.catch(() => (suspended = null));
 	});
+
+	function describeSuspended(s: SuspendedMatch): string {
+		const bot = s.seats.find((x) => x.kind === 'bot');
+		return t('suspended.item', {
+			level: bot && bot.kind === 'bot' ? bot.level : '-',
+			moves: s.moves,
+			date: date(s.suspended_at)
+		});
+	}
+
+	function play() {
+		const clock = clocks[clockIndex] ?? null;
+		if (suspended && !confirmNew) {
+			confirmNew = true;
+			return;
+		}
+		confirmNew = false;
+		if (suspended) forfeitAndStart(id, level, seat, clock);
+		else startMatch(id, level, seat, clock);
+	}
 
 	function date(ms: number): string {
 		return new Intl.DateTimeFormat(lang(), { dateStyle: 'medium', timeStyle: 'short' }).format(ms);
@@ -76,6 +113,23 @@
 </script>
 
 <div class="game">
+	{#if suspended}
+		<Frame title={t('suspended.title')}>
+			<p>{describeSuspended(suspended)}</p>
+			{#if suspended.clock}
+				<p class="dim">
+					{t('suspended.clock', {
+						you: clockText(suspended.clock.remaining_ms[suspended.seat]),
+						bot: clockText(suspended.clock.remaining_ms[1 - suspended.seat])
+					})}
+				</p>
+			{/if}
+			<div class="start">
+				<NavButton onclick={() => resumeSuspended(id)}>[ {t('action.continue')} ]</NavButton>
+			</div>
+		</Frame>
+	{/if}
+
 	<div class="actions">
 		<NavButton onclick={() => startTutorial(id)}>[ {t('action.tutorial')} ]</NavButton>
 		<NavButton onclick={back}>[ {t('action.back')} ]</NavButton>
@@ -120,9 +174,15 @@
 				{/if}
 			</div>
 			<div class="start">
-				<NavButton onclick={() => startMatch(id, level, seat, clocks[clockIndex] ?? null)}
-					>[ {t('play.start')} ]</NavButton
-				>
+				{#if confirmNew}
+					<p>{t('suspended.forfeit')}</p>
+					<div class="actions">
+						<NavButton onclick={() => (confirmNew = false)}>[ {t('action.cancel')} ]</NavButton>
+						<NavButton onclick={play}>[ {t('action.new_game')} ]</NavButton>
+					</div>
+				{:else}
+					<NavButton onclick={play}>[ {t('play.start')} ]</NavButton>
+				{/if}
 			</div>
 		</Frame>
 	{/if}

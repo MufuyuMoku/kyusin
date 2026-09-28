@@ -6,7 +6,6 @@
 	import { tick } from 'svelte';
 	import {
 		app,
-		back,
 		current,
 		findGame,
 		gameCommands,
@@ -14,6 +13,7 @@
 		home,
 		matchAct,
 		print,
+		requestBack,
 		startMatch,
 		startTutorial,
 		tutorialAct
@@ -154,7 +154,7 @@
 			case 'menu':
 				return home();
 			case 'back':
-				return back();
+				return requestBack();
 			case 'settings':
 				if (current().name !== 'settings') go({ name: 'settings' });
 				return;

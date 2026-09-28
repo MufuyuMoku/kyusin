@@ -22,3 +22,11 @@ export function format(template: string, params: Params, lang: string): string {
 	for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, String(v));
 	return s;
 }
+
+/** Sisa jam catur sebagai `mm:ss` (dibulatkan ke atas, tidak negatif). */
+export function clockText(ms: number): string {
+	const total = Math.max(0, Math.ceil(ms / 1000));
+	const m = Math.floor(total / 60);
+	const s = total % 60;
+	return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}

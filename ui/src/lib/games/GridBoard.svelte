@@ -10,9 +10,15 @@
   kursor, Enter/Spasi memilih sel, Tab keluar; klik sel juga memilih. Seret
   (penunjuk atau sentuh) dari petak `draggable` ke petak lain memanggil
   `ondrop`.
+
+  Kursor mengikuti interaksi terakhir (SPEC §4 Rev. 9): mulai di `start`
+  (sekali, saat papan dipasang), pindah ke petak yang diklik atau tempat
+  bidak dilepas, dan tidak berubah karena langkah lawan. Selama mouse
+  dipakai kursor disembunyikan; tombol panah pertama memunculkannya lagi di
+  posisi terakhir tanpa memindahkannya.
 -->
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import PixelSprite from './PixelSprite.svelte';
 	import { DOT } from './sprites';
 
@@ -55,7 +61,7 @@
 		selected?: string | null;
 		/** Petak peringatan, misalnya raja yang diskak. */
 		alert?: string | null;
-		/** Petak awal kursor. */
+		/** Petak awal kursor; dibaca sekali saat papan dipasang. */
 		start?: string | null;
 		onplay?: (square: string) => void;
 		/** Petak yang bidaknya boleh diseret. */
@@ -70,14 +76,22 @@
 	const lastSet = $derived(new Set(last === null ? [] : typeof last === 'string' ? [last] : last));
 	const uid = `gb-${Math.random().toString(36).slice(2, 8)}`;
 
-	let cursor = $state({ row: 0, col: 0 });
-	let focused = $state(false);
+	function initialCursor(): { row: number; col: number } {
+		return untrack(() => {
+			for (let r = 0; r < rowLabels.length; r++)
+				for (let c = 0; c < colLabels.length; c++) if (squareOf(r, c) === start) return { row: r, col: c };
+			return { row: 0, col: 0 };
+		});
+	}
 
-	$effect(() => {
-		if (!start) return;
-		for (let r = 0; r < rows; r++)
-			for (let c = 0; c < cols; c++) if (squareOf(r, c) === start) cursor = { row: r, col: c };
-	});
+	let cursor = $state(initialCursor());
+	let focused = $state(false);
+	/** Mouse sedang dipakai: kursor keyboard disembunyikan. */
+	let pointer = $state(false);
+
+	function moveCursorTo(cell: HTMLElement) {
+		cursor = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };
+	}
 
 	function choose(sq: string) {
 		if (legal.has(sq)) onplay(sq);
@@ -102,6 +116,7 @@
 
 	function onpointerdown(e: PointerEvent) {
 		afterDrag = false;
+		pointer = true;
 		if (e.button !== 0 || !draggable || !ondrop) return;
 		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]');
 		const sq = cell?.dataset.sq;
@@ -110,6 +125,7 @@
 	}
 
 	function onpointermove(e: PointerEvent) {
+		if (e.movementX !== 0 || e.movementY !== 0) pointer = true;
 		if (!drag) return;
 		drag.x = e.clientX;
 		drag.y = e.clientY;
@@ -128,7 +144,9 @@
 		over = null;
 		if (!was?.active) return;
 		afterDrag = true;
-		const to = cellAt(e.clientX, e.clientY)?.dataset.sq;
+		const cell = cellAt(e.clientX, e.clientY);
+		const to = cell?.dataset.sq;
+		if (cell) moveCursorTo(cell);
 		if (to && to !== was.from) ondrop?.(was.from, to);
 	}
 
@@ -139,7 +157,8 @@
 		}
 		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]') ?? cellAt(e.clientX, e.clientY);
 		if (!cell) return;
-		cursor = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };
+		pointer = true;
+		moveCursorTo(cell);
 		choose(cell.dataset.sq!);
 	}
 
@@ -151,6 +170,14 @@
 			ArrowRight: [0, 1]
 		};
 		const d = moves[e.key];
+		const reveal = (d || e.key === 'Enter' || e.key === ' ') && pointer;
+		if (reveal) {
+			// Kembali ke keyboard: kursor muncul di posisi terakhir dulu.
+			e.preventDefault();
+			e.stopPropagation();
+			pointer = false;
+			return;
+		}
 		if (d) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -218,7 +245,7 @@
 						{#if highlight.has(sq)}<div class="layer sorot"></div>{/if}
 						{#if over === sq}<div class="layer drop"></div>{/if}
 						<div class="layer hover"></div>
-						{#if focused && cursor.row === r && cursor.col === c}<div class="layer cursor-ring"></div>{/if}
+						{#if focused && !pointer && cursor.row === r && cursor.col === c}<div class="layer cursor-ring"></div>{/if}
 					</div>
 				{/each}
 			</div>

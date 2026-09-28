@@ -249,5 +249,15 @@
 	"catur.note.castle_short": "(rokade pendek: raja dan benteng pindah)",
 	"catur.note.castle_long": "(rokade panjang: raja dan benteng pindah)",
 	"catur.note.en_passant": "(en passant: pion di {square} ditangkap)",
-	"catur.note.promotion": "(promosi menjadi {piece})"
+	"catur.note.promotion": "(promosi menjadi {piece})",
+	"pause.title": "JEDA",
+	"pause.note": "Jam dan bot berhenti selama jeda.",
+	"pause.resign_note": "Menyerah berarti kalah; hasilnya dicatat.",
+	"action.continue": "LANJUTKAN",
+	"action.suspend": "TUNDA & KELUAR",
+	"suspended.title": "pertandingan tertunda",
+	"suspended.item": "bot level {level} · {moves} langkah · ditunda {date}",
+	"suspended.clock": "sisa jam: {you} (kamu) · {bot} (bot)",
+	"suspended.forfeit": "Masih ada pertandingan tertunda. Memulai yang baru berarti pertandingan itu dihitung menyerah.",
+	"action.new_game": "YA, MAIN BARU"
 }

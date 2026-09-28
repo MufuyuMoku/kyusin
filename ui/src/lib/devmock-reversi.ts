@@ -5,7 +5,7 @@
  * menggerakkan layar. Tidak ikut build produksi.
  */
 
-import type { FairRecord, MatchState, ReplayData, ReplaySummary, Move } from './backend';
+import type { FairRecord, MatchState, ReplayData, ReplaySummary, Move, SuspendedMatch } from './backend';
 import type { ReversiView } from './games/reversi';
 
 type Cell = '.' | 'X' | 'O';
@@ -62,14 +62,22 @@ interface Game {
 	moves: Move[];
 	human: number;
 	level: number;
+	startedAt: number;
+	/** Kursi yang menyerah. */
+	resigned?: number;
 }
 
 let game: Game | null = null;
 const replays: { summary: ReplaySummary; moves: Move[]; human: number }[] = [];
 
 const color = (seat: number): Cell => (seat === 0 ? 'X' : 'O');
-const over = (g: Game) => !moves(g.board, 'X').length && !moves(g.board, 'O').length;
+const over = (g: Game) =>
+	g.resigned !== undefined || (!moves(g.board, 'X').length && !moves(g.board, 'O').length);
 const count = (b: Cell[], c: Cell) => b.filter((x) => x === c).length;
+
+function winnersOf(g: Game): number[] {
+	return g.resigned !== undefined ? [1 - g.resigned] : winners(g.board);
+}
 
 function winners(b: Cell[]): number[] {
 	const x = count(b, 'X');
@@ -90,8 +98,8 @@ function view(g: Game, seat: number): ReversiView {
 		terakhir: g.last === null ? null : name(g.last),
 		dibalik: g.flipped.map(name),
 		selesai: done,
-		pemenang: done ? winners(g.board) : null,
-		menyerah: false
+		pemenang: done ? winnersOf(g) : null,
+		menyerah: g.resigned !== undefined
 	};
 }
 
@@ -133,7 +141,7 @@ function summary(g: Game) {
 	const b = count(g.board, 'X');
 	const w = count(g.board, 'O');
 	return {
-		winners: winners(g.board),
+		winners: winnersOf(g),
 		scores: [b, w],
 		summary: { id: `Selesai (tiruan): ${b}–${w}.`, en: `Game over (mock): ${b}–${w}.` }
 	};
@@ -162,9 +170,20 @@ function state(g: Game): MatchState {
 		verify: done ? verifyOk : null,
 		replay_id: done ? replays.length : null,
 		save_error: null,
-		clock: null
+		clock: null,
+		started_at: g.startedAt,
+		paused
 	};
 }
+
+function resignFor(g: Game, seat: number) {
+	g.resigned = seat;
+	g.moves.push({ seat, command: 'resign' });
+}
+
+let paused = false;
+let suspended: Game | null = null;
+let suspendedAt = 0;
 
 function save(g: Game) {
 	replays.push({
@@ -195,7 +214,17 @@ export const reversiMock = {
 	},
 	match_start: async (_id: string, level: number, seat: number): Promise<MatchState> => {
 		if (game && !over(game) && game.moves.length) save(game);
-		game = { board: initial(), turn: 0, last: null, flipped: [], moves: [], human: seat, level };
+		game = {
+			board: initial(),
+			turn: 0,
+			last: null,
+			flipped: [],
+			moves: [],
+			human: seat,
+			level,
+			startedAt: Date.now()
+		};
+		paused = false;
 		return state(game);
 	},
 	match_act: async (command: string): Promise<MatchState> => {
@@ -214,14 +243,70 @@ export const reversiMock = {
 		return state(game);
 	},
 	match_leave: async () => {
-		if (game && !over(game) && game.moves.length) save(game);
+		if (game && !over(game)) {
+			suspended = game;
+			suspendedAt = Date.now();
+		}
 		game = null;
 	},
+	match_pause: async (): Promise<MatchState> => {
+		if (!game) throw { id: 'Tidak ada permainan yang berjalan.', en: 'No game is running.' };
+		paused = true;
+		return state(game);
+	},
+	match_unpause: async (): Promise<MatchState> => {
+		if (!game) throw { id: 'Tidak ada permainan yang berjalan.', en: 'No game is running.' };
+		paused = false;
+		return state(game);
+	},
+	match_suspend: async () => {
+		if (game && !over(game)) {
+			suspended = game;
+			suspendedAt = Date.now();
+		}
+		game = null;
+		paused = false;
+	},
+	match_resign: async (): Promise<MatchState> => {
+		if (!game) throw { id: 'Tidak ada permainan yang berjalan.', en: 'No game is running.' };
+		paused = false;
+		resignFor(game, game.human);
+		save(game);
+		return state(game);
+	},
+	match_resume: async (): Promise<MatchState> => {
+		if (!suspended) throw { id: 'Tidak ada pertandingan tertunda.', en: 'No suspended match.' };
+		game = suspended;
+		suspended = null;
+		paused = false;
+		return state(game);
+	},
+	suspended_forfeit: async () => {
+		if (suspended) {
+			resignFor(suspended, suspended.human);
+			save(suspended);
+		}
+		suspended = null;
+	},
+	suspended_list: async (): Promise<SuspendedMatch[]> =>
+		suspended
+			? [
+					{
+						game: 'reversi',
+						started_at: suspended.startedAt,
+						suspended_at: suspendedAt,
+						moves: suspended.moves.length,
+						seat: suspended.human,
+						seats: state(suspended).seats,
+						clock: null
+					}
+				]
+			: [],
 	replay_list: async (): Promise<ReplaySummary[]> => [...replays].reverse().map((r) => r.summary),
 	replay_open: async (id: number): Promise<ReplayData> => {
 		const r = replays[id - 1];
 		if (!r) throw { id: `Replay ${id} tidak ditemukan.`, en: `Replay ${id} not found.` };
-		const g: Game = { board: initial(), turn: 0, last: null, flipped: [], moves: [], human: r.human, level: 1 };
+		const g: Game = { board: initial(), turn: 0, last: null, flipped: [], moves: [], human: r.human, level: 1, startedAt: 0 };
 		const frames = [{ index: 0, last: null, view_data: view(g, r.human), view_text: { id: '', en: '' } }];
 		for (const [i, mv] of r.moves.entries()) {
 			apply(g, mv.command);
@@ -243,5 +328,5 @@ export const reversiMock = {
 
 /** Keadaan awal untuk tutorial tiruan. */
 export function reversiStartView(seat = 0): ReversiView {
-	return view({ board: initial(), turn: 0, last: null, flipped: [], moves: [], human: seat, level: 1 }, seat);
+	return view({ board: initial(), turn: 0, last: null, flipped: [], moves: [], human: seat, level: 1, startedAt: 0 }, seat);
 }

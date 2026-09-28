@@ -131,6 +131,21 @@ export interface MatchState {
 	save_error: string | null;
 	/** Jam (catur), dihitung host. */
 	clock: ClockState | null;
+	/** Waktu mulai (epoch ms); pengenal pertandingan. */
+	started_at: number;
+	/** Menu jeda terbuka: jam dan bot berhenti. */
+	paused: boolean;
+}
+
+/** Pertandingan yang ditunda (SPEC §4), satu per game. */
+export interface SuspendedMatch {
+	game: string;
+	started_at: number;
+	suspended_at: number;
+	moves: number;
+	seat: number;
+	seats: SeatKind[];
+	clock: ClockState | null;
 }
 
 export interface ClockState {
@@ -208,6 +223,13 @@ type Api = {
 	match_act(command: string): Promise<MatchState>;
 	match_step(): Promise<MatchState>;
 	match_leave(): Promise<void>;
+	match_pause(): Promise<MatchState>;
+	match_unpause(): Promise<MatchState>;
+	match_suspend(): Promise<void>;
+	match_resign(): Promise<MatchState>;
+	match_resume(id: string): Promise<MatchState>;
+	suspended_forfeit(id: string): Promise<void>;
+	suspended_list(): Promise<SuspendedMatch[]>;
 	replay_list(game: string | null): Promise<ReplaySummary[]>;
 	replay_open(id: number): Promise<ReplayData>;
 };
@@ -228,6 +250,13 @@ const tauriApi: Api = {
 	match_act: (command) => invoke('match_act', { command }),
 	match_step: () => invoke('match_step'),
 	match_leave: () => invoke('match_leave'),
+	match_pause: () => invoke('match_pause'),
+	match_unpause: () => invoke('match_unpause'),
+	match_suspend: () => invoke('match_suspend'),
+	match_resign: () => invoke('match_resign'),
+	match_resume: (id) => invoke('match_resume', { id }),
+	suspended_forfeit: (id) => invoke('suspended_forfeit', { id }),
+	suspended_list: () => invoke('suspended_list'),
 	replay_list: (game) => invoke('replay_list', { game }),
 	replay_open: (id) => invoke('replay_open', { id })
 };

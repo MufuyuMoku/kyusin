@@ -119,7 +119,8 @@
 
 	const cols = $derived(flip ? [...FILES].reverse() : [...FILES]);
 	const rows = $derived(flip ? ['1', '2', '3', '4', '5', '6', '7', '8'] : ['8', '7', '6', '5', '4', '3', '2', '1']);
-	const start = $derived(selected ?? [...lit][0] ?? moves[0]?.dari ?? v?.terakhir?.ke ?? 'e2');
+	/** Posisi awal kursor (SPEC §4): e2, atau e7 bila bermain hitam. */
+	const start = $derived(v?.kamu === 1 ? 'e7' : 'e2');
 </script>
 
 {#if v}

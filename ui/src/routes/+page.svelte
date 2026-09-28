@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { app, back, current, load } from '$lib/app.svelte';
+	import { app, current, load, requestBack } from '$lib/app.svelte';
 	import { effectOn, settings } from '$lib/settings.svelte';
 	import { errorText, lang, t, type Key } from '$lib/i18n.svelte';
 	import { startSession } from '$lib/boot/session';
@@ -64,7 +64,8 @@
 	});
 
 	function navItems(): HTMLElement[] {
-		return Array.from(main?.querySelectorAll<HTMLElement>(NAV_SELECTOR) ?? []);
+		// Kontrol di balik dialog (`inert`) dilewati.
+		return Array.from(main?.querySelectorAll<HTMLElement>(NAV_SELECTOR) ?? []).filter((el) => !el.closest('[inert]'));
 	}
 
 	function onkeydown(e: KeyboardEvent) {
@@ -78,7 +79,7 @@
 		}
 		if (e.key === 'Escape') {
 			e.preventDefault();
-			back();
+			requestBack();
 			return;
 		}
 		if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowRight' || e.key === 'ArrowLeft') {

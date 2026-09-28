@@ -2,15 +2,26 @@
   Bermain melawan bot (SPEC §1 poin akhir 1). Kontrol visual adalah cara
   utama (papan per game); perintah teks tetap bisa lewat konsol. Setelah
   selesai: hasil, seed yang dibuka, verify otomatis, dan tautan replay.
+  `Esc` / [ KELUAR ] di tengah permainan membuka menu jeda (SPEC §4 Rev. 9).
 -->
 <script lang="ts">
-	import { app, back, findGame, matchAct, matchFlag, openReplay, startMatch } from '$lib/app.svelte';
+	import {
+		app,
+		back,
+		findGame,
+		matchAct,
+		matchFlag,
+		openReplay,
+		requestBack,
+		startMatch
+	} from '$lib/app.svelte';
 	import ClockPanel from './ClockPanel.svelte';
 	import { GAME_UI } from '$lib/games';
 	import { L, t } from '$lib/i18n.svelte';
 	import FairPanel from './FairPanel.svelte';
 	import Frame from './Frame.svelte';
 	import NavButton from './NavButton.svelte';
+	import PauseMenu from './PauseMenu.svelte';
 
 	/** Kata perintah; sama di kedua bahasa (SPEC §4). */
 	const PASS = 'pass';
@@ -22,7 +33,9 @@
 	const bot = $derived(m?.seats.find((s) => s.kind === 'bot'));
 	const level = $derived(bot && bot.kind === 'bot' ? bot.level : 1);
 	const buttons = $derived(m?.actions.flatMap((a) => a.concrete ?? []) ?? []);
-	const canPass = $derived(m?.your_turn && buttons.length === 1 && buttons[0] === PASS);
+	const moveButtons = $derived(buttons.filter((b) => b !== RESIGN));
+	const canPass = $derived(m?.your_turn && moveButtons.length === 1 && moveButtons[0] === PASS);
+	const paused = $derived(app.pauseMenu && !!m && !m.over);
 	const canResign = $derived(!!m && !m.over && m.your_turn && buttons.includes(RESIGN));
 	let confirmResign = $state(false);
 
@@ -52,16 +65,22 @@
 
 {#if m}
 	<div class="match">
-		<div class="head">
+		{#if paused}
+			<PauseMenu />
+		{/if}
+		<div class="head" inert={paused}>
 			<span class="display big">{game ? L(game.nama) : m.game}</span>
 			<span class="dim">{t('match.vs', { level })}</span>
-			<NavButton onclick={back}>[ {t('action.exit')} ]</NavButton>
+			<NavButton onclick={requestBack}>[ {t('action.exit')} ]</NavButton>
 		</div>
 
-		<div class="body">
+		<div class="body" inert={paused}>
 			<div class="left">
 				{#if ui}
-					<ui.board view={m.view_data} interactive={m.your_turn} onplay={matchAct} />
+					<!-- Dipasang ulang per pertandingan: kursor mulai dari posisi awal game. -->
+					{#key m.started_at}
+						<ui.board view={m.view_data} interactive={m.your_turn && !paused} onplay={matchAct} />
+					{/key}
 					<ui.status view={m.view_data} botTurn={m.bot_turn} />
 				{:else}
 					<pre>{L(m.view_text)}</pre>
@@ -70,7 +89,7 @@
 					{#if canPass}
 						<NavButton sorot onclick={() => matchAct(PASS)}>[ {PASS.toUpperCase()} ]</NavButton>
 					{:else if !ui && m.your_turn}
-						{#each buttons.filter((b) => b !== RESIGN) as cmd (cmd)}
+						{#each moveButtons as cmd (cmd)}
 							<NavButton onclick={() => matchAct(cmd)}>[ {cmd.toUpperCase()} ]</NavButton>
 						{/each}
 					{/if}
@@ -124,6 +143,7 @@
 
 <style>
 	.match {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		gap: var(--cell-h);

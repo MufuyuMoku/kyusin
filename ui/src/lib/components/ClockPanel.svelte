@@ -6,6 +6,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { ClockState } from '$lib/backend';
+	import { clockText as fmt } from '$lib/format';
 	import { t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
 
@@ -50,12 +51,6 @@
 		}
 	});
 
-	function fmt(ms: number): string {
-		const total = Math.max(0, Math.ceil(ms / 1000));
-		const m = Math.floor(total / 60);
-		const s = total % 60;
-		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-	}
 </script>
 
 <Frame title={t('clock.frame')}>

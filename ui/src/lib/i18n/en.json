@@ -249,5 +249,15 @@
 	"catur.note.castle_short": "(kingside castling: king and rook move)",
 	"catur.note.castle_long": "(queenside castling: king and rook move)",
 	"catur.note.en_passant": "(en passant: the pawn on {square} is captured)",
-	"catur.note.promotion": "(promoted to {piece})"
+	"catur.note.promotion": "(promoted to {piece})",
+	"pause.title": "PAUSED",
+	"pause.note": "The clock and the bot are stopped while paused.",
+	"pause.resign_note": "Resigning counts as a loss and is recorded.",
+	"action.continue": "CONTINUE",
+	"action.suspend": "SUSPEND & EXIT",
+	"suspended.title": "suspended match",
+	"suspended.item": "bot level {level} · {moves} {moves|move|moves} · suspended {date}",
+	"suspended.clock": "clock left: {you} (you) · {bot} (bot)",
+	"suspended.forfeit": "There is still a suspended match. Starting a new one counts that match as resigned.",
+	"action.new_game": "YES, NEW GAME"
 }
