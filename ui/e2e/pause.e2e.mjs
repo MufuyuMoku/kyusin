@@ -12,12 +12,17 @@ import { join } from 'node:path';
 import { fail, resetToMenu } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
+/**
+ * Isi setiap petak dari label aksesibelnya, tanpa penanda yang bergantung
+ * pada giliran (langkah sah, tujuan): catur "e4, putih pion", Reversi
+ * "d3: hitam".
+ */
 const pieces = () =>
 	Object.fromEntries(
-		[...document.querySelectorAll('[role="gridcell"][data-sq]')].map((c) => [
-			c.dataset.sq,
-			c.getAttribute('aria-label').split(',').slice(0, 2).join(',')
-		])
+		[...document.querySelectorAll('[role="gridcell"][data-sq]')].map((c) => {
+			const parts = c.getAttribute('aria-label').split(',');
+			return [c.dataset.sq, parts[0].includes(':') ? parts[0] : parts.slice(0, 2).join(',')];
+		})
 	);
 const movesText = () => document.querySelector('.moves')?.textContent.trim() ?? '';
 const timers = () => [...document.querySelectorAll('[role="timer"]')].map((t) => t.textContent.trim());
