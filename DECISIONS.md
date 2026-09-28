@@ -328,6 +328,16 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Membiarkan msedgedriver meluncurkan aplikasi tetap gagal di CI (folder profilnya tidak sampai ke WebView2). Karena itu runner tes menjalankan aplikasi sendiri dengan `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` dan folder data sementara, lalu membuat sesi lewat tauri-driver yang meneruskan `ms:edgeOptions.debuggerAddress` ke msedgedriver (cara menempel ke WebView2 yang didokumentasikan Microsoft). Di runner CI, argumen yang dikirim wry lewat API menimpa variabel `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` (baris perintah WebView2 tanpa `--remote-debugging-port`), jadi aplikasi menggabungkan isi variabel itu secara eksplisit dengan argumen bawaan wry. Port dibaca dari berkas `DevToolsActivePort`. Perintah tetap hanya masuk ke jendela KyuSin, dan tes tidak menyentuh pengaturan maupun replay pemain.
 - Rujukan: SPEC §11, D-038.
 
+### D-041 — Keputusan klien untuk M2 (catur)
+- Tanggal / milestone: 2026-09-28 / M2
+- Diputuskan oleh: klien (hasil uji M1b sesuai; tes jendela asli cukup di CI, tanpa msedgedriver lokal)
+- Keputusan:
+  1. Bidak catur berupa sprite piksel SVG (§4): enam jenis jelas terbedakan di sel 40×40; putih penuh, hitam bergaris tepi (konsisten dengan Reversi); terbaca di ketiga tema.
+  2. Input visual: klik-pilih-lalu-klik-tujuan dan seret-lepas, keduanya berfungsi; langkah sah disorot saat bidak dipilih; promosi lewat pilihan visual; rokade, en passant, dan promosi tampil jelas.
+  3. Kalibrasi level terhadap Stockfish berjalan sebagai workflow GitHub Actions manual (`workflow_dispatch`) yang mengunduh Stockfish saat berjalan. Stockfish tidak masuk repo dan tidak dijalankan di mesin lokal. Hasil kalibrasi disimpan sebagai data di repo.
+  4. Tes jendela asli (§11): keselarasan papan, kursor/hover/seret tidak menggeser sel, dan satu partai pendek melawan bot.
+- Rujukan: SPEC §3, §4, §6.1, §8, §9 (M2), §11.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

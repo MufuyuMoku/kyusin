@@ -12,6 +12,7 @@ publish.workspace = true
 fixture = []
 
 [dependencies]
+cozy-chess.workspace = true
 kyusin-core.workspace = true
 serde.workspace = true
 serde_json.workspace = true

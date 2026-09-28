@@ -22,6 +22,8 @@ kyusin-bots = { path = "crates/bots" }
 kyusin-store = { path = "crates/store" }
 
 # RNG provably fair: ChaCha20 dengan seed eksplisit, hash SHA-256 (SPEC §3).
+# Generator langkah catur (MIT); bukan shakmaty (GPL), SPEC §3.
+cozy-chess = "0.3"
 rand_chacha = "0.10"
 rand_core = "0.10"
 sha2 = "0.11"
