@@ -107,7 +107,9 @@ pub fn export(game: &Catur, tags: &Tags) -> String {
         &game.start_fen,
         &game.history,
         result_token(winners.as_deref()),
-        game.jam.as_ref().map(|j| format!("{}+{}", j.menit * 60, j.tambahan_detik)),
+        game.jam
+            .as_ref()
+            .map(|j| format!("{}+{}", j.menit * 60, j.tambahan_detik)),
         tags,
     )
 }
@@ -132,7 +134,10 @@ pub fn import(text: &str) -> Result<Imported, String> {
         if l.starts_with('[') && l.ends_with(']') {
             let inner = &l[1..l.len() - 1];
             if let Some((k, v)) = inner.split_once(' ') {
-                tags.push((k.to_string(), v.trim().trim_matches('"').replace("\\\"", "\"")));
+                tags.push((
+                    k.to_string(),
+                    v.trim().trim_matches('"').replace("\\\"", "\""),
+                ));
             }
         } else if !l.starts_with('%') {
             body.push_str(line);
@@ -161,7 +166,10 @@ pub fn import(text: &str) -> Result<Imported, String> {
         }
     }
 
-    let fen = tags.iter().find(|(k, _)| k == "FEN").map(|(_, v)| v.clone());
+    let fen = tags
+        .iter()
+        .find(|(k, _)| k == "FEN")
+        .map(|(_, v)| v.clone());
     let mut game = Catur::new(
         Config {
             fen: fen.clone(),
@@ -190,7 +198,12 @@ pub fn import(text: &str) -> Result<Imported, String> {
         let seat = TurnGame::pending_players(&game)
             .first()
             .copied()
-            .ok_or_else(|| format!("langkah ke-{} `{tok}` setelah permainan selesai", moves.len() + 1))?;
+            .ok_or_else(|| {
+                format!(
+                    "langkah ke-{} `{tok}` setelah permainan selesai",
+                    moves.len() + 1
+                )
+            })?;
         let canonical = kyusin_core::Session::canonical(&game, tok);
         kyusin_core::Session::act(&mut game, seat, tok)
             .map_err(|_| format!("langkah ke-{} `{tok}` tidak sah", moves.len() + 1))?;

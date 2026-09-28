@@ -93,7 +93,10 @@ impl Stockfish {
     }
 
     fn best(&mut self, uci_moves: &[String], movetime: u32) -> String {
-        self.send(&format!("position fen {START_FEN} moves {}", uci_moves.join(" ")));
+        self.send(&format!(
+            "position fen {START_FEN} moves {}",
+            uci_moves.join(" ")
+        ));
         self.send(&format!("go movetime {movetime}"));
         loop {
             let line = self.line();
@@ -105,12 +108,22 @@ impl Stockfish {
 }
 
 fn uci_of(m: &san::Legal) -> String {
-    let promo = m.promotion.map(|p| san::promotion_char(p).to_string()).unwrap_or_default();
+    let promo = m
+        .promotion
+        .map(|p| san::promotion_char(p).to_string())
+        .unwrap_or_default();
     format!("{}{}{promo}", m.from, m.to)
 }
 
 /// Satu partai; poin bot (1, ½, 0).
-fn game(sf: &mut Stockfish, level: u8, bot_white: bool, opening: &[&str], seed: u64, movetime: u32) -> f64 {
+fn game(
+    sf: &mut Stockfish,
+    level: u8,
+    bot_white: bool,
+    opening: &[&str],
+    seed: u64,
+    movetime: u32,
+) -> f64 {
     let mut g = Catur::new(Config::default(), [0; 32]).unwrap();
     let mut uci = Vec::new();
     let mut bot = ChessBot::new(level, derive(&[level; 32], &format!("kalibrasi:{seed}")));
@@ -131,7 +144,11 @@ fn game(sf: &mut Stockfish, level: u8, bot_white: bool, opening: &[&str], seed: 
         let text = if seat == bot_seat {
             let board: &Board = g.board();
             let mv = bot.choose(board).expect("ada langkah");
-            san::legal_moves(board).into_iter().find(|m| m.raw == mv).unwrap().san
+            san::legal_moves(board)
+                .into_iter()
+                .find(|m| m.raw == mv)
+                .unwrap()
+                .san
         } else {
             sf.best(&uci, movetime)
         };
@@ -158,11 +175,18 @@ fn estimate(results: &[(f64, f64, f64)]) -> (f64, f64, bool) {
     let games: f64 = results.iter().map(|r| r.2).sum();
     let extrapolated = total == 0.0 || total == games;
     let data: Vec<(f64, f64, f64)> = if extrapolated {
-        results.iter().map(|&(e, p, n)| (e, p + 0.5, n + 1.0)).collect()
+        results
+            .iter()
+            .map(|&(e, p, n)| (e, p + 0.5, n + 1.0))
+            .collect()
     } else {
         results.to_vec()
     };
-    let grad = |r: f64| data.iter().map(|&(e, p, n)| p - n * expected(r, e)).sum::<f64>();
+    let grad = |r: f64| {
+        data.iter()
+            .map(|&(e, p, n)| p - n * expected(r, e))
+            .sum::<f64>()
+    };
     let (mut lo, mut hi) = (-1000.0, 4000.0);
     for _ in 0..100 {
         let mid = (lo + hi) / 2.0;
@@ -186,7 +210,9 @@ fn arg(name: &str, default: &str) -> String {
 }
 
 fn list(text: &str) -> Vec<u32> {
-    text.split(',').map(|x| x.trim().parse().expect("angka")).collect()
+    text.split(',')
+        .map(|x| x.trim().parse().expect("angka"))
+        .collect()
 }
 
 fn main() {
@@ -217,7 +243,10 @@ fn main() {
             per_opponent.push(json!({ "opponent_elo": elo, "points": points, "games": games }));
         }
         let (elo, half, extrapolated) = estimate(&rows);
-        eprintln!("level {level}: ~{elo:.0} ± {half:.0}{}", if extrapolated { " (ekstrapolasi)" } else { "" });
+        eprintln!(
+            "level {level}: ~{elo:.0} ± {half:.0}{}",
+            if extrapolated { " (ekstrapolasi)" } else { "" }
+        );
         report.push(json!({
             "level": level,
             "elo": elo.round(),

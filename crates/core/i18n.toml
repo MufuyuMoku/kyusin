@@ -64,6 +64,10 @@
 "error.seat" = "Kursi {seat} tidak ada di game ini."
 "error.store" = "Basis data tidak tersedia: {detail}"
 "error.replay_missing" = "Replay {id} tidak ditemukan."
+"error.no_pgn" = "PGN hanya untuk replay catur."
+"error.pgn" = "PGN tidak bisa dibaca: {detail}"
+"pgn.player" = "Pemain"
+"pgn.bot" = "Bot level {level}"
 
 [en]
 "yes" = "yes"
@@ -127,3 +131,7 @@
 "error.seat" = "Seat {seat} does not exist in this game."
 "error.store" = "The database is not available: {detail}"
 "error.replay_missing" = "Replay {id} not found."
+"error.no_pgn" = "PGN is only for chess replays."
+"error.pgn" = "The PGN cannot be read: {detail}"
+"pgn.player" = "Player"
+"pgn.bot" = "Bot level {level}"

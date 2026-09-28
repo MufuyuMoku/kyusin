@@ -59,8 +59,16 @@ fn starting_position() {
     assert_eq!(v["papan"][0], "rnbqkbnr");
     assert_eq!(v["papan"][7], "RNBQKBNR");
     assert_eq!(v["langkah"].as_array().unwrap().len(), 20);
-    assert!(TurnGame::legal_actions(&g, 0).iter().any(|a| a.usage() == "resign"));
-    assert!(!TurnGame::legal_actions(&g, 0).iter().any(|a| a.usage() == "timeout"));
+    assert!(
+        TurnGame::legal_actions(&g, 0)
+            .iter()
+            .any(|a| a.usage() == "resign")
+    );
+    assert!(
+        !TurnGame::legal_actions(&g, 0)
+            .iter()
+            .any(|a| a.usage() == "timeout")
+    );
 }
 
 fn perft(g: &Catur, depth: u32) -> u64 {
@@ -98,11 +106,17 @@ fn san_disambiguation_captures_checks() {
     // Dua kuda bisa ke d2: harus Nbd2 / Nfd2.
     let g = fen("4k3/8/8/8/8/8/8/1N2KN2 w - - 0 1");
     let l = legal(&g);
-    assert!(l.contains(&"Nbd2".into()) && l.contains(&"Nfd2".into()), "{l:?}");
+    assert!(
+        l.contains(&"Nbd2".into()) && l.contains(&"Nfd2".into()),
+        "{l:?}"
+    );
     // Benteng di baris yang sama tetapi kolom berbeda, dan di kolom yang sama.
     let g = fen("4k3/8/8/8/R7/8/8/R3K3 w - - 0 1");
     let l = legal(&g);
-    assert!(l.contains(&"R1a2".into()) && l.contains(&"R4a2".into()), "{l:?}");
+    assert!(
+        l.contains(&"R1a2".into()) && l.contains(&"R4a2".into()),
+        "{l:?}"
+    );
     // Tangkapan pion dan skak.
     let mut g = start();
     play(&mut g, &["e4", "d5"]);
@@ -117,7 +131,10 @@ fn coordinate_and_zero_castling_aliases() {
     let mut a = start();
     let mut b = start();
     play(&mut a, &["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "O-O"]);
-    play(&mut b, &["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "f8c5", "e1g1"]);
+    play(
+        &mut b,
+        &["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "f8c5", "e1g1"],
+    );
     assert_eq!(Session::state_hash(&a), Session::state_hash(&b));
     let mut c = start();
     play(&mut c, &["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "0-0"]);
@@ -140,7 +157,10 @@ fn queenside_castling_and_castling_through_check() {
     // Benteng hitam di f8 mengawasi f1: rokade pendek putih terlarang.
     let g = fen("4kr2/8/8/8/8/8/8/R3K2R w KQ - 0 1");
     let l = legal(&g);
-    assert!(!l.contains(&"O-O".into()) && l.contains(&"O-O-O".into()), "{l:?}");
+    assert!(
+        !l.contains(&"O-O".into()) && l.contains(&"O-O-O".into()),
+        "{l:?}"
+    );
 }
 
 #[test]
@@ -222,7 +242,9 @@ fn insufficient_material_is_a_draw() {
         assert_eq!(view(&g)["alasan"], "bahan", "{f}");
     }
     // Gajah beda warna petak masih bisa mat: bukan remis otomatis.
-    assert!(!TurnGame::is_over(&fen("4k1b1/8/8/8/8/8/8/2B1K3 w - - 0 1")));
+    assert!(!TurnGame::is_over(&fen(
+        "4k1b1/8/8/8/8/8/8/2B1K3 w - - 0 1"
+    )));
 }
 
 #[test]
@@ -241,7 +263,11 @@ fn resign_and_timeout() {
         }),
     };
     let mut g = Catur::new(clocked.clone(), [0; 32]).unwrap();
-    assert!(TurnGame::legal_actions(&g, 0).iter().any(|a| a.usage() == "timeout"));
+    assert!(
+        TurnGame::legal_actions(&g, 0)
+            .iter()
+            .any(|a| a.usage() == "timeout")
+    );
     Session::act(&mut g, 0, "timeout").unwrap();
     assert_eq!(TurnGame::result(&g).unwrap().winners, vec![1]);
     assert_eq!(view(&g)["alasan"], "waktu");
@@ -323,11 +349,17 @@ fn random_playouts_terminate_deterministically() {
 #[test]
 fn pgn_export_import_round_trip() {
     let mut g = start();
-    play(&mut g, &["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Bxc6", "dxc6", "O-O"]);
+    play(
+        &mut g,
+        &["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Bxc6", "dxc6", "O-O"],
+    );
     let text = pgn::export(&g, &pgn::Tags::new("Kamu", "Bot level 2", "2026.09.28"));
     assert!(text.contains("[White \"Kamu\"]"), "{text}");
     assert!(text.contains("[Result \"*\"]"), "{text}");
-    assert!(text.contains("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 dxc6 5. O-O *"), "{text}");
+    assert!(
+        text.contains("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 dxc6 5. O-O *"),
+        "{text}"
+    );
     let game = pgn::import(&text).unwrap();
     assert_eq!(game.moves, legal_history(&g));
 }
@@ -360,5 +392,8 @@ fn finished_game_pgn_has_result() {
     let mut g = start();
     play(&mut g, &["f3", "e5", "g4", "Qh4#"]);
     let text = pgn::export(&g, &pgn::Tags::new("A", "B", "2026.09.28"));
-    assert!(text.contains("[Result \"0-1\"]") && text.trim_end().ends_with("0-1"), "{text}");
+    assert!(
+        text.contains("[Result \"0-1\"]") && text.trim_end().ends_with("0-1"),
+        "{text}"
+    );
 }

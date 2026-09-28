@@ -7,7 +7,7 @@
 //! termasuk yang ditinggalkan di tengah jalan.
 
 use std::collections::BTreeMap;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use kyusin_core::fair::{FairRecord, FairRound, commitment};
 use kyusin_core::hash::unhex32;
@@ -23,6 +23,51 @@ use crate::{ActionDto, AppState, action_dtos, unknown_game};
 const HOST: &str = "host";
 const PLAYER: &str = "player";
 
+/// Jam catur, dihitung host dengan jam monoton (game tidak memakai jam
+/// dinding). Saat waktu seorang pemain habis, host mengajukan `timeout`
+/// atas namanya, jadi tercatat di replay (D-045).
+struct HostClock {
+    remaining: [i64; 2],
+    increment: i64,
+    running: Option<u8>,
+    since: Instant,
+}
+
+impl HostClock {
+    fn charge(&mut self) {
+        if let Some(s) = self.running {
+            self.remaining[s as usize] -= self.since.elapsed().as_millis() as i64;
+        }
+        self.since = Instant::now();
+    }
+
+    /// Setelah `mover` melangkah: tambahan waktu, lalu jam `next` berjalan.
+    fn after_move(&mut self, mover: u8, next: Option<u8>) {
+        self.charge();
+        self.remaining[mover as usize] += self.increment;
+        self.running = next;
+    }
+
+    fn snapshot(&self) -> ClockDto {
+        let mut remaining = self.remaining;
+        if let Some(s) = self.running {
+            remaining[s as usize] -= self.since.elapsed().as_millis() as i64;
+        }
+        ClockDto {
+            remaining_ms: remaining,
+            running: self.running,
+            increment_ms: self.increment,
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub(crate) struct ClockDto {
+    remaining_ms: [i64; 2],
+    running: Option<u8>,
+    increment_ms: i64,
+}
+
 pub(crate) struct Running {
     game: String,
     m: Match,
@@ -31,6 +76,38 @@ pub(crate) struct Running {
     replay_id: Option<i64>,
     verify: Option<VerifyReport>,
     save_error: Option<String>,
+    clock: Option<HostClock>,
+}
+
+impl Running {
+    fn pending(&self) -> Option<u8> {
+        self.m.session().pending_players().first().copied()
+    }
+
+    /// Jam untuk pemain yang sedang melangkah habis? Bila ya, ajukan
+    /// `timeout` atas namanya.
+    fn flag_if_expired(&mut self) -> bool {
+        let Some(clock) = self.clock.as_mut() else {
+            return false;
+        };
+        clock.charge();
+        let Some(seat) = clock.running else {
+            return false;
+        };
+        if clock.remaining[seat as usize] > 0 {
+            return false;
+        }
+        clock.remaining[seat as usize] = 0;
+        clock.running = None;
+        self.m.act(seat, "timeout").is_ok()
+    }
+
+    fn moved(&mut self, mover: u8) {
+        let next = self.pending();
+        if let Some(clock) = self.clock.as_mut() {
+            clock.after_move(mover, next);
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -55,6 +132,7 @@ pub(crate) struct MatchDto {
     verify: Option<VerifyReport>,
     replay_id: Option<i64>,
     save_error: Option<String>,
+    clock: Option<ClockDto>,
 }
 
 fn now_ms() -> i64 {
@@ -126,6 +204,7 @@ fn dto(r: &Running) -> MatchDto {
         verify: r.verify.clone(),
         replay_id: r.replay_id,
         save_error: r.save_error.clone(),
+        clock: r.clock.as_ref().map(HostClock::snapshot),
     }
 }
 
@@ -160,12 +239,20 @@ fn leave(state: &AppState, r: Running) {
     }
 }
 
+/// Jam catur yang dipilih pemain: menit per pemain + tambahan per langkah.
+#[derive(serde::Deserialize)]
+pub(crate) struct ClockSpec {
+    minutes: u32,
+    increment: u32,
+}
+
 #[tauri::command]
 pub(crate) fn match_start(
     id: String,
     level: u8,
     seat: u8,
     player_seed: Option<String>,
+    clock: Option<ClockSpec>,
     state: State<'_, AppState>,
 ) -> Result<MatchDto, Localized> {
     let cartridge = state.registry.get(&id).ok_or_else(|| unknown_game(&id))?;
@@ -188,8 +275,14 @@ pub(crate) fn match_start(
             players.push(bot);
         }
     }
-    let m =
-        Match::new(cartridge, serde_json::Value::Null, fair, players).map_err(|e| e.message())?;
+    let config = match &clock {
+        Some(c) => {
+            serde_json::json!({ "jam": { "menit": c.minutes, "tambahan_detik": c.increment } })
+        }
+        None => serde_json::Value::Null,
+    };
+    let m = Match::new(cartridge, config, fair, players).map_err(|e| e.message())?;
+    let first = m.session().pending_players().first().copied();
     let running = Running {
         game: id,
         m,
@@ -198,6 +291,12 @@ pub(crate) fn match_start(
         replay_id: None,
         verify: None,
         save_error: None,
+        clock: clock.map(|c| HostClock {
+            remaining: [i64::from(c.minutes) * 60_000; 2],
+            increment: i64::from(c.increment) * 1000,
+            running: first,
+            since: Instant::now(),
+        }),
     };
     let dto = dto(&running);
     if let Some(old) = state.play.lock().unwrap().replace(running) {
@@ -213,7 +312,23 @@ pub(crate) fn match_act(
 ) -> Result<MatchDto, Localized> {
     let mut guard = state.play.lock().unwrap();
     let r = guard.as_mut().ok_or_else(no_match)?;
-    r.m.act(r.human, &command).map_err(|e| e.message())?;
+    // Waktu habis sebelum langkah ini: yang berlaku adalah timeout.
+    if !r.flag_if_expired() {
+        r.m.act(r.human, &command).map_err(|e| e.message())?;
+        let human = r.human;
+        r.moved(human);
+    }
+    finish(&state, r);
+    Ok(dto(r))
+}
+
+/// Dipanggil UI saat jam pemain di layar mencapai nol; host memeriksa
+/// dengan jamnya sendiri.
+#[tauri::command]
+pub(crate) fn match_flag(state: State<'_, AppState>) -> Result<MatchDto, Localized> {
+    let mut guard = state.play.lock().unwrap();
+    let r = guard.as_mut().ok_or_else(no_match)?;
+    r.flag_if_expired();
     finish(&state, r);
     Ok(dto(r))
 }
@@ -223,7 +338,11 @@ pub(crate) fn match_act(
 pub(crate) fn match_step(state: State<'_, AppState>) -> Result<MatchDto, Localized> {
     let mut guard = state.play.lock().unwrap();
     let r = guard.as_mut().ok_or_else(no_match)?;
-    r.m.step_auto().map_err(|e| e.message())?;
+    if !r.flag_if_expired()
+        && let Some(mv) = r.m.step_auto().map_err(|e| e.message())?
+    {
+        r.moved(mv.seat);
+    }
     finish(&state, r);
     Ok(dto(r))
 }
@@ -280,14 +399,18 @@ pub(crate) fn replay_list(
 
 #[derive(Serialize)]
 pub(crate) struct ReplayDto {
-    id: i64,
+    /// `null` untuk partai impor PGN (tidak tersimpan).
+    id: Option<i64>,
     game: String,
     seat: u8,
     seats: Vec<SeatKind>,
     frames: Vec<Frame>,
-    fair: FairRecord,
+    /// Catatan provably fair; tidak ada untuk impor PGN.
+    fair: Option<FairRecord>,
     result: Option<GameResult>,
-    verify: VerifyReport,
+    verify: Option<VerifyReport>,
+    /// Tag PGN (impor).
+    tags: Vec<(String, String)>,
 }
 
 #[tauri::command]
@@ -311,20 +434,168 @@ pub(crate) fn replay_open(id: i64, state: State<'_, AppState>) -> Result<ReplayD
         .unwrap_or(0) as u8;
     let frames = replay.frames(cartridge, seat).map_err(|e| e.message())?;
     Ok(ReplayDto {
-        id,
+        id: Some(id),
         game: replay.game.clone(),
         seat,
         seats: replay.seats.clone(),
         frames,
-        verify: replay.verify(cartridge),
-        fair: replay.fair,
+        verify: Some(replay.verify(cartridge)),
+        fair: Some(replay.fair),
         result: replay.result,
+        tags: Vec::new(),
+    })
+}
+
+fn load(state: &AppState, id: i64) -> Result<(Replay, i64), Localized> {
+    let store = state.store.as_ref().map_err(store_error)?;
+    let guard = store.lock().unwrap();
+    let replay = guard
+        .load_replay(id)
+        .map_err(store_error)?
+        .ok_or_else(|| core().localized("error.replay_missing", &[("id", &id.to_string())]))?;
+    let started = guard
+        .list_replays(Some(&replay.game), 10_000)
+        .map_err(store_error)?
+        .into_iter()
+        .find(|s| s.id == id)
+        .map(|s| s.started_at)
+        .unwrap_or(0);
+    Ok((replay, started))
+}
+
+/// PGN sebuah replay catur (SPEC §6.1). Nama kursi dalam bahasa `lang`.
+#[tauri::command]
+pub(crate) fn replay_pgn(
+    id: i64,
+    lang: kyusin_core::Lang,
+    state: State<'_, AppState>,
+) -> Result<String, Localized> {
+    use kyusin_games::catur::{START_FEN, pgn};
+    let (replay, started) = load(&state, id)?;
+    if replay.game != kyusin_games::catur::ID {
+        return Err(core().localized("error.no_pgn", &[]));
+    }
+    let seat_name = |s: &SeatKind| match s {
+        SeatKind::Bot { level } => core().text(lang, "pgn.bot", &[("level", &level.to_string())]),
+        _ => core().text(lang, "pgn.player", &[]),
+    };
+    let fen = replay.config["fen"]
+        .as_str()
+        .unwrap_or(START_FEN)
+        .to_string();
+    let sans: Vec<String> = replay
+        .moves
+        .iter()
+        .map(|m| m.command.clone())
+        .filter(|c| c != "resign" && c != "timeout")
+        .collect();
+    let winners = replay.result.as_ref().map(|r| r.winners.clone());
+    let jam = &replay.config["jam"];
+    let time_control = jam["menit"]
+        .as_u64()
+        .map(|m| format!("{}+{}", m * 60, jam["tambahan_detik"].as_u64().unwrap_or(0)));
+    let date = {
+        let days = started / 86_400_000;
+        // Tanggal UTC dari hari sejak 1970 (algoritme civil_from_days).
+        let z = days + 719_468;
+        let era = z.div_euclid(146_097);
+        let doe = z - era * 146_097;
+        let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+        let mp = (5 * doy + 2) / 153;
+        let d = doy - (153 * mp + 2) / 5 + 1;
+        let m = if mp < 10 { mp + 3 } else { mp - 9 };
+        let y = yoe + era * 400 + i64::from(m <= 2);
+        if started > 0 {
+            format!("{y:04}.{m:02}.{d:02}")
+        } else {
+            "????.??.??".into()
+        }
+    };
+    let tags = pgn::Tags {
+        white: seat_name(&replay.seats[0]),
+        black: seat_name(&replay.seats[1]),
+        date,
+    };
+    Ok(pgn::export_moves(
+        &fen,
+        &sans,
+        pgn::result_token(winners.as_deref()),
+        time_control,
+        &tags,
+    ))
+}
+
+/// Membuka teks PGN di penampil replay (tidak disimpan, tanpa verify).
+#[tauri::command]
+pub(crate) fn pgn_open(text: String, state: State<'_, AppState>) -> Result<ReplayDto, Localized> {
+    use kyusin_games::catur::pgn;
+    let game = pgn::import(&text).map_err(|e| core().localized("error.pgn", &[("detail", &e)]))?;
+    let cartridge = state
+        .registry
+        .get(kyusin_games::catur::ID)
+        .ok_or_else(|| unknown_game(kyusin_games::catur::ID))?;
+    let config = match &game.fen {
+        Some(f) => serde_json::json!({ "fen": f }),
+        None => serde_json::Value::Null,
+    };
+    let mut session = (cartridge.create)(&config, [0; 32]).map_err(|e| e.message())?;
+    let frame = |s: &dyn kyusin_core::Session, index: usize, last: Option<Move>| Frame {
+        index,
+        last,
+        view_data: s.view_data(0),
+        view_text: Localized::build(|lang| s.view_text(0, lang)),
+    };
+    let mut frames = vec![frame(session.as_ref(), 0, None)];
+    for (i, san) in game.moves.iter().enumerate() {
+        let seat = session.pending_players()[0];
+        session.act(seat, san).map_err(|e| e.message())?;
+        frames.push(frame(
+            session.as_ref(),
+            i + 1,
+            Some(Move {
+                seat,
+                command: san.clone(),
+            }),
+        ));
+    }
+    Ok(ReplayDto {
+        id: None,
+        game: kyusin_games::catur::ID.into(),
+        seat: 0,
+        seats: vec![SeatKind::Human, SeatKind::Human],
+        frames,
+        fair: None,
+        result: session.result(),
+        verify: None,
+        tags: game.tags,
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn host_clock_charges_the_mover_and_adds_increment() {
+        let mut c = HostClock {
+            remaining: [60_000, 60_000],
+            increment: 2_000,
+            running: Some(0),
+            since: Instant::now() - std::time::Duration::from_millis(1_500),
+        };
+        c.after_move(0, Some(1));
+        assert!((60_400..=60_600).contains(&c.remaining[0]), "{:?}", c.remaining);
+        assert_eq!(c.remaining[1], 60_000);
+        assert_eq!(c.running, Some(1));
+        c.since = Instant::now() - std::time::Duration::from_millis(700);
+        let snap = c.snapshot();
+        assert!(snap.remaining_ms[1] <= 59_300);
+        c.after_move(1, None);
+        assert_eq!(c.running, None);
+        let still = c.snapshot().remaining_ms;
+        assert_eq!(still, c.remaining, "jam berhenti setelah permainan selesai");
+    }
 
     #[test]
     fn singleplayer_fair_record_verifies_and_hides_nothing_needed() {

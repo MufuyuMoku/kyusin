@@ -144,7 +144,11 @@ fn san(board: &Board, m: &Legal, all: &[Legal]) -> String {
     let mut after = board.clone();
     after.play(m.raw);
     if !after.checkers().is_empty() {
-        s.push(if raw_moves(&after).is_empty() { '#' } else { '+' });
+        s.push(if raw_moves(&after).is_empty() {
+            '#'
+        } else {
+            '+'
+        });
     }
     s
 }
@@ -192,7 +196,7 @@ pub fn find(moves: &[Legal], input: &str) -> Option<usize> {
                     && m.to == to
                     && match (promo, m.promotion) {
                         (None, None) => true,
-                        (Some(p), Some(q)) => p.chars().next() == Some(promotion_char(q)),
+                        (Some(p), Some(q)) => p.starts_with(promotion_char(q)),
                         _ => false,
                     }
             })
@@ -207,7 +211,10 @@ pub fn find(moves: &[Legal], input: &str) -> Option<usize> {
             && "QRBN".contains(last)
             && !t.contains('=')
             && t.len() >= 3
-            && t[..t.len() - 1].chars().last().is_some_and(|c| c.is_ascii_digit())
+            && t[..t.len() - 1]
+                .chars()
+                .last()
+                .is_some_and(|c| c.is_ascii_digit())
         {
             t.insert(t.len() - 1, '=');
         }

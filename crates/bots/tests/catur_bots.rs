@@ -27,7 +27,9 @@ fn play(white: u8, black: u8, seed: u8) -> i64 {
     let mut m = Match::new(&c, serde_json::Value::Null, fair, players).unwrap();
     let mut plies = 0;
     while !m.session().is_over() && plies < 300 {
-        m.step_auto().expect("bot harus memilih langkah sah").unwrap();
+        m.step_auto()
+            .expect("bot harus memilih langkah sah")
+            .unwrap();
         plies += 1;
     }
     if !m.session().is_over() {

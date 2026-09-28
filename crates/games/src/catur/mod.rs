@@ -135,7 +135,11 @@ pub fn seat_of(c: Color) -> PlayerId {
 }
 
 fn color_of(seat: PlayerId) -> Color {
-    if seat == 0 { Color::White } else { Color::Black }
+    if seat == 0 {
+        Color::White
+    } else {
+        Color::Black
+    }
 }
 
 /// Tidak ada pihak yang bisa mat: tanpa pion/benteng/menteri, dan paling
@@ -187,12 +191,21 @@ impl Catur {
         let other = 1 - mover;
         self.ending = if self.legal.is_empty() {
             Some(if self.board.checkers().is_empty() {
-                Ending { alasan: "pat", winners: vec![] }
+                Ending {
+                    alasan: "pat",
+                    winners: vec![],
+                }
             } else {
-                Ending { alasan: "skakmat", winners: vec![other] }
+                Ending {
+                    alasan: "skakmat",
+                    winners: vec![other],
+                }
             })
         } else if self.board.halfmove_clock() >= 100 {
-            Some(Ending { alasan: "50_langkah", winners: vec![] })
+            Some(Ending {
+                alasan: "50_langkah",
+                winners: vec![],
+            })
         } else if self
             .positions
             .iter()
@@ -200,9 +213,15 @@ impl Catur {
             .count()
             >= 3
         {
-            Some(Ending { alasan: "ulangan", winners: vec![] })
+            Some(Ending {
+                alasan: "ulangan",
+                winners: vec![],
+            })
         } else if insufficient(&self.board) {
-            Some(Ending { alasan: "bahan", winners: vec![] })
+            Some(Ending {
+                alasan: "bahan",
+                winners: vec![],
+            })
         } else {
             None
         };
@@ -254,14 +273,22 @@ impl TurnGame for Catur {
     }
 
     fn pending_players(&self) -> Vec<PlayerId> {
-        if self.ending.is_some() { Vec::new() } else { vec![self.mover()] }
+        if self.ending.is_some() {
+            Vec::new()
+        } else {
+            vec![self.mover()]
+        }
     }
 
     fn legal_actions(&self, player: PlayerId) -> Vec<ActionSpec> {
         if self.ending.is_some() || player != self.mover() {
             return Vec::new();
         }
-        let mut out: Vec<ActionSpec> = self.legal.iter().map(|m| ActionSpec::fixed(&m.san)).collect();
+        let mut out: Vec<ActionSpec> = self
+            .legal
+            .iter()
+            .map(|m| ActionSpec::fixed(&m.san))
+            .collect();
         out.push(ActionSpec::fixed("resign"));
         if self.jam.is_some() {
             out.push(ActionSpec::fixed("timeout"));
@@ -299,15 +326,25 @@ impl TurnGame for Catur {
                 self.evaluate();
             }
             Action::Resign => {
-                self.ending = Some(Ending { alasan: "menyerah", winners: vec![1 - player] });
+                self.ending = Some(Ending {
+                    alasan: "menyerah",
+                    winners: vec![1 - player],
+                });
             }
             Action::Timeout => {
                 if self.jam.is_none() {
                     return Err(GameError::Illegal("timeout".into()));
                 }
                 let opponent = color_of(1 - player);
-                let winners = if cannot_mate(&self.board, opponent) { vec![] } else { vec![1 - player] };
-                self.ending = Some(Ending { alasan: "waktu", winners });
+                let winners = if cannot_mate(&self.board, opponent) {
+                    vec![]
+                } else {
+                    vec![1 - player]
+                };
+                self.ending = Some(Ending {
+                    alasan: "waktu",
+                    winners,
+                });
             }
         }
         Ok(())

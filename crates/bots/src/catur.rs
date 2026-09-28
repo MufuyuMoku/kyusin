@@ -24,10 +24,30 @@ struct Params {
 
 fn params(level: u8) -> Params {
     match level {
-        1 => Params { depth: 1, quiesce: false, noise: 150, node_limit: 20_000 },
-        2 => Params { depth: 2, quiesce: true, noise: 40, node_limit: 60_000 },
-        3 => Params { depth: 3, quiesce: true, noise: 10, node_limit: 250_000 },
-        _ => Params { depth: 4, quiesce: true, noise: 0, node_limit: 600_000 },
+        1 => Params {
+            depth: 1,
+            quiesce: false,
+            noise: 150,
+            node_limit: 20_000,
+        },
+        2 => Params {
+            depth: 2,
+            quiesce: true,
+            noise: 40,
+            node_limit: 60_000,
+        },
+        3 => Params {
+            depth: 3,
+            quiesce: true,
+            noise: 10,
+            node_limit: 250_000,
+        },
+        _ => Params {
+            depth: 4,
+            quiesce: true,
+            noise: 0,
+            node_limit: 600_000,
+        },
     }
 }
 
@@ -111,7 +131,11 @@ fn is_capture(b: &Board, mv: Move) -> bool {
 /// Urutan: promosi dan tangkapan (korban termahal, penyerang termurah) dulu.
 fn order(b: &Board, moves: &mut [Move]) {
     moves.sort_by_key(|&mv| {
-        let victim = b.piece_on(mv.to).filter(|_| is_capture(b, mv)).map(value).unwrap_or(0);
+        let victim = b
+            .piece_on(mv.to)
+            .filter(|_| is_capture(b, mv))
+            .map(value)
+            .unwrap_or(0);
         let attacker = b.piece_on(mv.from).map(value).unwrap_or(0);
         let promo = mv.promotion.map(value).unwrap_or(0);
         -(victim * 10 - attacker / 10 + promo * 10)
@@ -134,13 +158,21 @@ impl Search {
         }
         let mut moves = moves_of(b);
         if moves.is_empty() {
-            return if b.checkers().is_empty() { 0 } else { -MATE + ply };
+            return if b.checkers().is_empty() {
+                0
+            } else {
+                -MATE + ply
+            };
         }
         if b.halfmove_clock() >= 100 {
             return 0;
         }
         if depth == 0 {
-            return if self.quiesce { self.qsearch(b, alpha, beta, 0) } else { evaluate(b) };
+            return if self.quiesce {
+                self.qsearch(b, alpha, beta, 0)
+            } else {
+                evaluate(b)
+            };
         }
         order(b, &mut moves);
         let mut best = -MATE;
@@ -239,8 +271,8 @@ impl ChessBot {
             for (i, &mv) in moves.iter().enumerate() {
                 let mut child = board.clone();
                 child.play_unchecked(mv);
-                let score = -search.negamax(&child, depth - 1, -MATE - 1, -alpha + noise[i], 1)
-                    + noise[i];
+                let score =
+                    -search.negamax(&child, depth - 1, -MATE - 1, -alpha + noise[i], 1) + noise[i];
                 if search.aborted {
                     break;
                 }

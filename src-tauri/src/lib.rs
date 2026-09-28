@@ -46,6 +46,8 @@ struct GameDto {
     rtp_line: Option<Localized>,
     /// Jumlah level bot (0 = belum ada).
     bot_levels: u8,
+    /// Perkiraan rating tiap level dari kalibrasi (SPEC §8), bila ada.
+    bot_ratings: Vec<Option<i64>>,
 }
 
 #[derive(Serialize)]
@@ -111,6 +113,7 @@ fn catalog(state: State<'_, AppState>) -> Vec<CategoryDto> {
                 .map(|m| GameDto {
                     rtp_line: rtp_line(m),
                     bot_levels: kyusin_bots::levels(&m.id),
+                    bot_ratings: kyusin_bots::ratings(&m.id),
                     manifest: m.clone(),
                 })
                 .collect(),
@@ -195,6 +198,9 @@ pub fn run() {
             play::match_act,
             play::match_step,
             play::match_leave,
+            play::match_flag,
+            play::replay_pgn,
+            play::pgn_open,
             play::replay_list,
             play::replay_open,
         ])
@@ -214,6 +220,7 @@ mod tests {
             manifest: m.clone(),
             rtp_line: None,
             bot_levels: 0,
+            bot_ratings: vec![],
         })
         .unwrap();
         for key in [
