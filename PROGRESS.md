@@ -11,7 +11,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M0c | selesai | 2026-09-27 | Tiga mode boot (Verbose, Sinematik, Sapaan) + Mati |
 | M1 | selesai | 2026-09-28 | Kontrak final, provably fair + verify, replay, Reversi memenuhi §7 |
 | M1b | selesai | 2026-09-28 | Papan grid CSS + sprite piksel, komponen papan bersama, tes jendela asli tauri-driver di CI Windows, sapaan baru + bentuk jamak |
-| M2 | belum mulai | | |
+| M2 | selesai | 2026-09-28 | Catur: mesin (cozy-chess), SAN/PGN, 4 level terkalibrasi Stockfish 19, jam host, tutorial, seret-lepas + klik, tes jendela asli |
 | M3 | belum mulai | | |
 | M4 | belum mulai | | |
 | M5 | belum mulai | | |
@@ -32,8 +32,29 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Game | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | Selesai |
 |------|---|---|---|---|---|---|---|---|---|---------|
 | Reversi | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M1); rating lokal di M3 |
+| Catur | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M2); rating lokal di M3 |
 
 ## Log sesi
+
+### 2026-09-28 — M2: catur
+- Keputusan klien: D-041 (sprite, input visual, kalibrasi di workflow, tes jendela asli). Keputusan developer: D-042–D-046.
+- Tes aturan ditulis dan di-commit lebih dulu (commit e81941f), lalu mesinnya.
+- Dikerjakan:
+  - Mesin aturan di atas cozy-chess (MIT): SAN kanonik + alias koordinat, rokade/en passant/promosi, skakmat, pat, remis otomatis (tiga kali, 50 langkah, bahan tidak cukup), menyerah, waktu habis. Metode kontrak opsional `canonical` untuk alias.
+  - PGN: ekspor dari replay (tampil + salin), impor ke penampil replay dengan pemeriksaan setiap langkah.
+  - Bot 4 level (alpha-beta + quiescence, dibatasi kedalaman/node). Jam 5+0, 10+5, 15+10, dihitung host; waktu habis tercatat di replay.
+  - Tutorial dua bahasa (e4, Nf3, Bc4, O-O, aturan khusus) + `man`.
+  - UI: enam sprite piksel 12×12 (putih penuh, hitam garis tepi otomatis), klik-pilih-lalu-tujuan, seret-lepas, keyboard, titik tujuan sah, petak terpilih, langkah terakhir, skak, pilihan promosi bergambar, papan dibalik saat memegang hitam, catatan langkah khusus di status.
+  - Kalibrasi: workflow manual `calibrate.yml` (Stockfish 19 diunduh saat berjalan), 16 partai per pasangan, 100 ms/langkah. Hasil di `data/calibration/catur.json`:
+    - level 1: 0/64 melawan 1320–1900 → di bawah 1320 (taksiran ekstrapolasi ≈888, tidak ditampilkan di UI);
+    - level 2: ≈1283 (95%: 1166–1401);
+    - level 3: ≈1459 (1357–1562);
+    - level 4: ≈1604 (1504–1703).
+    Catatan: skala `UCI_Elo` Stockfish, 100 ms/langkah, bukan rating FIDE.
+- Temuan tes jendela asli: klik pertama setelah seret tertelan. Di jendela asli dengan reduced motion, bot membalas tanpa jeda dan klik berikutnya datang <150 ms setelah seret dilepas, masih di dalam jendela peredam klik penutup seret. Kini hanya klik yang langsung menyusul pelepasan seret yang diabaikan (tanda, bukan jendela waktu), dan penangkapan penunjuk baru dimulai saat seret aktif (lewat 4 px).
+- Tes: 104 tes Rust (catur 22 aturan termasuk perft/kiwipete, bot catur 6 termasuk uji kekuatan antar-level dan rating), 34 tes UI. Tes jendela asli (CI Windows, run 36371740188) lulus: keselarasan papan, kursor keyboard dan hover ke 64 sel, seret e2→e4 melintasi e3/d3/d4 tanpa sel bergeser (bidak bayangan + sasaran seret tampil), empat langkah klik-pilih-lalu-tujuan (petak terpilih + titik tujuan), menyerah, hasil + verify cocok + replay tersimpan, tema P3/P4 tetap selaras.
+- Belum/sisa: pilihan promosi, rokade, dan en passant lewat UI belum dilalui tes jendela asli (aturannya dites di Rust; tampilannya belum dicek di jendela asli). Mohon dicek klien.
+- Langkah berikutnya: M3 di sesi berikutnya.
 
 ### 2026-09-28 — M1b: papan ulang dan tes jendela asli
 - Konteks: uji klien M1 di jendela Tauri asli: baris papan tempat kursor berada bergeser dan garis vertikal putus. SPEC Revisi 8 (+ aturan lapisan kursor di §4).

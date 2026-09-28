@@ -380,6 +380,12 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Kalibrasi: `crates/bots/examples/calibrate_catur.rs` bicara UCI dengan Stockfish (`UCI_LimitStrength` + `UCI_Elo`), memainkan setiap level dari delapan pembukaan pendek dengan warna bergantian, lalu menaksir rating tiap level dengan kemungkinan maksimum model Elo logistik plus selang 95%. Bila semua kalah atau semua menang, ditambah satu remis semu per lawan dan ditandai ekstrapolasi. Workflow manual `.github/workflows/calibrate.yml` mengunduh rilis Stockfish resmi ke folder sementara runner. Hasil disimpan di `data/calibration/catur.json`, ditanam ke `kyusin-bots`, dan ditampilkan di pilihan level ("≈rating").
 - Rujukan: SPEC §6.1, §8, D-041.
 
+### D-047 — Hasil kalibrasi pertama dan rating ekstrapolasi
+- Tanggal / milestone: 2026-09-28 / M2
+- Diputuskan oleh: developer
+- Keputusan: kalibrasi pertama (Stockfish 19, `UCI_Elo` 1320/1500/1700/1900, 16 partai per pasangan, 100 ms/langkah) disimpan apa adanya di `data/calibration/catur.json`. Level 1 kalah semua (0/64) melawan tingkat terendah Stockfish, jadi taksirannya murni ekstrapolasi. Rating ekstrapolasi tidak ditampilkan di pilihan level; yang ditampilkan hanya level 2–4 (≈1283, ≈1459, ≈1604). Angka ini skala `UCI_Elo` Stockfish, bukan rating FIDE. Kalibrasi ulang cukup dengan menjalankan workflow lagi dan meng-commit berkasnya.
+- Rujukan: D-041, D-046.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
