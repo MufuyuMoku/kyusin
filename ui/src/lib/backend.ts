@@ -135,6 +135,43 @@ export interface MatchState {
 	started_at: number;
 	/** Menu jeda terbuka: jam dan bot berhenti. */
 	paused: boolean;
+	/** Perubahan rating lokal setelah selesai, bila dihitung (M3). */
+	rating: RatingChange | null;
+}
+
+export interface RatingChange {
+	before: number;
+	after: number;
+	rd: number;
+}
+
+/** Profil tunggal per instalasi (M3). */
+export interface ProfileState {
+	name: string | null;
+	created_at: number;
+	last_game: string | null;
+	name_max: number;
+}
+
+export interface StatsState {
+	games: {
+		game: string;
+		played: number;
+		wins: number;
+		draws: number;
+		losses: number;
+		last_played: number;
+		rating: { rating: number; rd: number; games: number; best: number } | null;
+	}[];
+	history: {
+		id: number;
+		game: string;
+		finished_at: number;
+		replay_id: number | null;
+		opponent_level: number | null;
+		outcome: 'win' | 'draw' | 'loss';
+		rating: RatingChange | null;
+	}[];
 }
 
 /** Pertandingan yang ditunda (SPEC §4), satu per game. */
@@ -199,7 +236,7 @@ export interface AppInfo {
 	 * di M3 (nama, game terakhir) dan M4 (chip). Sapaan yang membutuhkannya
 	 * aktif otomatis begitu ada.
 	 */
-	profile?: { name?: string; last_game?: string; chips?: number };
+	profile?: { name?: string | null; last_game?: string | null; chips?: number };
 }
 
 type Api = {
@@ -230,6 +267,9 @@ type Api = {
 	match_resume(id: string): Promise<MatchState>;
 	suspended_forfeit(id: string): Promise<void>;
 	suspended_list(): Promise<SuspendedMatch[]>;
+	profile_get(): Promise<ProfileState>;
+	profile_set_name(name: string): Promise<ProfileState>;
+	stats(game: string | null): Promise<StatsState>;
 	replay_list(game: string | null): Promise<ReplaySummary[]>;
 	replay_open(id: number): Promise<ReplayData>;
 };
@@ -257,6 +297,9 @@ const tauriApi: Api = {
 	match_resume: (id) => invoke('match_resume', { id }),
 	suspended_forfeit: (id) => invoke('suspended_forfeit', { id }),
 	suspended_list: () => invoke('suspended_list'),
+	profile_get: () => invoke('profile_get'),
+	profile_set_name: (name) => invoke('profile_set_name', { name }),
+	stats: (game) => invoke('stats', { game }),
 	replay_list: (game) => invoke('replay_list', { game }),
 	replay_open: (id) => invoke('replay_open', { id })
 };

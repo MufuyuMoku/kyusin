@@ -17,6 +17,7 @@
 	} from '$lib/app.svelte';
 	import ClockPanel from './ClockPanel.svelte';
 	import { GAME_UI } from '$lib/games';
+	import { signed } from '$lib/format';
 	import { L, t } from '$lib/i18n.svelte';
 	import FairPanel from './FairPanel.svelte';
 	import Frame from './Frame.svelte';
@@ -107,6 +108,15 @@
 				</div>
 				{#if m.over}
 					<p class="result" role="status">{outcome} {m.result ? L(m.result.summary) : ''}</p>
+					{#if m.rating}
+						<p class="rating">
+							{t('match.rating', {
+								before: Math.round(m.rating.before),
+								after: Math.round(m.rating.after),
+								delta: signed(Math.round(m.rating.after) - Math.round(m.rating.before))
+							})}
+						</p>
+					{/if}
 					<div class="controls">
 						<NavButton onclick={() => startMatch(m.game, level, m.seat, app.lastClock)}
 							>[ {t('action.again')} ]</NavButton

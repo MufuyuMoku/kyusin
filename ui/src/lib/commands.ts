@@ -23,6 +23,8 @@ export const GLOBAL_COMMANDS: CommandDef[] = [
 	{ name: 'menu', args: '', summary: 'cmd.menu' },
 	{ name: 'back', args: '', summary: 'cmd.back' },
 	{ name: 'settings', args: '', summary: 'cmd.settings' },
+	{ name: 'profile', args: '', summary: 'cmd.profile' },
+	{ name: 'stats', args: '', summary: 'cmd.stats' },
 	{ name: 'theme', args: '<p1|p3|p4>', summary: 'cmd.theme' },
 	{ name: 'fx', args: '<effect> <on|off>', summary: 'cmd.fx' },
 	{ name: 'lang', args: '<id|en>', summary: 'cmd.lang' },

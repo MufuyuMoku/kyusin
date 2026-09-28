@@ -155,7 +155,9 @@ async function chessCursor(s, artifacts, log) {
 	await s.waitFor(() => !!document.querySelector('.match .result'), 'hasil setelah menyerah');
 	const verify = await s.exec(() => document.body.innerText.includes('verify: semua cocok'));
 	if (!verify) fail('verify tidak cocok setelah menyerah dari menu jeda');
-	log('menyerah dari menu jeda: hasil tercatat, verify cocok');
+	const rating = await s.exec(() => document.querySelector('.match .rating')?.textContent.trim() ?? null);
+	if (!rating?.startsWith('Rating lokal:')) fail(`perubahan rating lokal tidak tampil: ${rating}`);
+	log(`menyerah dari menu jeda: hasil tercatat, verify cocok, ${rating}`);
 }
 
 async function reversi(s, artifacts, log) {

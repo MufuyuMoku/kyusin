@@ -5,7 +5,16 @@
  * menggerakkan layar. Tidak ikut build produksi.
  */
 
-import type { FairRecord, MatchState, ReplayData, ReplaySummary, Move, SuspendedMatch } from './backend';
+import type {
+	FairRecord,
+	MatchState,
+	Move,
+	ProfileState,
+	ReplayData,
+	ReplaySummary,
+	StatsState,
+	SuspendedMatch
+} from './backend';
 import type { ReversiView } from './games/reversi';
 
 type Cell = '.' | 'X' | 'O';
@@ -172,7 +181,8 @@ function state(g: Game): MatchState {
 		save_error: null,
 		clock: null,
 		started_at: g.startedAt,
-		paused
+		paused,
+		rating: null
 	};
 }
 
@@ -180,6 +190,8 @@ function resignFor(g: Game, seat: number) {
 	g.resigned = seat;
 	g.moves.push({ seat, command: 'resign' });
 }
+
+let profile: ProfileState = { name: null, created_at: Date.now(), last_game: null, name_max: 24 };
 
 let paused = false;
 let suspended: Game | null = null;
@@ -287,6 +299,47 @@ export const reversiMock = {
 			save(suspended);
 		}
 		suspended = null;
+	},
+	profile_get: async (): Promise<ProfileState> => ({
+		...profile,
+		last_game: replays.some((r) => r.summary.finished) ? 'reversi' : null
+	}),
+	profile_set_name: async (name: string): Promise<ProfileState> => {
+		const n = name.trim().slice(0, profile.name_max);
+		profile = { ...profile, name: n || null };
+		return profile;
+	},
+	stats: async (): Promise<StatsState> => {
+		const done = replays.filter((r) => r.summary.finished && r.summary.result);
+		const outcome = (r: (typeof done)[number]) => {
+			const w = r.summary.result!.winners;
+			return w.length === 0 ? 'draw' : w.includes(r.human) ? 'win' : 'loss';
+		};
+		const count = (o: string) => done.filter((r) => outcome(r) === o).length;
+		return {
+			games: done.length
+				? [
+						{
+							game: 'reversi',
+							played: done.length,
+							wins: count('win'),
+							draws: count('draw'),
+							losses: count('loss'),
+							last_played: done[done.length - 1].summary.started_at,
+							rating: null
+						}
+					]
+				: [],
+			history: [...done].reverse().map((r) => ({
+				id: r.summary.id,
+				game: 'reversi',
+				finished_at: r.summary.started_at,
+				replay_id: r.summary.id,
+				opponent_level: 1,
+				outcome: outcome(r) as 'win' | 'draw' | 'loss',
+				rating: null
+			}))
+		};
 	},
 	suspended_list: async (): Promise<SuspendedMatch[]> =>
 		suspended

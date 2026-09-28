@@ -21,7 +21,9 @@ export type Screen =
 	| { name: 'replay'; id: number }
 	| { name: 'pgn' }
 	| { name: 'settings' }
-	| { name: 'help' };
+	| { name: 'help' }
+	| { name: 'profile' }
+	| { name: 'stats' };
 
 export const app = $state({
 	stack: [{ name: 'menu' }] as Screen[],

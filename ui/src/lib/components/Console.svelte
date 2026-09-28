@@ -158,6 +158,12 @@
 			case 'settings':
 				if (current().name !== 'settings') go({ name: 'settings' });
 				return;
+			case 'profile':
+				if (current().name !== 'profile') go({ name: 'profile' });
+				return;
+			case 'stats':
+				if (current().name !== 'stats') go({ name: 'stats' });
+				return;
 			case 'theme':
 				if (!THEME_IDS.includes(a)) return print(t('console.theme_usage', { options: THEME_IDS.join(', ') }));
 				settings.theme = a as Theme;

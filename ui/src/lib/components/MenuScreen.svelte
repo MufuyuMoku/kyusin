@@ -41,6 +41,12 @@
 	<Frame title={t('menu.system')}>
 		<ul>
 			<li>
+				<NavButton onclick={() => go({ name: 'profile' })}>› {t('menu.profile')}</NavButton>
+			</li>
+			<li>
+				<NavButton onclick={() => go({ name: 'stats' })}>› {t('menu.stats')}</NavButton>
+			</li>
+			<li>
 				<NavButton onclick={() => go({ name: 'settings' })}>› {t('menu.settings')}</NavButton>
 			</li>
 			<li>

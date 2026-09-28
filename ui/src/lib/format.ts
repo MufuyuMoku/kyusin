@@ -30,3 +30,8 @@ export function clockText(ms: number): string {
 	const s = total % 60;
 	return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
+/** Selisih bertanda untuk perubahan rating: `+12`, `-8`, `0`. */
+export function signed(n: number): string {
+	return n > 0 ? `+${n}` : `${n}`;
+}

@@ -8,7 +8,7 @@
  */
 
 import { isTauri } from '@tauri-apps/api/core';
-import { app, fonts, marks } from '$lib/app.svelte';
+import { app, findGame, fonts, marks } from '$lib/app.svelte';
 import { L, lang, t, type Key } from '$lib/i18n.svelte';
 import { EFFECTS, effectOn, motion, settings, settingsReadAt } from '$lib/settings.svelte';
 import { pickGreeting } from './greetings';
@@ -156,8 +156,9 @@ export function greeting(previous: SessionRecord): { script: Script; id: string 
 			weekday: new Date().getDay(),
 			streak: streak(previous.days, Date.now()),
 			gapMs: previous.last === null ? null : Date.now() - previous.last,
-			profile: profile?.name,
-			lastGame: profile?.last_game,
+			profile: profile?.name ?? undefined,
+			// Nama tampilan game terakhir dalam bahasa aktif.
+			lastGame: profile?.last_game ? (L(findGame(profile.last_game)?.nama) ?? undefined) : undefined,
 			chips: profile?.chips
 		},
 		previous.greeting
