@@ -249,7 +249,8 @@ fn resign_and_timeout() {
     // Waktu habis, tetapi lawan tinggal raja: remis.
     let mut g = Catur::new(
         Config {
-            fen: Some("4k3/8/8/8/8/8/8/Q3K3 b - - 0 1".into()),
+            // Hitam kehabisan waktu; putih tinggal raja, tak mungkin mat.
+            fen: Some("4k3/q7/8/8/8/8/8/4K3 b - - 0 1".into()),
             ..clocked
         },
         [0; 32],
