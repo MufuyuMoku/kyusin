@@ -17,6 +17,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
 use cozy_chess::Board;
+use kyusin_bots::calibration::estimate;
 use kyusin_bots::catur::ChessBot;
 use kyusin_core::rng::derive;
 use kyusin_core::{Session, TurnGame};
@@ -161,44 +162,6 @@ fn game(
         Some(_) => 0.0,
         None => 0.5,
     }
-}
-
-fn expected(r: f64, e: f64) -> f64 {
-    1.0 / (1.0 + 10f64.powf((e - r) / 400.0))
-}
-
-/// Taksiran kemungkinan maksimum + selang 95%. Bila semua kalah atau semua
-/// menang, ditambah satu remis semu per lawan supaya taksirannya berhingga
-/// (ditandai ekstrapolasi).
-fn estimate(results: &[(f64, f64, f64)]) -> (f64, f64, bool) {
-    let total: f64 = results.iter().map(|r| r.1).sum();
-    let games: f64 = results.iter().map(|r| r.2).sum();
-    let extrapolated = total == 0.0 || total == games;
-    let data: Vec<(f64, f64, f64)> = if extrapolated {
-        results
-            .iter()
-            .map(|&(e, p, n)| (e, p + 0.5, n + 1.0))
-            .collect()
-    } else {
-        results.to_vec()
-    };
-    let grad = |r: f64| {
-        data.iter()
-            .map(|&(e, p, n)| p - n * expected(r, e))
-            .sum::<f64>()
-    };
-    let (mut lo, mut hi) = (-1000.0, 4000.0);
-    for _ in 0..100 {
-        let mid = (lo + hi) / 2.0;
-        if grad(mid) > 0.0 { lo = mid } else { hi = mid }
-    }
-    let r = (lo + hi) / 2.0;
-    let k = std::f64::consts::LN_10 / 400.0;
-    let info: f64 = data
-        .iter()
-        .map(|&(e, _, n)| n * expected(r, e) * (1.0 - expected(r, e)) * k * k)
-        .sum();
-    (r, 1.96 / info.sqrt(), extrapolated)
 }
 
 fn arg(name: &str, default: &str) -> String {

@@ -5,6 +5,7 @@
 use kyusin_core::rng::derive;
 use kyusin_core::{Player, Seed};
 
+pub mod calibration;
 pub mod catur;
 pub mod reversi;
 
@@ -17,24 +18,14 @@ pub fn levels(game: &str) -> u8 {
     }
 }
 
-/// Perkiraan rating tiap level dari kalibrasi (SPEC §8), bila ada.
-/// Indeks 0 = level 1.
+/// Rating lokal tiap level untuk ditampilkan (SPEC §8), bila ada.
+/// Indeks 0 = level 1. Taksiran ekstrapolasi tidak ditampilkan (D-047).
 pub fn ratings(game: &str) -> Vec<Option<i64>> {
-    let data = match game {
-        kyusin_games::catur::ID => include_str!("../../../data/calibration/catur.json"),
-        _ => return vec![None; levels(game) as usize],
-    };
-    let doc: serde_json::Value = serde_json::from_str(data).unwrap_or_default();
     (1..=levels(game))
-        .map(|level| {
-            doc["levels"]
-                .as_array()?
-                .iter()
-                .find(|l| l["level"] == level)
-                // Taksiran ekstrapolasi (semua kalah/menang) tidak ditampilkan.
-                .filter(|l| l["extrapolated"] != true)?["elo"]
-                .as_f64()
-                .map(|e| e as i64)
+        .map(|l| {
+            calibration::level(game, l)
+                .filter(|r| !r.extrapolated)
+                .map(|r| r.elo.round() as i64)
         })
         .collect()
 }

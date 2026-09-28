@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-28",
+  "game": "reversi",
+  "games_per_pairing": 1000,
+  "levels": [
+    {
+      "anchor": true,
+      "ci95": [
+        1000.0,
+        1000.0
+      ],
+      "elo": 1000.0,
+      "extrapolated": false,
+      "level": 1,
+      "results": []
+    },
+    {
+      "ci95": [
+        1311.0,
+        1377.0
+      ],
+      "elo": 1344.0,
+      "extrapolated": false,
+      "level": 2,
+      "results": [
+        {
+          "games": 1000,
+          "opponent_level": 1,
+          "points": 878.5
+        }
+      ]
+    },
+    {
+      "ci95": [
+        2034.0,
+        2232.0
+      ],
+      "elo": 2133.0,
+      "extrapolated": false,
+      "level": 3,
+      "results": [
+        {
+          "games": 1000,
+          "opponent_level": 1,
+          "points": 998.5
+        },
+        {
+          "games": 1000,
+          "opponent_level": 2,
+          "points": 989.5
+        }
+      ]
+    }
+  ],
+  "method": "level 1 dipatok 1000; level berikutnya ditaksir berurutan dari hasil melawan semua level di bawahnya (kemungkinan maksimum model Elo logistik, selang 95% dari informasi Fisher); 4 langkah pembuka acak, kursi bergantian",
+  "opponent": "antar-bot",
+  "random_plies": 4
+}
