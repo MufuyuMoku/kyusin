@@ -3,8 +3,10 @@
 //! Singleplayer: aplikasi berperan sebagai host dan pemain lokal sebagai
 //! peserta. Komitmen keduanya diumumkan sebelum langkah pertama; seed baru
 //! dibuka setelah permainan selesai, lalu `verify` dijalankan otomatis dan
-//! hasilnya ditampilkan. Setiap pertandingan disimpan sebagai replay,
-//! termasuk yang ditinggalkan di tengah jalan.
+//! hasilnya ditampilkan. Setiap pertandingan yang selesai disimpan sebagai
+//! replay. Pertandingan yang belum selesai tidak pernah hilang: menu jeda,
+//! keluar dari layar, atau menutup jendela menundanya (SPEC §4 Rev. 9), dan
+//! pertandingan itu bisa dilanjutkan dari layar game.
 
 use std::collections::BTreeMap;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -14,8 +16,8 @@ use kyusin_core::hash::unhex32;
 use kyusin_core::i18n::core;
 use kyusin_core::replay::{Frame, Move, Replay, VerifyReport};
 use kyusin_core::{GameResult, Human, Localized, Match, Player, SeatKind, Seed};
-use kyusin_store::ReplaySummary;
-use serde::Serialize;
+use kyusin_store::{ReplaySummary, Suspended};
+use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use crate::{ActionDto, AppState, action_dtos, unknown_game};
@@ -31,9 +33,36 @@ struct HostClock {
     increment: i64,
     running: Option<u8>,
     since: Instant,
+    /// Kursi yang jamnya dihentikan oleh menu jeda.
+    paused: Option<u8>,
 }
 
 impl HostClock {
+    fn new(remaining: [i64; 2], increment: i64, running: Option<u8>) -> Self {
+        HostClock {
+            remaining,
+            increment,
+            running,
+            since: Instant::now(),
+            paused: None,
+        }
+    }
+
+    /// Menu jeda dibuka: jam yang berjalan berhenti.
+    fn pause(&mut self) {
+        self.charge();
+        if let Some(s) = self.running.take() {
+            self.paused = Some(s);
+        }
+    }
+
+    fn unpause(&mut self) {
+        if let Some(s) = self.paused.take() {
+            self.running = Some(s);
+            self.since = Instant::now();
+        }
+    }
+
     fn charge(&mut self) {
         if let Some(s) = self.running {
             self.remaining[s as usize] -= self.since.elapsed().as_millis() as i64;
@@ -77,6 +106,7 @@ pub(crate) struct Running {
     verify: Option<VerifyReport>,
     save_error: Option<String>,
     clock: Option<HostClock>,
+    paused: bool,
 }
 
 impl Running {
@@ -100,6 +130,24 @@ impl Running {
         clock.remaining[seat as usize] = 0;
         clock.running = None;
         self.m.act(seat, "timeout").is_ok()
+    }
+
+    fn human_pending(&self) -> bool {
+        self.m.session().pending_players().contains(&self.human)
+    }
+
+    fn pause(&mut self) {
+        self.paused = true;
+        if let Some(c) = self.clock.as_mut() {
+            c.pause();
+        }
+    }
+
+    fn unpause(&mut self) {
+        self.paused = false;
+        if let Some(c) = self.clock.as_mut() {
+            c.unpause();
+        }
     }
 
     fn moved(&mut self, mover: u8) {
@@ -133,6 +181,25 @@ pub(crate) struct MatchDto {
     replay_id: Option<i64>,
     save_error: Option<String>,
     clock: Option<ClockDto>,
+    /// Waktu mulai (epoch ms); pengenal pertandingan bagi UI.
+    started_at: i64,
+    /// Menu jeda terbuka: jam dan bot berhenti.
+    paused: bool,
+}
+
+/// Isi pertandingan tertunda di store: replay sejauh ini (konfigurasi,
+/// kursi, catatan provably fair, langkah) + kursi pemain + sisa jam.
+#[derive(Serialize, Deserialize)]
+struct SuspendedMatch {
+    replay: Replay,
+    human: u8,
+    clock: Option<SavedClock>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SavedClock {
+    remaining_ms: [i64; 2],
+    increment_ms: i64,
 }
 
 fn now_ms() -> i64 {
@@ -205,6 +272,8 @@ fn dto(r: &Running) -> MatchDto {
         replay_id: r.replay_id,
         save_error: r.save_error.clone(),
         clock: r.clock.as_ref().map(HostClock::snapshot),
+        started_at: r.started_at,
+        paused: r.paused,
     }
 }
 
@@ -232,11 +301,133 @@ fn finish(state: &AppState, r: &mut Running) {
     }
 }
 
-/// Pertandingan yang ditinggalkan tetap disimpan sebagai replay (SPEC §2.5).
-fn leave(state: &AppState, r: Running) {
-    if !r.m.session().is_over() && !r.m.moves().is_empty() {
-        let _ = save(state, &r.m.replay(), r.started_at);
+fn store_of(state: &AppState) -> Result<&std::sync::Mutex<kyusin_store::Store>, Localized> {
+    state.store.as_ref().map_err(store_error)
+}
+
+/// Menunda pertandingan yang belum selesai: jam berhenti, keadaannya
+/// disimpan (satu per game), dan bisa dilanjutkan dari layar game.
+fn suspend(state: &AppState, mut r: Running) -> Result<(), Localized> {
+    if r.m.session().is_over() {
+        return Ok(());
     }
+    if let Some(c) = r.clock.as_mut() {
+        c.pause();
+    }
+    let data = SuspendedMatch {
+        replay: r.m.replay(),
+        human: r.human,
+        clock: r.clock.as_ref().map(|c| SavedClock {
+            remaining_ms: c.remaining,
+            increment_ms: c.increment,
+        }),
+    };
+    let rec = Suspended {
+        game: r.game.clone(),
+        started_at: r.started_at,
+        suspended_at: now_ms(),
+        data: serde_json::to_value(&data).map_err(store_error)?,
+    };
+    store_of(state)?
+        .lock()
+        .unwrap()
+        .save_suspended(&rec)
+        .map_err(store_error)
+}
+
+/// Keluar dari pertandingan: yang belum selesai ditunda, bukan dibuang.
+fn leave(state: &AppState, r: Running) {
+    let _ = suspend(state, r);
+}
+
+/// Tutup jendela atau aplikasi berhenti: pertandingan berjalan ditunda.
+pub(crate) fn suspend_running(state: &AppState) {
+    let taken = state.play.lock().unwrap().take();
+    if let Some(r) = taken {
+        leave(state, r);
+    }
+}
+
+fn bot_players(
+    game: &str,
+    seats: &[SeatKind],
+    human: u8,
+    round: &Seed,
+) -> Result<Vec<Box<dyn Player>>, Localized> {
+    let mut players: Vec<Box<dyn Player>> = Vec::new();
+    for (s, kind) in seats.iter().enumerate() {
+        let s = s as u8;
+        let level = match kind {
+            SeatKind::Bot { level } if s != human => *level,
+            _ => {
+                players.push(Box::new(Human));
+                continue;
+            }
+        };
+        let bot = kyusin_bots::create(game, level, round, s)
+            .ok_or_else(|| core().localized("error.no_bot", &[("level", &level.to_string())]))?;
+        players.push(bot);
+    }
+    Ok(players)
+}
+
+/// Membangun ulang pertandingan tertunda sebuah game (dan menghapusnya
+/// dari daftar tunda). Jam berjalan lagi dari sisa waktu saat ditunda.
+fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
+    let rec = store_of(state)?
+        .lock()
+        .unwrap()
+        .take_suspended(game)
+        .map_err(store_error)?
+        .ok_or_else(|| core().localized("error.no_suspended", &[]))?;
+    let data: SuspendedMatch = serde_json::from_value(rec.data).map_err(store_error)?;
+    let cartridge = state.registry.get(game).ok_or_else(|| unknown_game(game))?;
+    let round = data
+        .replay
+        .fair
+        .round_seed_bytes()
+        .map_err(|e| core().localized("error.replay_fair", &[("detail", &e.to_string())]))?;
+    let players = bot_players(game, &data.replay.seats, data.human, &round)?;
+    let m = Match::restore(
+        cartridge,
+        data.replay.config,
+        data.replay.fair,
+        players,
+        data.replay.moves,
+    )
+    .map_err(|e| e.message())?;
+    let pending = m.session().pending_players().first().copied();
+    Ok(Running {
+        game: game.to_string(),
+        m,
+        human: data.human,
+        started_at: rec.started_at,
+        replay_id: None,
+        verify: None,
+        save_error: None,
+        clock: data
+            .clock
+            .map(|c| HostClock::new(c.remaining_ms, c.increment_ms, pending)),
+        paused: false,
+    })
+}
+
+/// Menyerah atas nama pemain lokal. Bila sedang giliran bot, bot
+/// melangkah dulu sampai giliran pemain (aturan hanya menerima aksi dari
+/// kursi yang ditunggu).
+fn resign(r: &mut Running) -> Result<(), Localized> {
+    while !r.m.session().is_over() && !r.human_pending() {
+        match r.m.step_auto().map_err(|e| e.message())? {
+            Some(mv) => r.moved(mv.seat),
+            None => break,
+        }
+    }
+    if !r.m.session().is_over() {
+        r.m.act(r.human, "resign").map_err(|e| e.message())?;
+        let human = r.human;
+        r.moved(human);
+    }
+    Ok(())
 }
 
 /// Jam catur yang dipilih pemain: menit per pemain + tambahan per langkah.
@@ -291,12 +482,14 @@ pub(crate) fn match_start(
         replay_id: None,
         verify: None,
         save_error: None,
-        clock: clock.map(|c| HostClock {
-            remaining: [i64::from(c.minutes) * 60_000; 2],
-            increment: i64::from(c.increment) * 1000,
-            running: first,
-            since: Instant::now(),
+        clock: clock.map(|c| {
+            HostClock::new(
+                [i64::from(c.minutes) * 60_000; 2],
+                i64::from(c.increment) * 1000,
+                first,
+            )
         }),
+        paused: false,
     };
     let dto = dto(&running);
     if let Some(old) = state.play.lock().unwrap().replace(running) {
@@ -312,6 +505,7 @@ pub(crate) fn match_act(
 ) -> Result<MatchDto, Localized> {
     let mut guard = state.play.lock().unwrap();
     let r = guard.as_mut().ok_or_else(no_match)?;
+    r.unpause();
     // Waktu habis sebelum langkah ini: yang berlaku adalah timeout.
     if !r.flag_if_expired() {
         r.m.act(r.human, &command).map_err(|e| e.message())?;
@@ -338,7 +532,8 @@ pub(crate) fn match_flag(state: State<'_, AppState>) -> Result<MatchDto, Localiz
 pub(crate) fn match_step(state: State<'_, AppState>) -> Result<MatchDto, Localized> {
     let mut guard = state.play.lock().unwrap();
     let r = guard.as_mut().ok_or_else(no_match)?;
-    if !r.flag_if_expired()
+    if !r.paused
+        && !r.flag_if_expired()
         && let Some(mv) = r.m.step_auto().map_err(|e| e.message())?
     {
         r.moved(mv.seat);
@@ -349,9 +544,109 @@ pub(crate) fn match_step(state: State<'_, AppState>) -> Result<MatchDto, Localiz
 
 #[tauri::command]
 pub(crate) fn match_leave(state: State<'_, AppState>) {
-    if let Some(r) = state.play.lock().unwrap().take() {
-        leave(&state, r);
+    suspend_running(&state);
+}
+
+/// Menu jeda dibuka (`Esc`): jam dan bot berhenti.
+#[tauri::command]
+pub(crate) fn match_pause(state: State<'_, AppState>) -> Result<MatchDto, Localized> {
+    let mut guard = state.play.lock().unwrap();
+    let r = guard.as_mut().ok_or_else(no_match)?;
+    if !r.m.session().is_over() {
+        r.pause();
     }
+    Ok(dto(r))
+}
+
+/// Menu jeda ditutup lewat Lanjutkan.
+#[tauri::command]
+pub(crate) fn match_unpause(state: State<'_, AppState>) -> Result<MatchDto, Localized> {
+    let mut guard = state.play.lock().unwrap();
+    let r = guard.as_mut().ok_or_else(no_match)?;
+    r.unpause();
+    Ok(dto(r))
+}
+
+/// Tunda & keluar.
+#[tauri::command]
+pub(crate) fn match_suspend(state: State<'_, AppState>) -> Result<(), Localized> {
+    let taken = state.play.lock().unwrap().take();
+    match taken {
+        Some(r) => suspend(&state, r),
+        None => Ok(()),
+    }
+}
+
+/// Menyerah dari menu jeda (kapan pun, termasuk saat giliran bot).
+#[tauri::command]
+pub(crate) fn match_resign(state: State<'_, AppState>) -> Result<MatchDto, Localized> {
+    let mut guard = state.play.lock().unwrap();
+    let r = guard.as_mut().ok_or_else(no_match)?;
+    r.unpause();
+    resign(r)?;
+    finish(&state, r);
+    Ok(dto(r))
+}
+
+/// Melanjutkan pertandingan tertunda sebuah game.
+#[tauri::command]
+pub(crate) fn match_resume(id: String, state: State<'_, AppState>) -> Result<MatchDto, Localized> {
+    let running = restore(&state, &id)?;
+    let dto = dto(&running);
+    let old = state.play.lock().unwrap().replace(running);
+    if let Some(old) = old {
+        leave(&state, old);
+    }
+    Ok(dto)
+}
+
+/// Pertandingan tertunda dibuang untuk memulai yang baru: dihitung
+/// menyerah (hasilnya disimpan sebagai replay yang selesai).
+#[tauri::command]
+pub(crate) fn suspended_forfeit(id: String, state: State<'_, AppState>) -> Result<(), Localized> {
+    let mut r = restore(&state, &id)?;
+    resign(&mut r)?;
+    finish(&state, &mut r);
+    Ok(())
+}
+
+#[derive(Serialize)]
+pub(crate) struct SuspendedDto {
+    game: String,
+    started_at: i64,
+    suspended_at: i64,
+    moves: usize,
+    seat: u8,
+    seats: Vec<SeatKind>,
+    clock: Option<ClockDto>,
+}
+
+#[tauri::command]
+pub(crate) fn suspended_list(state: State<'_, AppState>) -> Result<Vec<SuspendedDto>, Localized> {
+    let list = store_of(&state)?
+        .lock()
+        .unwrap()
+        .list_suspended()
+        .map_err(store_error)?;
+    Ok(list
+        .into_iter()
+        .filter_map(|rec| {
+            let data: SuspendedMatch = serde_json::from_value(rec.data).ok()?;
+            Some(SuspendedDto {
+                game: rec.game,
+                started_at: rec.started_at,
+                suspended_at: rec.suspended_at,
+                moves: data.replay.moves.len(),
+                seat: data.human,
+                seats: data.replay.seats,
+                clock: data.clock.map(|c| ClockDto {
+                    remaining_ms: c.remaining_ms,
+                    running: None,
+                    increment_ms: c.increment_ms,
+                }),
+            })
+        })
+        .collect())
 }
 
 #[derive(Serialize)]
@@ -578,12 +873,8 @@ mod tests {
 
     #[test]
     fn host_clock_charges_the_mover_and_adds_increment() {
-        let mut c = HostClock {
-            remaining: [60_000, 60_000],
-            increment: 2_000,
-            running: Some(0),
-            since: Instant::now() - std::time::Duration::from_millis(1_500),
-        };
+        let mut c = HostClock::new([60_000, 60_000], 2_000, Some(0));
+        c.since = Instant::now() - std::time::Duration::from_millis(1_500);
         c.after_move(0, Some(1));
         assert!(
             (60_400..=60_600).contains(&c.remaining[0]),
@@ -599,6 +890,142 @@ mod tests {
         assert_eq!(c.running, None);
         let still = c.snapshot().remaining_ms;
         assert_eq!(still, c.remaining, "jam berhenti setelah permainan selesai");
+    }
+
+    fn state() -> AppState {
+        AppState {
+            registry: kyusin_games::builtin().unwrap(),
+            tutorial: std::sync::Mutex::new(None),
+            play: std::sync::Mutex::new(None),
+            store: Ok(std::sync::Mutex::new(
+                kyusin_store::Store::open_in_memory().unwrap(),
+            )),
+            db_path: None,
+        }
+    }
+
+    fn running(state: &AppState, game: &str, clock: bool) -> Running {
+        let fair = fair_record(None).unwrap();
+        let round = fair.round_seed_bytes().unwrap();
+        let seats = [SeatKind::Human, SeatKind::Bot { level: 1 }];
+        let players = bot_players(game, &seats, 0, &round).unwrap();
+        let config = if clock {
+            serde_json::json!({ "jam": { "menit": 5, "tambahan_detik": 0 } })
+        } else {
+            serde_json::Value::Null
+        };
+        let m = Match::new(state.registry.get(game).unwrap(), config, fair, players).unwrap();
+        Running {
+            game: game.into(),
+            m,
+            human: 0,
+            started_at: 42,
+            replay_id: None,
+            verify: None,
+            save_error: None,
+            clock: clock.then(|| HostClock::new([300_000; 2], 0, Some(0))),
+            paused: false,
+        }
+    }
+
+    #[test]
+    fn suspend_and_resume_keep_position_moves_and_clock() {
+        let st = state();
+        let mut r = running(&st, "catur", true);
+        r.m.act(0, "e4").unwrap();
+        r.moved(0);
+        let mv = r.m.step_auto().unwrap().unwrap();
+        r.moved(mv.seat);
+        let hash = r.m.session().state_hash();
+        let moves = r.m.moves().to_vec();
+        suspend(&st, r).unwrap();
+
+        let list = store_of(&st)
+            .unwrap()
+            .lock()
+            .unwrap()
+            .list_suspended()
+            .unwrap();
+        assert_eq!(list.len(), 1);
+        let saved: SuspendedMatch = serde_json::from_value(list[0].data.clone()).unwrap();
+        let left = saved.clock.as_ref().unwrap().remaining_ms;
+
+        let back = restore(&st, "catur").unwrap();
+        assert_eq!(back.m.session().state_hash(), hash);
+        assert_eq!(back.m.moves(), moves.as_slice());
+        assert_eq!(back.started_at, 42);
+        let c = back.clock.as_ref().unwrap();
+        assert_eq!(c.remaining, left, "sisa jam sama seperti saat ditunda");
+        assert_eq!(c.running, Some(0), "jam pemain yang ditunggu berjalan lagi");
+        // Diambil sekali: daftar tunda kosong lagi.
+        assert!(restore(&st, "catur").is_err());
+    }
+
+    #[test]
+    fn leaving_or_closing_suspends_instead_of_dropping() {
+        let st = state();
+        let mut r = running(&st, "reversi", false);
+        r.m.act(0, "d3").unwrap();
+        *st.play.lock().unwrap() = Some(r);
+        suspend_running(&st);
+        assert!(st.play.lock().unwrap().is_none());
+        let list = store_of(&st)
+            .unwrap()
+            .lock()
+            .unwrap()
+            .list_suspended()
+            .unwrap();
+        assert_eq!(list[0].game, "reversi");
+        // Pertandingan yang sudah selesai tidak ditunda.
+        let mut done = running(&st, "reversi", false);
+        done.m.act(0, "resign").unwrap();
+        suspend(&st, done).unwrap();
+        assert_eq!(
+            store_of(&st)
+                .unwrap()
+                .lock()
+                .unwrap()
+                .list_suspended()
+                .unwrap()
+                .len(),
+            1
+        );
+    }
+
+    #[test]
+    fn resign_waits_for_the_bot_then_counts_as_a_loss() {
+        let st = state();
+        let mut r = running(&st, "reversi", false);
+        r.m.act(0, "d3").unwrap();
+        // Giliran bot: menyerah tetap bisa, bot melangkah dulu.
+        assert!(!r.human_pending());
+        resign(&mut r).unwrap();
+        let result = r.m.session().result().unwrap();
+        assert_eq!(result.winners, vec![1]);
+        assert_eq!(r.m.moves().last().unwrap().command, "resign");
+        finish(&st, &mut r);
+        assert!(r.replay_id.is_some() && r.verify.as_ref().unwrap().ok);
+    }
+
+    #[test]
+    fn paused_clock_does_not_run() {
+        let mut c = HostClock::new([60_000, 60_000], 0, Some(1));
+        c.since = Instant::now() - std::time::Duration::from_millis(1_000);
+        c.pause();
+        let at_pause = c.remaining;
+        assert!(at_pause[1] <= 59_000);
+        assert_eq!(c.snapshot().running, None);
+        c.since = Instant::now() - std::time::Duration::from_millis(5_000);
+        assert_eq!(
+            c.snapshot().remaining_ms,
+            at_pause,
+            "jam berhenti saat jeda"
+        );
+        c.charge();
+        assert_eq!(c.remaining, at_pause);
+        c.unpause();
+        assert_eq!(c.running, Some(1));
+        assert!(c.snapshot().remaining_ms[1] >= at_pause[1] - 50);
     }
 
     #[test]

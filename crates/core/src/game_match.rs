@@ -45,6 +45,23 @@ impl Match {
         })
     }
 
+    /// Melanjutkan pertandingan yang ditunda (SPEC §4): sesi dibangun ulang
+    /// dari seed ronde, lalu langkah tersimpan dimainkan ulang lewat aturan
+    /// yang sama. Langkah yang tidak sah membatalkan pemulihan.
+    pub fn restore(
+        cartridge: &Cartridge,
+        config: serde_json::Value,
+        fair: FairRecord,
+        players: Vec<Box<dyn Player>>,
+        moves: Vec<Move>,
+    ) -> Result<Self, GameError> {
+        let mut m = Match::new(cartridge, config, fair, players)?;
+        for mv in moves {
+            m.act(mv.seat, &mv.command)?;
+        }
+        Ok(m)
+    }
+
     pub fn session(&self) -> &dyn Session {
         self.session.as_ref()
     }

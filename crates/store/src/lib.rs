@@ -1,7 +1,8 @@
 //! SQLite lewat `rusqlite` (fitur `bundled`), SPEC §3, §5.1.
 //!
-//! M1: replay setiap pertandingan (SPEC §2.5). Profil, chip, dan riwayat
-//! menyusul di M3/M4 sebagai migrasi berikutnya.
+//! M1: replay setiap pertandingan (SPEC §2.5).
+//! Rev. 9: pertandingan yang ditunda (SPEC §4), satu per game.
+//! Profil, chip, dan riwayat menyusul sebagai migrasi berikutnya.
 
 use std::path::Path;
 
@@ -10,7 +11,7 @@ use kyusin_core::{GameResult, SeatKind};
 use rusqlite::{Connection, OptionalExtension, params};
 
 /// Versi skema; dinaikkan tiap migrasi.
-const SCHEMA_VERSION: i32 = 1;
+const SCHEMA_VERSION: i32 = 2;
 
 pub struct Store {
     conn: Connection,
@@ -61,6 +62,16 @@ pub struct ReplaySummary {
     pub result: Option<GameResult>,
 }
 
+/// Pertandingan yang ditunda. Isi `data` ditentukan aplikasi (keadaan
+/// pertandingan + jam); store hanya menyimpannya.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Suspended {
+    pub game: String,
+    pub started_at: i64,
+    pub suspended_at: i64,
+    pub data: serde_json::Value,
+}
+
 impl Store {
     pub fn open(path: &Path) -> Result<Store, StoreError> {
         Self::init(Connection::open(path)?)
@@ -88,6 +99,19 @@ impl Store {
                  );
                  CREATE INDEX replays_game ON replays (game, started_at DESC);
                  PRAGMA user_version = 1;
+                 COMMIT;",
+            )?;
+        }
+        if version < 2 {
+            conn.execute_batch(
+                "BEGIN;
+                 CREATE TABLE suspended (
+                     game          TEXT    PRIMARY KEY,
+                     started_at    INTEGER NOT NULL,
+                     suspended_at  INTEGER NOT NULL,
+                     data          TEXT    NOT NULL
+                 );
+                 PRAGMA user_version = 2;
                  COMMIT;",
             )?;
         }
@@ -140,6 +164,62 @@ impl Store {
                 moves: replay.moves.len(),
                 seats: replay.seats,
                 result: replay.result,
+            });
+        }
+        Ok(out)
+    }
+
+    /// Menyimpan (atau mengganti) pertandingan tertunda untuk satu game.
+    pub fn save_suspended(&self, s: &Suspended) -> Result<(), StoreError> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO suspended (game, started_at, suspended_at, data)
+             VALUES (?1, ?2, ?3, ?4)",
+            params![
+                s.game,
+                s.started_at,
+                s.suspended_at,
+                serde_json::to_string(&s.data)?
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Mengambil dan sekaligus menghapus pertandingan tertunda sebuah game.
+    pub fn take_suspended(&self, game: &str) -> Result<Option<Suspended>, StoreError> {
+        let found = self.find_suspended(game)?;
+        if found.is_some() {
+            self.conn
+                .execute("DELETE FROM suspended WHERE game = ?1", [game])?;
+        }
+        Ok(found)
+    }
+
+    pub fn find_suspended(&self, game: &str) -> Result<Option<Suspended>, StoreError> {
+        Ok(self.list_suspended()?.into_iter().find(|s| s.game == game))
+    }
+
+    /// Semua pertandingan tertunda, terbaru dulu.
+    pub fn list_suspended(&self) -> Result<Vec<Suspended>, StoreError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT game, started_at, suspended_at, data FROM suspended
+             ORDER BY suspended_at DESC",
+        )?;
+        let rows = stmt.query_map([], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, i64>(1)?,
+                r.get::<_, i64>(2)?,
+                r.get::<_, String>(3)?,
+            ))
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            let (game, started_at, suspended_at, data) = row?;
+            out.push(Suspended {
+                game,
+                started_at,
+                suspended_at,
+                data: serde_json::from_str(&data)?,
             });
         }
         Ok(out)
@@ -220,6 +300,34 @@ mod tests {
     }
 
     #[test]
+    fn suspended_one_per_game_taken_once() {
+        let s = Store::open_in_memory().unwrap();
+        let rec = |game: &str, at: i64, n: i64| Suspended {
+            game: game.into(),
+            started_at: 1,
+            suspended_at: at,
+            data: serde_json::json!({ "n": n }),
+        };
+        s.save_suspended(&rec("catur", 10, 1)).unwrap();
+        s.save_suspended(&rec("reversi", 20, 2)).unwrap();
+        // Game yang sama: yang baru menggantikan yang lama.
+        s.save_suspended(&rec("catur", 30, 3)).unwrap();
+        let all = s.list_suspended().unwrap();
+        assert_eq!(all.len(), 2);
+        assert_eq!(all[0], rec("catur", 30, 3));
+        assert_eq!(
+            s.find_suspended("reversi").unwrap(),
+            Some(rec("reversi", 20, 2))
+        );
+        assert_eq!(
+            s.take_suspended("catur").unwrap(),
+            Some(rec("catur", 30, 3))
+        );
+        assert_eq!(s.take_suspended("catur").unwrap(), None);
+        assert_eq!(s.list_suspended().unwrap().len(), 1);
+    }
+
+    #[test]
     fn reopening_keeps_data_and_schema() {
         let dir = std::env::temp_dir().join(format!("kyusin-store-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
@@ -229,8 +337,20 @@ mod tests {
             let s = Store::open(&path).unwrap();
             s.save_replay(&replay("reversi", 2, true), 5).unwrap();
         }
+        // Basis data versi 1 (sebelum Rev. 9) dimigrasikan tanpa kehilangan replay.
+        {
+            let conn = Connection::open(&path).unwrap();
+            conn.execute_batch("DROP TABLE suspended; PRAGMA user_version = 1;")
+                .unwrap();
+        }
         let s = Store::open(&path).unwrap();
         assert_eq!(s.list_replays(None, 10).unwrap().len(), 1);
+        assert!(s.list_suspended().unwrap().is_empty());
+        let v: i32 = s
+            .conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(v, SCHEMA_VERSION);
         drop(s);
         std::fs::remove_dir_all(&dir).unwrap();
     }

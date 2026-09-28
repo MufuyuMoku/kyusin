@@ -199,11 +199,29 @@ pub fn run() {
             play::match_step,
             play::match_leave,
             play::match_flag,
+            play::match_pause,
+            play::match_unpause,
+            play::match_suspend,
+            play::match_resign,
+            play::match_resume,
+            play::suspended_forfeit,
+            play::suspended_list,
             play::replay_pgn,
             play::pgn_open,
             play::replay_list,
             play::replay_open,
         ])
+        // Menutup jendela saat pertandingan berjalan otomatis menundanya
+        // (SPEC §4 Rev. 9).
+        .on_window_event(|window, event| {
+            if matches!(
+                event,
+                tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Destroyed
+            ) && let Some(state) = window.try_state::<AppState>()
+            {
+                play::suspend_running(&state);
+            }
+        })
         .run(tauri::generate_context!())
         .expect("KyuSin gagal dijalankan");
 }

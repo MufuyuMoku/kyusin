@@ -114,3 +114,39 @@ fn match_rejects_wrong_player_count() {
     let players: Vec<Box<dyn Player>> = vec![Box::new(Human)];
     assert!(Match::new(&fixture(), serde_json::Value::Null, fair_record(), players).is_err());
 }
+
+/// Menunda lalu melanjutkan (SPEC §4 Rev. 9): pertandingan dibangun ulang
+/// dari seed ronde + langkah tersimpan, keadaannya sama persis, dan setelah
+/// selesai replay-nya tetap lolos verify.
+#[test]
+fn restored_match_continues_from_the_same_state() {
+    let c = fixture();
+    let config = serde_json::json!({ "batang": 5 });
+    let players = || -> Vec<Box<dyn Player>> { vec![Box::new(Human), Box::new(TakeOne)] };
+    let mut m = Match::new(&c, config.clone(), fair_record(), players()).unwrap();
+    m.act(0, "take 2").unwrap();
+    m.step_auto().unwrap();
+    let saved = m.replay();
+    assert!(saved.result.is_none());
+
+    let mut back = Match::restore(
+        &c,
+        saved.config.clone(),
+        saved.fair.clone(),
+        players(),
+        saved.moves.clone(),
+    )
+    .unwrap();
+    assert_eq!(back.session().state_hash(), m.session().state_hash());
+    assert_eq!(back.moves(), m.moves());
+    back.act(0, "take 2").unwrap();
+    assert!(back.session().is_over());
+    let replay = back.replay();
+    assert_eq!(replay.moves.len(), 3);
+    assert!(replay.verify(&c).ok);
+
+    // Langkah tersimpan yang tidak sah ditolak.
+    let mut bad = saved.moves.clone();
+    bad[0].command = "take 9".into();
+    assert!(Match::restore(&c, saved.config, saved.fair, players(), bad).is_err());
+}
