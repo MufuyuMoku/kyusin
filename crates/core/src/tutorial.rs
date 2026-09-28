@@ -10,7 +10,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::action::{find_match, normalize};
+use crate::action::find_match;
 use crate::game::{GameError, PlayerId, Seed, Session};
 use crate::i18n::{Lang, Localized, core};
 use crate::registry::Cartridge;
@@ -241,7 +241,8 @@ impl TutorialRun {
                 hint: core().localized("tutorial.readonly", &[]),
             });
         };
-        if normalize(command) != normalize(expected) {
+        // Alias (misalnya `e2e4` untuk `e4`) juga diterima.
+        if self.session.canonical(command) != self.session.canonical(expected) {
             let hint = step
                 .hint
                 .clone()

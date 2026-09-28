@@ -1,0 +1,62 @@
+name: Kalibrasi catur
+
+# Kalibrasi level bot catur terhadap Stockfish (SPEC §8, D-041). Hanya
+# dijalankan manual. Stockfish diunduh saat berjalan ke folder sementara
+# runner: tidak masuk repo, tidak ikut dikirim, dan tidak dijalankan di mesin
+# lokal. Hasilnya (data/calibration/catur.json) diunggah sebagai artefak lalu
+# disimpan ke repo lewat commit biasa.
+
+on:
+  workflow_dispatch:
+    inputs:
+      games:
+        description: "Partai per pasangan level × Elo (genap)"
+        default: "16"
+      elos:
+        description: "UCI_Elo lawan, dipisah koma (minimum Stockfish 1320)"
+        default: "1320,1500,1700,1900"
+      movetime:
+        description: "Waktu pikir Stockfish per langkah (ms)"
+        default: "100"
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: calibrate
+
+      - name: Unduh Stockfish (sementara, di luar repo)
+        run: |
+          mkdir -p "$RUNNER_TEMP/stockfish"
+          cd "$RUNNER_TEMP/stockfish"
+          curl -sSfL -o sf.tar \
+            https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-ubuntu-x86-64-avx2.tar
+          tar xf sf.tar
+          SF=$(find "$RUNNER_TEMP/stockfish" -type f -name 'stockfish-ubuntu-x86-64-avx2' | head -1)
+          chmod +x "$SF"
+          echo "STOCKFISH=$SF" >> "$GITHUB_ENV"
+
+      - name: Kalibrasi
+        run: |
+          cargo run --release -p kyusin-bots --example calibrate_catur -- \
+            --stockfish "$STOCKFISH" \
+            --games "${{ inputs.games }}" \
+            --elos "${{ inputs.elos }}" \
+            --movetime "${{ inputs.movetime }}" \
+            --date "$(date -u +%F)" \
+            --out data/calibration/catur.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calibration-catur
+          path: data/calibration/catur.json

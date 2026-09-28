@@ -86,6 +86,11 @@ pub trait TurnGame: Sized + Serialize {
     fn result(&self) -> Option<GameResult>;
     fn parse_command(&self, command: &str) -> Result<Self::Action, GameError>;
     fn format_action(&self, action: &Self::Action) -> String;
+    /// Bentuk kanonik untuk perintah alias yang sah, misalnya notasi
+    /// koordinat catur `e2e4` → SAN `e4` (D-042). Bawaan: tidak ada alias.
+    fn canonical(&self, _command: &str) -> Option<String> {
+        None
+    }
 }
 
 /// Permainan yang sedang berjalan, tanpa tipe konkret. Semua aksi masuk
@@ -94,6 +99,8 @@ pub trait Session: Send {
     fn seats(&self) -> u8;
     fn pending_players(&self) -> Vec<PlayerId>;
     fn legal_actions(&self, player: PlayerId) -> Vec<ActionSpec>;
+    /// Bentuk kanonik perintah: alias diterjemahkan, spasi dirapikan.
+    fn canonical(&self, command: &str) -> String;
     /// Memeriksa giliran dan `legal_actions`, lalu menerapkan perintah.
     fn act(&mut self, player: PlayerId, command: &str) -> Result<(), GameError>;
     fn view_data(&self, player: PlayerId) -> serde_json::Value;
@@ -117,6 +124,11 @@ impl<G: TurnGame + Send> Session for G {
         TurnGame::legal_actions(self, player)
     }
 
+    fn canonical(&self, command: &str) -> String {
+        let command = crate::action::normalize(command);
+        TurnGame::canonical(self, &command).unwrap_or(command)
+    }
+
     fn act(&mut self, player: PlayerId, command: &str) -> Result<(), GameError> {
         if TurnGame::is_over(self) {
             return Err(GameError::Over);
@@ -125,10 +137,16 @@ impl<G: TurnGame + Send> Session for G {
             return Err(GameError::NotPending(player));
         }
         let specs = TurnGame::legal_actions(self, player);
-        if find_match(&specs, command).is_none() {
-            return Err(GameError::Illegal(crate::action::normalize(command)));
-        }
-        let action = self.parse_command(command)?;
+        let command = if find_match(&specs, command).is_some() {
+            crate::action::normalize(command)
+        } else {
+            let canonical = Session::canonical(self, command);
+            if find_match(&specs, &canonical).is_none() {
+                return Err(GameError::Illegal(crate::action::normalize(command)));
+            }
+            canonical
+        };
+        let action = self.parse_command(&command)?;
         self.apply(player, action)
     }
 

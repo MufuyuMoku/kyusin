@@ -63,10 +63,12 @@ impl Match {
 
     /// Aksi dari luar (UI lokal atau jaringan).
     pub fn act(&mut self, seat: PlayerId, command: &str) -> Result<(), GameError> {
+        // Replay menyimpan bentuk kanonik (misalnya SAN, bukan `e2e4`).
+        let canonical = self.session.canonical(command);
         self.session.act(seat, command)?;
         self.moves.push(Move {
             seat,
-            command: crate::action::normalize(command),
+            command: canonical,
         });
         Ok(())
     }

@@ -6,12 +6,14 @@
 
 use kyusin_core::{Registry, RegistryError};
 
+pub mod catur;
 pub mod fixture;
 pub mod reversi;
 
 /// Game katalog yang dikirim bersama aplikasi.
 pub fn builtin() -> Result<Registry, RegistryError> {
     let mut registry = Registry::new();
+    registry.register(catur::cartridge()?)?;
     registry.register(reversi::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;

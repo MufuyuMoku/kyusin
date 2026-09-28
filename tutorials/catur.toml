@@ -1,0 +1,109 @@
+game = "catur"
+judul = { id = "Catur: dasar", en = "Chess: basics" }
+
+[man.aturan]
+id = """
+Aturan catur FIDE. Putih jalan duluan. Tujuan: skakmat, yaitu raja lawan
+diserang dan tidak punya cara lolos.
+
+Rokade: raja melangkah dua petak ke arah benteng dan benteng melompatinya.
+Syarat: raja dan benteng itu belum pernah bergerak, petak di antaranya
+kosong, dan raja tidak sedang, tidak melewati, dan tidak mendarat di petak
+yang diserang.
+
+En passant: pion yang baru maju dua petak dan berhenti tepat di samping pion
+lawan boleh ditangkap seolah-olah hanya maju satu petak, tetapi hanya pada
+langkah berikutnya.
+
+Promosi: pion yang mencapai baris terakhir wajib menjadi menteri, benteng,
+gajah, atau kuda.
+
+Remis: pat (tidak ada langkah sah dan raja tidak diskak), posisi yang sama
+terulang tiga kali, 50 langkah tanpa tangkapan atau langkah pion, atau bahan
+tidak cukup untuk mat. Dengan jam, pemain yang waktunya habis kalah, kecuali
+lawannya tidak mungkin lagi mat.
+"""
+en = """
+FIDE chess rules. White moves first. The goal is checkmate: the opposing
+king is attacked and has no way to escape.
+
+Castling: the king moves two squares towards a rook and the rook jumps over
+it. Conditions: neither piece has moved, the squares between are empty, and
+the king is not in check, does not cross an attacked square, and does not
+land on one.
+
+En passant: a pawn that has just advanced two squares and stopped right next
+to an enemy pawn may be captured as if it had moved only one square, but only
+on the very next move.
+
+Promotion: a pawn that reaches the last rank must become a queen, rook,
+bishop, or knight.
+
+Draws: stalemate (no legal move and the king is not in check), the same
+position three times, 50 moves without a capture or pawn move, or not enough
+material to mate. With a clock, a player who runs out of time loses, unless
+the opponent can no longer possibly mate.
+"""
+
+[man.kontrol]
+id = """
+Klik bidakmu, lalu klik petak tujuan yang ditandai titik; atau seret bidak ke
+tujuannya. Rokade: pilih raja, lalu petak dua langkah ke samping. Promosi:
+pilih bidak baru dari pilihan yang muncul. Keyboard: panah memindahkan
+kursor, Enter atau Spasi memilih. Di papan, bidak putih penuh dan bidak hitam
+bergaris tepi.
+"""
+en = """
+Click one of your pieces, then click a destination marked with a dot; or drag
+the piece to its destination. Castling: choose the king, then the square two
+steps to the side. Promotion: pick the new piece from the choices that
+appear. Keyboard: the arrow keys move the cursor, Enter or Space selects. On
+the board, white pieces are solid and black pieces are outlined.
+"""
+
+[[langkah]]
+teks.id = "Kamu putih dan jalan duluan. Pilih bidak, lalu petak tujuannya; titik menandai tujuan yang sah. Bidak juga bisa diseret."
+teks.en = "You are white and move first. Choose a piece, then its destination; dots mark the legal destinations. Pieces can also be dragged."
+
+[[langkah]]
+teks.id = "Majukan pion raja dua petak: e2 ke e4."
+teks.en = "Advance the king's pawn two squares: e2 to e4."
+aksi = "e4"
+sorot = ["aksi:e4", "petak:e2", "petak:e4"]
+petunjuk.id = "Pilih pion di e2, lalu petak e4."
+petunjuk.en = "Choose the pawn on e2, then the square e4."
+
+[[langkah]]
+teks.id = "Hitam membalas e5. Keluarkan kuda: g1 ke f3, menyerang pion e5."
+teks.en = "Black answers e5. Develop the knight: g1 to f3, attacking the pawn on e5."
+sebelum = ["e5"]
+aksi = "Nf3"
+sorot = ["aksi:Nf3", "petak:g1", "petak:f3"]
+petunjuk.id = "Kuda melompat berbentuk L. Pilih kuda di g1, lalu f3."
+petunjuk.en = "Knights jump in an L shape. Choose the knight on g1, then f3."
+
+[[langkah]]
+teks.id = "Hitam melindungi e5 dengan kuda c6. Keluarkan gajah: f1 ke c4."
+teks.en = "Black protects e5 with the knight on c6. Develop the bishop: f1 to c4."
+sebelum = ["Nc6"]
+aksi = "Bc4"
+sorot = ["aksi:Bc4", "petak:f1", "petak:c4"]
+petunjuk.id = "Gajah bergerak diagonal. Pilih gajah di f1, lalu c4."
+petunjuk.en = "Bishops move diagonally. Choose the bishop on f1, then c4."
+
+[[langkah]]
+teks.id = "Hitam memainkan Bc5. Sekarang rokade pendek: pilih raja di e1, lalu g1. Benteng h1 ikut pindah ke f1."
+teks.en = "Black plays Bc5. Now castle kingside: choose the king on e1, then g1. The rook on h1 moves to f1 as well."
+sebelum = ["Bc5"]
+aksi = "O-O"
+sorot = ["aksi:O-O", "petak:e1", "petak:g1"]
+petunjuk.id = "Rokade dilakukan dengan memindahkan raja dua petak ke arah benteng: e1 ke g1."
+petunjuk.en = "Castle by moving the king two squares towards the rook: e1 to g1."
+
+[[langkah]]
+teks.id = "Dua aturan khusus lagi: en passant (menangkap pion yang baru maju dua petak di sampingmu) dan promosi (pion di baris terakhir menjadi bidak lain yang kamu pilih). Keduanya ditandai jelas di daftar langkah."
+teks.en = "Two more special rules: en passant (capturing a pawn that has just advanced two squares beside yours) and promotion (a pawn on the last rank becomes another piece of your choice). Both are clearly marked in the move list."
+
+[[langkah]]
+teks.id = "Tutorial selesai. Coba lawan bot level 1 untuk berlatih."
+teks.en = "Tutorial finished. Try bot level 1 to practise."

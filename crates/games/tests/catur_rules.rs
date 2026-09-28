@@ -123,7 +123,7 @@ fn coordinate_and_zero_castling_aliases() {
     play(&mut c, &["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "0-0"]);
     assert_eq!(Session::state_hash(&a), Session::state_hash(&c));
     let v = view(&a);
-    assert_eq!(v["papan"][7], "RNBQ1RK1");
+    assert_eq!(v["papan"][7], "RNBQ.RK.");
     assert_eq!(v["terakhir"]["san"], "O-O");
     assert_eq!(v["terakhir"]["dari"], "e1");
     assert_eq!(v["terakhir"]["ke"], "g1");
@@ -136,7 +136,7 @@ fn queenside_castling_and_castling_through_check() {
     assert!(l.contains(&"O-O".into()) && l.contains(&"O-O-O".into()));
     let mut q = g.clone();
     play(&mut q, &["O-O-O"]);
-    assert_eq!(view(&q)["papan"][7], "2KR3R");
+    assert_eq!(view(&q)["papan"][7], "..KR...R");
     // Benteng hitam di f8 mengawasi f1: rokade pendek putih terlarang.
     let g = fen("4kr2/8/8/8/8/8/8/R3K2R w KQ - 0 1");
     let l = legal(&g);

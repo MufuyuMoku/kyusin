@@ -42,3 +42,14 @@ debug = false
 
 [profile.test]
 debug = false
+
+# Pencarian bot catur dan generator langkahnya terlalu lambat tanpa optimasi,
+# bahkan untuk tes. Hanya dua paket ini; sisanya tetap cepat dikompilasi.
+[profile.dev.package.kyusin-bots]
+opt-level = 3
+
+[profile.dev.package.cozy-chess]
+opt-level = 3
+
+[profile.dev.package.cozy-chess-types]
+opt-level = 3

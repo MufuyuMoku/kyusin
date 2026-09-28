@@ -1,0 +1,23 @@
+id = "catur"
+nama = { id = "Catur", en = "Chess" }
+kategori = "papan"
+pemain_min = 2
+pemain_maks = 2
+jenis = "giliran"
+lawan = "bot"
+kompetitif = true
+lan = true
+agen = true
+tutorial = "tutorials/catur.toml"
+
+[[perintah]]
+pola = "<san>"
+ringkas = { id = "Langkah dalam notasi SAN, misalnya e4, Nf3, exd5, O-O, e8=Q", en = "A move in SAN, e.g. e4, Nf3, exd5, O-O, e8=Q" }
+
+[[perintah]]
+pola = "<from><to>[promo]"
+ringkas = { id = "Langkah dalam notasi koordinat, misalnya e2e4, e1g1, e7e8q", en = "A move in coordinate notation, e.g. e2e4, e1g1, e7e8q" }
+
+[[perintah]]
+pola = "resign"
+ringkas = { id = "Menyerah", en = "Resign" }
