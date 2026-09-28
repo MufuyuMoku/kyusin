@@ -403,6 +403,41 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Konteks: GitHub menolak push ("push declined due to email privacy restrictions") karena commit memakai email pribadi.
 - Keputusan: `user.email` lokal repo menjadi `264320223+MufuyuMoku@users.noreply.github.com` (nama tetap MufuyuMoku; konfigurasi global tidak diubah). Lima commit lokal yang belum ter-push ditulis ulang authornya; commit yang sudah ada di GitHub tidak diubah.
 
+### D-050 — Keputusan klien untuk M3 (profil, rating, riwayat, statistik)
+- Tanggal / milestone: 2026-09-28 / M3
+- Diputuskan oleh: klien
+- Keputusan:
+  - Satu profil per instalasi, namanya bisa diganti. Tidak ada profil ganda.
+  - Rating bot untuk game tanpa kalibrasi eksternal ditetapkan dari hasil antar-bot, level 1 dipatok 1000. Catur tetap memakai data kalibrasi Stockfish. Semua disebut "rating lokal".
+  - Sapaan `name` dan `last_game` aktif begitu datanya ada.
+  - Pertandingan yang ditunda tidak dihitung ke rating sampai selesai.
+  - Tes jendela asli untuk layar profil dan statistik sesuai §11.
+- Rujukan: SPEC §8, §9 M3, §11.
+
+### D-051 — Penerapan Rev. 9: jeda, penundaan, kursor
+- Tanggal / milestone: 2026-09-28 / perbaikan hasil uji M2
+- Diputuskan oleh: developer (dalam batas D-048)
+- Keputusan:
+  - Reversi mendapat aksi `resign` (hanya pemain yang sedang melangkah, sama seperti catur); tes aturannya di-commit lebih dulu. Menyerah dari menu jeda saat giliran bot: bot melangkah dulu sampai giliran pemain, baru menyerah.
+  - Selama menu jeda terbuka, jam dan bot juga berhenti (bukan hanya saat ditunda). `Esc` di menu jeda = Lanjutkan. Menyerah dari menu jeda meminta konfirmasi.
+  - Penundaan disimpan di SQLite (satu per game): replay sejauh ini + kursi pemain + sisa jam. Melanjutkan = membangun ulang sesi dari seed ronde lalu memutar ulang langkah lewat aturan (`Match::restore`), jadi keadaannya sama persis dan replay akhirnya tetap lolos verify. Bot dibuat ulang dari seed ronde; keputusan bot setelah dilanjutkan bisa berbeda dari yang akan terjadi tanpa jeda (bot tidak termasuk verify).
+  - Pertandingan yang belum selesai tidak pernah dibuang: keluar lewat jalur apa pun (menu, `back`, menutup jendela, memulai pertandingan lain) menundanya. Memulai pertandingan baru di game yang punya pertandingan tertunda meminta konfirmasi, dan yang tertunda dihitung menyerah (tercatat sebagai kalah), supaya penundaan tidak bisa dipakai menghindari kekalahan.
+  - Kursor: posisi awal dibaca sekali saat papan dipasang (catur e2/e7, Reversi d4); papan dipasang ulang per pertandingan. Tombol panah/Enter pertama setelah memakai mouse hanya memunculkan kursor di posisi terakhir, tanpa memindahkan atau memilih.
+- Rujukan: SPEC §4 Rev. 9, D-048.
+
+### D-052 — Rating lokal: Glicko-2, lawan bot, riwayat
+- Tanggal / milestone: 2026-09-28 / M3
+- Diputuskan oleh: developer (dalam batas D-050)
+- Keputusan:
+  - Glicko-2 implementasi sendiri (diuji terhadap contoh Glickman 2013), τ = 0,5, pemain baru 1500 / RD 350 / volatilitas 0,06. Satu pertandingan selesai = satu periode rating. Tidak ada kenaikan RD karena tidak bermain (belum dibutuhkan; bisa diusulkan kemudian).
+  - Rating dan RD lawan bot tetap: taksiran kalibrasi, RD = setengah lebar selang 95% / 1,96, minimal 30. Level catur 1 yang taksirannya ekstrapolasi tetap dipakai untuk menghitung (dengan RD lebarnya), tetapi tidak ditampilkan (D-047).
+  - Kalibrasi antar-bot (`calibrate_internal`): level 1 = 1000; level berikutnya ditaksir berurutan dari hasil melawan semua level di bawahnya (kemungkinan maksimum, penaksir yang sama dengan kalibrasi catur), empat langkah pembuka acak, kursi bergantian. Reversi, 1000 partai per pasangan: level 2 ≈1344 (±33), level 3 ≈2133 (±99). Selisih level Reversi memang besar (level 3 menang 998,5/1000 atas level 1).
+  - Hanya game kompetitif melawan bot terkalibrasi yang dihitung ke rating; hasil lain (misalnya fixture) tetap masuk riwayat tanpa rating. Tes CI memastikan setiap game kompetitif ber-bot punya data kalibrasi untuk setiap level dengan rating naik per level.
+  - Skema basis data 3: `profile` (satu baris), `ratings` (per game, termasuk rating terbaik), `results` (riwayat). Replay yang sudah selesai sebelum M3 dimasukkan ke riwayat tanpa rating (rating tidak dihitung mundur).
+  - Nama profil: spasi tepi dibuang, maksimal 24 karakter, kosong = tanpa nama (sapaan `name` tidak aktif). Sapaan `last_game` memakai game dari pertandingan terakhir yang selesai, dengan nama tampilan dalam bahasa aktif.
+  - Halaman statistik: tabel per game (rating ±RD, jumlah partai, menang–seri–kalah, rating terbaik) dan riwayat 30 pertandingan terakhir (perubahan rating, tautan ke replay). Ringkasan menang/kalah terhadap bandar (§2.2) menyusul bersama game casino di M4.
+- Rujukan: SPEC §8, D-047, D-050.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

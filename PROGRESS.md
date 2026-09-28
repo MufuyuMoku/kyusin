@@ -12,7 +12,8 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M1 | selesai | 2026-09-28 | Kontrak final, provably fair + verify, replay, Reversi memenuhi §7 |
 | M1b | selesai | 2026-09-28 | Papan grid CSS + sprite piksel, komponen papan bersama, tes jendela asli tauri-driver di CI Windows, sapaan baru + bentuk jamak |
 | M2 | selesai | 2026-09-28 | Catur: mesin (cozy-chess), SAN/PGN, 4 level terkalibrasi Stockfish 19, jam host, tutorial, seret-lepas + klik, tes jendela asli |
-| M3 | belum mulai | | |
+| M2b | belum mulai | | Level catur 5–6 (≥2000), setelah M3 (SPEC Rev. 9) |
+| M3 | selesai | 2026-09-28 | Profil tunggal, Glicko-2 (rating lokal), riwayat, statistik; kalibrasi antar-bot Reversi. Sebelumnya: perbaikan Rev. 9 (menu jeda, penundaan, kursor) |
 | M4 | belum mulai | | |
 | M5 | belum mulai | | |
 | M6 | belum mulai | | |
@@ -35,6 +36,24 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Catur | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M2); rating lokal di M3 |
 
 ## Log sesi
+
+### 2026-09-28 — Perbaikan hasil uji M2 (SPEC Rev. 9) dan M3
+- SPEC Revisi 9 ditimpa (D-048): menu jeda + penundaan, kursor mengikuti interaksi terakhir, milestone M2b.
+- Perbaikan bug hasil uji M2 (D-051), lulus CI sebelum M3 dimulai (run 36418674352):
+  - (a) `Esc`/[ KELUAR ]/`back` di tengah pertandingan membuka menu jeda (fokus di Lanjutkan; Tunda & keluar; Menyerah dengan konfirmasi); jam dan bot berhenti selama jeda. Penundaan disimpan (satu per game) dan dilanjutkan dari layar game dengan posisi, langkah, dan jam yang sama; menutup jendela menunda otomatis. Reversi mendapat `resign` (tes aturan lebih dulu, commit 66e46e4).
+  - (b) Kursor: posisi awal sekali saat papan dipasang (catur e2/e7, Reversi d4), pindah ke petak yang diklik/tempat bidak dilepas, tidak ikut langkah lawan, tersembunyi saat mouse dipakai dan muncul lagi di posisi terakhir dengan panah. Penyebab bug: posisi awal kursor dihitung ulang setiap kali daftar langkah berubah.
+  - Tes jendela asli baru (`pause.e2e.mjs`): Esc → menu jeda dengan fokus di Lanjutkan, jam berhenti, Tunda & keluar lalu Lanjutkan mengembalikan posisi/langkah/jam yang sama (catur 5+0 dan Reversi); urutan pilih b1 → pilih g1 → f3 → panah menaruh kursor di f3 (Reversi: di petak yang diklik).
+  - Lain-lain: pembacaan `DevToolsActivePort` di runner e2e diulang saat masih dikunci WebView2 (flaky EBUSY). Email commit memakai alamat noreply GitHub karena push ditolak (D-049).
+- M3 (D-050, D-052):
+  - Glicko-2 sendiri di `kyusin-core` (tes contoh Glickman ditulis lebih dulu, commit 622b43a).
+  - Rating lawan bot dari kalibrasi: catur dari Stockfish (D-047), Reversi dari kalibrasi antar-bot baru (`calibrate_internal`, level 1 = 1000): level 2 ≈1344 ±33, level 3 ≈2133 ±99 (1000 partai per pasangan).
+  - Store skema 3: profil tunggal, rating per game, riwayat; replay lama masuk riwayat tanpa rating.
+  - Hasil dan rating dicatat saat pertandingan selesai (termasuk menyerah dan pertandingan tertunda yang dibuang); yang masih tertunda tidak dihitung.
+  - UI: layar Profil (ganti nama), layar Statistik (tabel rating lokal ±RD, partai, M–S–K, terbaik; riwayat 30 terakhir dengan perubahan rating dan tautan replay), perubahan rating di akhir pertandingan, "rating lokal ≈…" di pilihan level, perintah konsol `profile` dan `stats`. Sapaan `name` dan `last_game` aktif dari data profil.
+  - Tes jendela asli baru (`profile.e2e.mjs`): ganti nama, tetap setelah muat ulang; tabel statistik berisi catur dan Reversi dengan rating lokal, kolom selaras dan tidak meluber di tiga tema; riwayat berisi perubahan rating dan membuka replay.
+- Tes: 126 tes Rust, 34 tes UI. Tes jendela asli (CI Windows): E2E_RESULT
+- Belum/sisa: RD tidak bertambah selama tidak bermain (belum diperlukan). Ringkasan menang/kalah terhadap bandar di statistik menyusul bersama game casino (M4). Menu jeda LAN (hanya konfirmasi keluar) menyusul saat LAN ada.
+- Langkah berikutnya: M2b (level catur 5–6) sesuai urutan §9 Rev. 9, lalu M4.
 
 ### 2026-09-28 — M2: catur
 - Keputusan klien: D-041 (sprite, input visual, kalibrasi di workflow, tes jendela asli). Keputusan developer: D-042–D-046.

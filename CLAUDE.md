@@ -52,3 +52,5 @@
 - Glyph UI hanya yang ada di IBM Plex Mono (D-035); `fonts.test.ts` memeriksanya.
 - Papan/meja game: grid CSS/SVG (`ui/src/lib/games/GridBoard.svelte`) + sprite piksel SVG (`PixelSprite`), bukan teks box-drawing. Kursor/hover/sorotan hanya lapisan absolut (SPEC §4, D-038).
 - Setiap layar game wajib punya tes jendela asli di `ui/e2e/` (tauri-driver, CI Windows) yang memeriksa keselarasan dan menyimpan tangkapan layar (SPEC §11).
+- Pertandingan yang belum selesai tidak pernah dibuang: jeda/tunda/tutup jendela menundanya (SPEC §4 Rev. 9, D-051); dilanjutkan lewat `Match::restore` (seed ronde + langkah). Game kompetitif baru wajib punya `resign` untuk menu jeda.
+- Rating lokal (D-052): Glicko-2 di `kyusin_core::rating`; rating level bot dari `data/calibration/<game>.json` (catur: Stockfish lewat workflow; lainnya: `cargo run --release -p kyusin-bots --example calibrate_internal -- --game <id>`, level 1 = 1000). Game kompetitif ber-bot tanpa berkas kalibrasi membuat tes CI gagal.

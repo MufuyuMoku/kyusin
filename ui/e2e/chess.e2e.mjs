@@ -39,6 +39,9 @@ async function clickMove(s) {
 		new MutationObserver(() =>
 			log.push(`${Math.round(performance.now() - t0)} selected=${document.querySelector('.layer.selected')?.closest('[data-sq]')?.dataset.sq ?? null}`)
 		).observe(document.querySelector('[role="grid"]'), { childList: true, subtree: true });
+		window.addEventListener('unhandledrejection', (e) =>
+			log.push(`${Math.round(performance.now() - t0)} reject ${JSON.stringify(e.reason) ?? String(e.reason)}`)
+		);
 	});
 	await s.click(await s.find('css selector', `[data-sq="${from}"]`));
 	await s.waitFor(() => !!document.querySelector('.layer.selected'), 'petak terpilih', 2000).catch(() => {});
@@ -55,7 +58,19 @@ async function clickMove(s) {
 	if (picked.dots.length === 0) fail(`tidak ada titik tujuan untuk ${from}`);
 	const before = await s.exec(movesText);
 	await s.click(await s.find('css selector', `[data-sq="${picked.dots[0]}"]`));
-	await s.waitFor((b) => (document.querySelector('.moves')?.textContent ?? '') !== b, 'langkah tercatat', 10000, before);
+	try {
+		await s.waitFor((b) => (document.querySelector('.moves')?.textContent ?? '') !== b, 'langkah tercatat', 10000, before);
+	} catch (e) {
+		const state = await s.exec(() => ({
+			events: window.__e2eEvents.filter((l) => !l.includes('pointermove')).slice(-20),
+			selected: document.querySelector('.layer.selected')?.closest('[data-sq]')?.dataset.sq ?? null,
+			can: [...document.querySelectorAll('[role="gridcell"].can')].map((c) => c.dataset.sq),
+			status: document.querySelector('.match [role="status"]')?.textContent.trim() ?? null,
+			alert: document.querySelector('[role="alert"]')?.textContent.trim() ?? null
+		}));
+		console.log(`  klik ${from} lalu ${picked.dots[0]} (titik: ${picked.dots.join(' ')}); ${JSON.stringify(state, null, 1)}`);
+		throw e;
+	}
 	return `${from}-${picked.dots[0]}`;
 }
 
