@@ -100,7 +100,12 @@ export async function run({ base, debuggerAddress, artifacts }) {
 			const g = document.querySelector('[role="grid"]');
 			const id = g.getAttribute('aria-activedescendant');
 			const cell = document.getElementById(id);
-			return { sq: cell?.dataset.sq, drawn: !!cell?.querySelector('.layer.cursor') };
+			const ring = cell?.querySelector('.layer.cursor-ring');
+			const st = ring && getComputedStyle(ring);
+			// Kursor = garis tepi di atas sel, tanpa latar yang menutupi isi sel.
+			const outline =
+				!!st && st.borderTopWidth === '2px' && st.backgroundColor === 'rgba(0, 0, 0, 0)';
+			return { sq: cell?.dataset.sq, drawn: outline };
 		};
 		let visited = 0;
 		for (let r = 0; r < 8; r++) {
@@ -109,7 +114,7 @@ export async function run({ base, debuggerAddress, artifacts }) {
 				const want = `${'abcdefgh'[col]}${r + 1}`;
 				const at = await s.exec(cursorAt);
 				if (at.sq !== want) fail(`kursor di ${at.sq}, seharusnya ${want}`);
-				if (!at.drawn) fail(`kursor di ${want} tidak tergambar`);
+				if (!at.drawn) fail(`kursor di ${want} tidak tergambar sebagai garis tepi`);
 				sameCells(base0, await s.exec(readCells), `kursor di ${want}`);
 				visited++;
 				if (k < 7) await s.type(grid, r % 2 === 0 ? KEYS.right : KEYS.left);

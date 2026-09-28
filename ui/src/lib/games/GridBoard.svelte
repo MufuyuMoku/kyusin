@@ -133,7 +133,7 @@
 						{#if last === sq}<div class="layer last"></div>{/if}
 						{#if highlight.has(sq)}<div class="layer sorot"></div>{/if}
 						<div class="layer hover"></div>
-						{#if focused && cursor.row === r && cursor.col === c}<div class="layer cursor"></div>{/if}
+						{#if focused && cursor.row === r && cursor.col === c}<div class="layer cursor-ring"></div>{/if}
 					</div>
 				{/each}
 			</div>
@@ -222,7 +222,8 @@
 	.cell.can:hover .hover {
 		border-color: var(--fg);
 	}
-	.cursor {
+	/* Bukan `.cursor`: nama itu dipakai kursor blok konsol di app.css. */
+	.cursor-ring {
 		inset: 1px;
 		border: 2px solid var(--fg);
 	}
