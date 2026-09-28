@@ -39,11 +39,15 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/stockfish"
           cd "$RUNNER_TEMP/stockfish"
-          curl -sSfL -o sf.tar \
-            https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-ubuntu-x86-64-avx2.tar
-          tar xf sf.tar
-          SF=$(find "$RUNNER_TEMP/stockfish" -type f -name 'stockfish-ubuntu-x86-64-avx2' | head -1)
+          curl -sSfL -o sf.tar.gz \
+            https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-linux-x86-64-universal.tar.gz
+          tar xzf sf.tar.gz
+          # Berkas biner ELF di dalam arsip (bukan arsip atau kode sumber).
+          SF=$(find "$RUNNER_TEMP/stockfish" -type f -name 'stockfish*' ! -name '*.tar.gz' \
+               -exec file {} \; | grep 'ELF' | head -1 | cut -d: -f1)
+          test -n "$SF"
           chmod +x "$SF"
+          echo quit | "$SF"
           echo "STOCKFISH=$SF" >> "$GITHUB_ENV"
 
       - name: Kalibrasi
