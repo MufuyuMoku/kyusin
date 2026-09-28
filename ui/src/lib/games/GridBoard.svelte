@@ -88,7 +88,12 @@
 		null
 	);
 	let over = $state<string | null>(null);
-	let suppressClick = false;
+	/**
+	 * Klik yang menyusul pelepasan seret diabaikan, tetapi hanya sesaat:
+	 * peramban tidak selalu mengirim klik penutup seret, dan klik pemain
+	 * berikutnya tidak boleh ikut tertelan.
+	 */
+	let suppressUntil = 0;
 
 	function cellAt(x: number, y: number): HTMLElement | null {
 		return (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>('[data-sq]') ?? null;
@@ -116,16 +121,13 @@
 		drag = null;
 		over = null;
 		if (!was?.active) return;
-		suppressClick = true;
+		suppressUntil = performance.now() + 150;
 		const to = cellAt(e.clientX, e.clientY)?.dataset.sq;
 		if (to && to !== was.from) ondrop?.(was.from, to);
 	}
 
 	function onclick(e: MouseEvent) {
-		if (suppressClick) {
-			suppressClick = false;
-			return;
-		}
+		if (performance.now() < suppressUntil) return;
 		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]');
 		if (!cell) return;
 		cursor = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };

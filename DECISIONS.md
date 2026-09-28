@@ -338,6 +338,48 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   4. Tes jendela asli (§11): keselarasan papan, kursor/hover/seret tidak menggeser sel, dan satu partai pendek melawan bot.
 - Rujukan: SPEC §3, §4, §6.1, §8, §9 (M2), §11.
 
+### D-042 — Catur: aturan, notasi, dan tambahan kontrak `canonical`
+- Tanggal / milestone: 2026-09-28 / M2
+- Diputuskan oleh: developer (dalam batas SPEC §3, §5.2, §6.1)
+- Keputusan:
+  - Generator langkah cozy-chess (MIT). Rokade dari sandi cozy-chess ("raja ke petak benteng") diterjemahkan ke bentuk standar (raja e1→g1, SAN `O-O`).
+  - Notasi kanonik = SAN (`e4`, `Nbd2`, `exd6`, `e8=Q`, `O-O`, dengan `+`/`#`) di `legal_actions`, riwayat, replay, dan PGN. Notasi koordinat (`e2e4`, `e7e8q`, `e1g1`), `0-0`, dan promosi tanpa `=` diterima sebagai alias.
+  - Kontrak mendapat satu metode opsional `TurnGame::canonical` (bawaan: tidak ada alias). `Session::act` mencoba alias bila perintah tidak cocok langsung; `Match` menyimpan bentuk kanonik di replay; runner tutorial membandingkan bentuk kanonik. Kompatibel dengan game lama.
+  - Remis otomatis (penyederhanaan dari aturan "klaim" FIDE): pat, posisi sama tiga kali, 50 langkah (halfmove ≥ 100), bahan tidak cukup (tanpa pion/benteng/menteri dan ≤1 bidak ringan, atau semua gajah di warna petak yang sama). `resign` untuk menyerah. `timeout` (hanya bila ada jam): kalah, kecuali lawan tidak mungkin mat lagi (tinggal raja, atau raja + satu bidak ringan melawan raja sendirian) = remis.
+  - Skor `GameResult` catur = poin × 2 (menang 2, remis 1, kalah 0), untuk Glicko-2 di M3.
+  - Posisi awal kustom lewat konfigurasi `fen` (dipakai tes dan impor PGN).
+- Rujukan: SPEC §5.2, §6.1, D-034.
+
+### D-043 — Sprite dan input visual catur
+- Tanggal / milestone: 2026-09-28 / M2
+- Diputuskan oleh: developer (dalam batas D-041)
+- Keputusan:
+  - Enam bidak 12×12 digambar tangan (dilipatkan 2 → 24px di sel 40×40). Bidak putih diisi penuh; bidak hitam = garis tepi yang dibangkitkan otomatis dari bentuk penuhnya (piksel yang bertetangga dengan kosong), jadi selalu konsisten. Tes UI memastikan keenam bentuk berbeda (penuh maupun garis tepi, beda ≥ 8 piksel antarbidak) dan versi garis tepi jelas lebih kosong.
+  - `GridBoard` diperluas: sasaran (titik) terpisah dari petak yang bisa dipilih, petak terpilih (garis ganda), dua penanda langkah terakhir, penanda skak di raja, sasaran seret. Semua lapisan absolut. Bidak yang diseret digambar di lapisan `position: fixed` terpisah; bidak asalnya hanya diredupkan.
+  - Klik bidak → titik di tujuan sah → klik tujuan; seret bidak → lepas di tujuan; keyboard: panah + Enter/Spasi dengan urutan yang sama. Promosi memunculkan empat pilihan bergambar (menteri, benteng, gajah, kuda) + batal. Papan dibalik bila pemain memegang hitam.
+  - Status menjelaskan langkah khusus terakhir: rokade pendek/panjang (raja dan benteng pindah), en passant (pion yang ditangkap disebut petaknya), promosi (bidak barunya disebut). SAN di daftar langkah tetap standar.
+- Rujukan: SPEC §4, D-038, D-041.
+
+### D-044 — Mesin catur dan level
+- Tanggal / milestone: 2026-09-28 / M2
+- Diputuskan oleh: developer
+- Keputusan: negamax alpha-beta + iterative deepening, quiescence untuk tangkapan/promosi (maks. 8 ply), urutan MVV-LVA, evaluasi bahan + tabel posisi (tabel raja akhir permainan terpisah). Empat level dibatasi kedalaman dan jumlah node (bukan waktu), dengan gangguan acak pada langkah akar dari RNG turunan seed ronde: level 1 kedalaman 1 tanpa quiescence (±150 cp), level 2 kedalaman 2 (±40), level 3 kedalaman 3 (±10), level 4 kedalaman 4 (tanpa gangguan, maks. 600 ribu node). Uji kekuatan di CI: level 2 vs 1 = 8/8, level 3 vs 2 = 7,5/8, level 4 vs 3 = 5,5/6. `kyusin-bots` dan cozy-chess dikompilasi teroptimasi juga di profil dev/test.
+- Rujukan: SPEC §6.1, §7.2, §8.
+
+### D-045 — Jam catur dihitung host
+- Tanggal / milestone: 2026-09-28 / M2
+- Diputuskan oleh: developer
+- Keputusan: game tidak memakai jam dinding (SPEC §5.2). Jam dihitung host dengan jam monoton: waktu pemain yang melangkah dikurangi, lalu ditambah tambahan per langkah. Waktu habis → host mengajukan `timeout` atas nama pemain itu (juga saat pemain mencoba melangkah setelah waktunya habis), jadi tercatat di replay dan lolos verify. UI hanya berdetak dari potret terakhir dan meminta host memeriksa saat mencapai nol. Pilihan: tanpa jam, 5+0, 10+5, 15+10. Konfigurasi `jam` ikut di replay dan menjadi tag `TimeControl` PGN.
+- Rujukan: SPEC §6.1.
+
+### D-046 — PGN dan kalibrasi
+- Tanggal / milestone: 2026-09-28 / M2
+- Diputuskan oleh: developer (dalam batas D-041)
+- Keputusan:
+  - Ekspor PGN dari replay catur tersimpan (tag tujuh baku, FEN/SetUp bila perlu, TimeControl bila ada jam, nama kursi dalam bahasa aktif), ditampilkan dan bisa disalin. Impor PGN (toleran terhadap komentar, variasi, NAG, nomor langkah) membuka partai di penampil replay tanpa disimpan; setiap langkah diperiksa terhadap mesin aturan dan galat menyebut langkah yang salah. Partai impor tidak punya catatan provably fair dan tidak di-verify.
+  - Kalibrasi: `crates/bots/examples/calibrate_catur.rs` bicara UCI dengan Stockfish (`UCI_LimitStrength` + `UCI_Elo`), memainkan setiap level dari delapan pembukaan pendek dengan warna bergantian, lalu menaksir rating tiap level dengan kemungkinan maksimum model Elo logistik plus selang 95%. Bila semua kalah atau semua menang, ditambah satu remis semu per lawan dan ditandai ekstrapolasi. Workflow manual `.github/workflows/calibrate.yml` mengunduh rilis Stockfish resmi ke folder sementara runner. Hasil disimpan di `data/calibration/catur.json`, ditanam ke `kyusin-bots`, dan ditampilkan di pilihan level ("≈rating").
+- Rujukan: SPEC §6.1, §8, D-041.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
