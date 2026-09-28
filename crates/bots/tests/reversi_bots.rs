@@ -67,13 +67,13 @@ fn every_competitive_game_has_three_levels() {
         }
     }
     assert!(kyusin_bots::create("reversi", 0, &[0; 32], 0).is_none());
-    assert!(kyusin_bots::create("reversi", 4, &[0; 32], 0).is_none());
+    assert!(kyusin_bots::create("reversi", 5, &[0; 32], 0).is_none());
 }
 
 #[test]
 fn all_levels_play_legal_games_with_both_colours() {
-    for a in 1..=3 {
-        for b in 1..=3 {
+    for a in 1..=4 {
+        for b in 1..=4 {
             let s = play(a, b, a * 10 + b);
             assert_eq!(s.len(), 2);
         }
@@ -104,4 +104,11 @@ fn level_three_beats_level_two() {
     let w = wins(3, 2, 10);
     eprintln!("level 3 vs 2: {w}/10");
     assert!(w >= 7, "level 3 hanya menang {w}/10 lawan level 2");
+}
+
+#[test]
+fn level_four_beats_level_three() {
+    let w = wins(4, 3, 10);
+    eprintln!("level 4 vs 3: {w}/10");
+    assert!(w >= 7, "level 4 hanya menang {w}/10 lawan level 3");
 }

@@ -1,18 +1,39 @@
-//! Bot Reversi, tiga level (SPEC §7.2: game kompetitif wajib minimal 3).
+//! Bot Reversi, empat level (SPEC §7.2: minimal 3; §8 Rev. 10: selisih
+//! rating level berurutan paling besar 400, D-054).
 //!
 //! 1. Pemula: langkah sah acak.
 //! 2. Menengah: satu langkah ke depan dengan tabel bobot petak (sudut
 //!    bagus, petak di sebelah sudut buruk).
-//! 3. Mahir: pencarian alpha-beta 4 langkah dengan bobot petak dan
-//!    mobilitas; bila petak kosong tinggal sedikit, dihitung sampai akhir.
+//! 3. Mahir: alpha-beta 2 langkah dengan bobot petak dan mobilitas.
+//! 4. Ahli: alpha-beta 3 langkah; bila petak kosong tinggal 8 atau
+//!    kurang, dihitung sampai akhir. (Level 3 lama, 4 langkah + hitung
+//!    akhir, membuat jarak level terlalu lebar; D-054.)
 
 use kyusin_core::{GameRng, Player, PlayerId, SeatKind, Seed, Session};
 use kyusin_games::reversi::{Board, Color, Square, View};
 
-pub const LEVELS: u8 = 3;
+pub const LEVELS: u8 = 4;
 
-const MID_DEPTH: u32 = 4;
-const ENDGAME_EMPTIES: u32 = 8;
+/// Parameter pencarian level 3 ke atas.
+struct Search {
+    /// Kedalaman pencarian di tengah permainan.
+    depth: u32,
+    /// Bila petak kosong sebanyak ini atau kurang, dihitung sampai akhir.
+    endgame: u32,
+}
+
+fn search_params(level: u8) -> Search {
+    match level {
+        3 => Search {
+            depth: 2,
+            endgame: 0,
+        },
+        _ => Search {
+            depth: 3,
+            endgame: 8,
+        },
+    }
+}
 
 #[rustfmt::skip]
 const WEIGHTS: [i32; 64] = [
@@ -53,14 +74,11 @@ impl ReversiBot {
                 let next = board.play(color, sq, board.flips(color, sq));
                 positional(&next, color)
             }),
-            _ => {
+            level => {
+                let p = search_params(level);
                 let empties = board.empty().count_ones();
-                let depth = if empties <= ENDGAME_EMPTIES {
-                    empties
-                } else {
-                    MID_DEPTH
-                };
-                let exact = empties <= ENDGAME_EMPTIES;
+                let exact = empties <= p.endgame;
+                let depth = if exact { empties } else { p.depth };
                 order(&mut moves);
                 let mut best = moves[0];
                 let mut alpha = i32::MIN + 1;

@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-28",
+  "date": "2026-09-29",
   "game": "reversi",
   "games_per_pairing": 1000,
   "levels": [
@@ -32,22 +32,48 @@
     },
     {
       "ci95": [
-        2034.0,
-        2232.0
+        1650.0,
+        1710.0
       ],
-      "elo": 2133.0,
+      "elo": 1680.0,
       "extrapolated": false,
       "level": 3,
       "results": [
         {
           "games": 1000,
           "opponent_level": 1,
-          "points": 998.5
+          "points": 945.0
         },
         {
           "games": 1000,
           "opponent_level": 2,
-          "points": 989.5
+          "points": 909.0
+        }
+      ]
+    },
+    {
+      "ci95": [
+        1973.0,
+        2030.0
+      ],
+      "elo": 2001.0,
+      "extrapolated": false,
+      "level": 4,
+      "results": [
+        {
+          "games": 1000,
+          "opponent_level": 1,
+          "points": 996.0
+        },
+        {
+          "games": 1000,
+          "opponent_level": 2,
+          "points": 990.0
+        },
+        {
+          "games": 1000,
+          "opponent_level": 3,
+          "points": 852.5
         }
       ]
     }
