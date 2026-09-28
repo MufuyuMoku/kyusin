@@ -27,7 +27,7 @@
 - Satu milestone per sesi, berurutan sesuai §9. Akhiri setiap milestone dengan memperbarui `PROGRESS.md` dan mencatat keputusan di `DECISIONS.md`.
 - Tes aturan ditulis **sebelum** implementasi untuk mesin aturan dan pembayaran casino.
 - Jangan menambah fitur di luar SPEC. Usulan masuk `DECISIONS.md` bagian "Usulan", tidak langsung dikerjakan.
-- Git: repo `MufuyuMoku/kyusin` (privat). Git global mesin klien memakai identitas clownface471; repo ini memakai `user.name`/`user.email` lokal MufuyuMoku. Jangan mengubah konfigurasi global.
+- Git: repo `MufuyuMoku/kyusin` (privat). Git global mesin klien memakai identitas clownface471; repo ini memakai `user.name` lokal MufuyuMoku dan `user.email` lokal `264320223+MufuyuMoku@users.noreply.github.com` (GitHub menolak push yang memuat email pribadi; D-049). Jangan mengubah konfigurasi global.
 - **Dilarang otomasi input tingkat OS** (SendKeys, xdotool, dsb.). Uji UI lewat browser dengan backend tiruan dan tes otomatis; jendela Tauri asli dicek klien (SPEC §11).
 - **Lokal vs cloud:** M0 dan semua pekerjaan yang perlu dicek visual dikerjakan di sesi lokal. Logika murni (mesin aturan, bot, simulasi RTP, protokol) boleh di sesi cloud; tes cloud hanya pada crate di `crates/` (tanpa crate Tauri).
 

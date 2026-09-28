@@ -397,6 +397,12 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Aturan lapisan kursor dari Rev. 8 dipindah ke butir papan di §4 (isi sama).
 - Rujukan: SPEC §4, §9, §12 Rev. 9.
 
+### D-049 — Email commit memakai alamat noreply GitHub
+- Tanggal / milestone: 2026-09-28 / perbaikan hasil uji M2
+- Diputuskan oleh: klien (dipilih saat push ditolak)
+- Konteks: GitHub menolak push ("push declined due to email privacy restrictions") karena commit memakai email pribadi.
+- Keputusan: `user.email` lokal repo menjadi `264320223+MufuyuMoku@users.noreply.github.com` (nama tetap MufuyuMoku; konfigurasi global tidak diubah). Lima commit lokal yang belum ter-push ditulis ulang authornya; commit yang sudah ada di GitHub tidak diubah.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
