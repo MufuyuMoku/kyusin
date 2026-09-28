@@ -77,7 +77,14 @@ app.on('error', (e) => console.error(`aplikasi gagal dijalankan: ${e.message}`))
 /** Nomor port DevTools dari berkas yang ditulis WebView2 di folder datanya. */
 function activePort() {
 	const file = join(dataDir, 'webview', 'EBWebView', 'DevToolsActivePort');
-	return existsSync(file) ? Number(readFileSync(file, 'utf8').split(/\r?\n/)[0]) : null;
+	if (!existsSync(file)) return null;
+	try {
+		return Number(readFileSync(file, 'utf8').split(/\r?\n/)[0]) || null;
+	} catch (e) {
+		// WebView2 bisa masih memegang berkasnya saat menulis: coba lagi nanti.
+		if (e.code === 'EBUSY' || e.code === 'EPERM') return null;
+		throw e;
+	}
 }
 
 async function devtools() {
