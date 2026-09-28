@@ -4,7 +4,8 @@
 //! mengapit minimal satu garis lawan; semua garis terapit dibalik. Yang
 //! tidak punya langkah wajib `pass` (dan hanya saat itu). Selesai bila kedua
 //! pemain tidak bisa melangkah; bidak terbanyak menang. Tidak memakai acak.
-//! Perintah teks: petak `a1`..`h8`, atau `pass`.
+//! Yang sedang melangkah boleh `resign` kapan saja (SPEC §4 Rev. 9).
+//! Perintah teks: petak `a1`..`h8`, `pass`, atau `resign`.
 
 mod board;
 
@@ -50,6 +51,7 @@ pub struct Config {
 pub enum Move {
     Place(Square),
     Pass,
+    Resign,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -68,6 +70,8 @@ pub struct View {
     pub selesai: bool,
     /// Kursi pemenang bila selesai; kosong = seri.
     pub pemenang: Option<Vec<PlayerId>>,
+    /// Selesai karena menyerah.
+    pub menyerah: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -77,6 +81,8 @@ pub struct Reversi {
     last: Option<Square>,
     flipped: u64,
     over: bool,
+    /// Warna yang menyerah, bila ada.
+    resigned: Option<Color>,
 }
 
 impl Reversi {
@@ -93,6 +99,9 @@ impl Reversi {
     }
 
     fn winners(&self) -> Vec<PlayerId> {
+        if let Some(c) = self.resigned {
+            return vec![c.other().seat()];
+        }
         let (b, w) = (
             self.board.count(Color::Black),
             self.board.count(Color::White),
@@ -116,10 +125,20 @@ fn color_name(lang: Lang, c: Color) -> String {
     )
 }
 
-fn outcome(lang: Lang, winners: &[PlayerId], b: u32, w: u32) -> String {
+fn outcome(lang: Lang, winners: &[PlayerId], resigned: bool, b: u32, w: u32) -> String {
     let c = catalog();
     let (b, w) = (b.to_string(), w.to_string());
     match winners.first() {
+        Some(&seat) if resigned => c.text(
+            lang,
+            "resigned",
+            &[
+                ("loser", &color_name(lang, Color::from_seat(seat).other())),
+                ("color", &color_name(lang, Color::from_seat(seat))),
+                ("b", &b),
+                ("w", &w),
+            ],
+        ),
         Some(&seat) => c.text(
             lang,
             "wins",
@@ -154,6 +173,7 @@ impl TurnGame for Reversi {
             last: None,
             flipped: 0,
             over: false,
+            resigned: None,
         };
         g.check_over();
         Ok(g)
@@ -176,12 +196,15 @@ impl TurnGame for Reversi {
             return Vec::new();
         }
         let moves = self.board.moves(self.turn);
-        if moves == 0 {
-            return vec![ActionSpec::fixed("pass")];
-        }
-        Square::iter(moves)
-            .map(|s| ActionSpec::fixed(s.to_string()))
-            .collect()
+        let mut out: Vec<ActionSpec> = if moves == 0 {
+            vec![ActionSpec::fixed("pass")]
+        } else {
+            Square::iter(moves)
+                .map(|s| ActionSpec::fixed(s.to_string()))
+                .collect()
+        };
+        out.push(ActionSpec::fixed("resign"));
+        out
     }
 
     fn apply(&mut self, player: PlayerId, action: Move) -> Result<(), GameError> {
@@ -193,6 +216,11 @@ impl TurnGame for Reversi {
         }
         let moves = self.board.moves(self.turn);
         match action {
+            Move::Resign => {
+                self.resigned = Some(self.turn);
+                self.over = true;
+                return Ok(());
+            }
             Move::Pass => {
                 if moves != 0 {
                     return Err(GameError::Illegal("pass".into()));
@@ -237,6 +265,7 @@ impl TurnGame for Reversi {
             dibalik: Square::iter(self.flipped).map(|s| s.to_string()).collect(),
             selesai: self.over,
             pemenang: self.over.then(|| self.winners()),
+            menyerah: self.resigned.is_some(),
         }
     }
 
@@ -276,7 +305,7 @@ impl TurnGame for Reversi {
         out.push('\n');
         let you = color_name(lang, Color::from_seat(view.kamu));
         let status = match (&view.pemenang, view.giliran) {
-            (Some(w), _) => outcome(lang, w, view.hitam, view.putih),
+            (Some(w), _) => outcome(lang, w, view.menyerah, view.hitam, view.putih),
             (None, Some(_)) if mine && view.legal == ["pass"] => {
                 c.text(lang, "must_pass", &[("color", &you)])
             }
@@ -306,7 +335,9 @@ impl TurnGame for Reversi {
             self.board.count(Color::White),
         );
         Some(GameResult {
-            summary: Localized::build(|lang| outcome(lang, &winners, b, w)),
+            summary: Localized::build(|lang| {
+                outcome(lang, &winners, self.resigned.is_some(), b, w)
+            }),
             winners,
             scores: vec![b as i64, w as i64],
         })
@@ -314,8 +345,10 @@ impl TurnGame for Reversi {
 
     fn parse_command(&self, command: &str) -> Result<Move, GameError> {
         let c = command.trim();
-        if c == "pass" {
-            return Ok(Move::Pass);
+        match c {
+            "pass" => return Ok(Move::Pass),
+            "resign" => return Ok(Move::Resign),
+            _ => {}
         }
         Square::parse(c)
             .map(Move::Place)
@@ -326,6 +359,7 @@ impl TurnGame for Reversi {
         match action {
             Move::Place(s) => s.to_string(),
             Move::Pass => "pass".into(),
+            Move::Resign => "resign".into(),
         }
     }
 }

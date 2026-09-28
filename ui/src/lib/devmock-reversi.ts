@@ -90,7 +90,8 @@ function view(g: Game, seat: number): ReversiView {
 		terakhir: g.last === null ? null : name(g.last),
 		dibalik: g.flipped.map(name),
 		selesai: done,
-		pemenang: done ? winners(g.board) : null
+		pemenang: done ? winners(g.board) : null,
+		menyerah: false
 	};
 }
 

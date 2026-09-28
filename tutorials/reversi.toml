@@ -12,7 +12,8 @@ warnamu. Langkah yang tidak mengapit apa pun tidak sah.
 
 Bila kamu tidak punya langkah sah, kamu wajib pass; pass hanya boleh saat itu.
 Permainan selesai bila kedua pemain tidak bisa melangkah. Yang punya bidak
-terbanyak menang; sama banyak berarti seri.
+terbanyak menang; sama banyak berarti seri. Di gilirannya, pemain boleh
+menyerah (`resign`); lawannya menang.
 """
 en = """
 8×8 board. Two players: black moves first, then white, in turn.
@@ -24,7 +25,8 @@ flipped to your colour. A move that flanks nothing is not legal.
 
 If you have no legal move you must pass; passing is allowed only then. The
 game ends when neither player can move. Whoever has more discs wins; equal
-counts are a draw.
+counts are a draw. On your turn you may resign (`resign`); your opponent
+wins.
 """
 
 [man.kontrol]

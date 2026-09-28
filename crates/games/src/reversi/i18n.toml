@@ -8,6 +8,7 @@
 "must_pass" = "Kamu ({color}) tidak punya langkah: pass."
 "wins" = "Selesai: {color} menang, {b}–{w}."
 "draw" = "Selesai: seri, {b}–{w}."
+"resigned" = "Selesai: {loser} menyerah, {color} menang ({b}–{w} di papan)."
 
 [en]
 "black" = "black"
@@ -18,3 +19,4 @@
 "must_pass" = "You ({color}) have no move: pass."
 "wins" = "Game over: {color} wins, {b}–{w}."
 "draw" = "Game over: draw, {b}–{w}."
+"resigned" = "Game over: {loser} resigned, {color} wins ({b}–{w} on the board)."

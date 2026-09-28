@@ -17,3 +17,7 @@ ringkas = { id = "Letakkan bidak di petak, misalnya d3", en = "Place a disc on a
 [[perintah]]
 pola = "pass"
 ringkas = { id = "Lewati giliran (hanya bila tidak ada langkah)", en = "Pass (only when you have no move)" }
+
+[[perintah]]
+pola = "resign"
+ringkas = { id = "Menyerah (lawan menang)", en = "Resign (your opponent wins)" }

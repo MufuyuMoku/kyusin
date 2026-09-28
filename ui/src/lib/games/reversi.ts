@@ -15,6 +15,8 @@ export interface ReversiView {
 	dibalik: string[];
 	selesai: boolean;
 	pemenang: number[] | null;
+	/** Selesai karena menyerah. */
+	menyerah: boolean;
 }
 
 export const COLS = 'abcdefgh';
