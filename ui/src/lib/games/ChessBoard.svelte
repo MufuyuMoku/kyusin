@@ -40,6 +40,7 @@
 	// Pilihan dibatalkan tiap kali posisi berubah.
 	$effect(() => {
 		void v?.fen;
+		((window as any).__dbg ??= []).push(`reset fen=${v?.fen}`);
 		selected = null;
 		promo = null;
 	});
@@ -72,6 +73,7 @@
 	}
 
 	function pick(sq: string) {
+		((window as any).__dbg ??= []).push(`pick ${sq} sel=${selected} promo=${JSON.stringify(promo)} src=${[...sources]}`);
 		if (promo) return;
 		if (selected && targets.has(sq)) attempt(selected, sq);
 		else if (sources.has(sq)) selected = selected === sq ? null : sq;

@@ -122,6 +122,7 @@
 
 	function onpointerup(e: PointerEvent) {
 		const was = drag;
+		((window as any).__dbg ??= []).push(`up t=${Math.round(performance.now())} was=${JSON.stringify(was)}`);
 		drag = null;
 		over = null;
 		if (!was?.active) return;
@@ -131,6 +132,7 @@
 	}
 
 	function onclick(e: MouseEvent) {
+		((window as any).__dbg ??= []).push(`click t=${Math.round(performance.now())} sup=${Math.round(suppressUntil)} drag=${JSON.stringify(drag)} tgt=${(e.target as Element).closest?.("[data-sq]")?.getAttribute("data-sq")} legal=${[...legal]}`);
 		if (performance.now() < suppressUntil) return;
 		const cell = (e.target as HTMLElement).closest<HTMLElement>('[data-sq]') ?? cellAt(e.clientX, e.clientY);
 		if (!cell) return;
