@@ -465,6 +465,19 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - Keputusan: label level tidak memakai gelar resmi (misalnya "master"/"grandmaster") karena rating KyuSin adalah rating lokal, bukan FIDE. Label untuk semua game (dibagi per nomor level): 1 Pemula/Beginner, 2 Menengah/Intermediate, 3 Mahir/Advanced, 4 Kuat/Strong, 5 Ahli/Expert, 6 Sangat kuat/Very strong. "Ahli" pindah dari level 4 ke level 5 supaya tidak ada label ganda dan urutannya tetap naik. Perkiraan rating lokal tetap tampil di samping label. Menggantikan butir label di D-054.
 - Rujukan: SPEC §2.2, §8, D-054.
 
+### D-056 — Keputusan klien untuk M4 (mesin kartu, chip, Blackjack)
+- Tanggal / milestone: 2026-09-29 / M4
+- Diputuskan oleh: klien
+- Keputusan:
+  - Aturan Blackjack: 6 dek, bandar berdiri di soft 17 (S17), blackjack dibayar 3:2, double di dua kartu mana pun termasuk setelah split, split sampai 4 tangan, as yang di-split hanya dapat satu kartu, ada insurance dan late surrender, kocok ulang setelah sekitar 75% shoe terpakai. RTP di manifest untuk strategi dasar aturan ini, dihitung dan diverifikasi sesuai §7.
+  - Provably fair Blackjack per shoe: komitmen seed saat shoe dikocok, seed dibuka saat shoe diganti atau pemain berhenti, `verify` memeriksa semua ronde dalam shoe. Ini penerapan §5.4 untuk game ber-shoe: membuka seed setelah tiap ronde akan membocorkan urutan sisa shoe.
+  - Batas taruhan meja: minimal 10, maksimal 2.000 chip.
+  - Simbol jenis kartu (♠♥♦♣) dan elemen kartu berupa sprite piksel SVG (§4), bukan glyph font.
+  - Sapaan `chips_low` mengikuti D-039: dipilih dari saldo sebelum tunjangan harian, lalu tunjangannya disebut sesudahnya.
+  - Halaman statistik: ringkasan menang/kalah terhadap bandar sepanjang waktu, per game casino.
+  - Tes jendela asli meja Blackjack (§11): keselarasan, taruhan, hit/stand/double/split, kursor/hover tidak menggeser elemen.
+- Rujukan: SPEC §2.2, §2.3, §4, §5.4, §6.3, §6.7, §7, §9 M4, §11, D-039.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
