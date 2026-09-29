@@ -459,6 +459,12 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Label UI level 5 "master", level 6 "grandmaster".
 - Rujukan: SPEC §8, §9 M2b, D-047, D-052, D-053.
 
+### D-055 — Label level deskriptif, tanpa gelar resmi
+- Tanggal / milestone: 2026-09-29 / hasil uji M2b
+- Diputuskan oleh: klien (developer memilih urutan kata)
+- Keputusan: label level tidak memakai gelar resmi (misalnya "master"/"grandmaster") karena rating KyuSin adalah rating lokal, bukan FIDE. Label untuk semua game (dibagi per nomor level): 1 Pemula/Beginner, 2 Menengah/Intermediate, 3 Mahir/Advanced, 4 Kuat/Strong, 5 Ahli/Expert, 6 Sangat kuat/Very strong. "Ahli" pindah dari level 4 ke level 5 supaya tidak ada label ganda dan urutannya tetap naik. Perkiraan rating lokal tetap tampil di samping label. Menggantikan butir label di D-054.
+- Rujukan: SPEC §2.2, §8, D-054.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

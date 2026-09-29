@@ -5,7 +5,7 @@
 //! 2. Menengah: satu langkah ke depan dengan tabel bobot petak (sudut
 //!    bagus, petak di sebelah sudut buruk).
 //! 3. Mahir: alpha-beta 2 langkah dengan bobot petak dan mobilitas.
-//! 4. Ahli: alpha-beta 3 langkah; bila petak kosong tinggal 8 atau
+//! 4. Kuat: alpha-beta 3 langkah; bila petak kosong tinggal 8 atau
 //!    kurang, dihitung sampai akhir. (Level 3 lama, 4 langkah + hitung
 //!    akhir, membuat jarak level terlalu lebar; D-054.)
 
