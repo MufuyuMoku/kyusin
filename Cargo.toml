@@ -43,12 +43,21 @@ debug = false
 [profile.test]
 debug = false
 
-# Pencarian bot catur dan generator langkahnya terlalu lambat tanpa optimasi,
-# bahkan untuk tes. Hanya dua paket ini; sisanya tetap cepat dikompilasi.
+# Pencarian bot catur, generator langkah, dan simulasi RTP meja (acak ChaCha20)
+# terlalu lambat tanpa optimasi, bahkan untuk tes. Sisanya tetap cepat dikompilasi.
 [profile.dev.package.kyusin-games]
 opt-level = 3
 
 [profile.dev.package.kyusin-bots]
+opt-level = 3
+
+[profile.dev.package.kyusin-core]
+opt-level = 3
+
+[profile.dev.package.rand_chacha]
+opt-level = 3
+
+[profile.dev.package.sha2]
 opt-level = 3
 
 [profile.dev.package.cozy-chess]

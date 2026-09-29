@@ -87,7 +87,10 @@ fn bets_before_the_deal() {
     assert!(!legal(&g).contains(&"deal".to_string()));
     assert!(legal(&g).contains(&"leave".to_string()));
     act(&mut g, "bet bahar 1990");
-    assert!(Session::act(&mut g, 0, "bet bahar 20").is_err(), "lebih dari 2.000");
+    assert!(
+        Session::act(&mut g, 0, "bet bahar 20").is_err(),
+        "lebih dari 2.000"
+    );
     act(&mut g, "bet bahar 10");
     assert_eq!(view(&g)["taruhan_meja"], 2000);
     for bad in ["bet andar 5", "bet tengah 10", "bet andar", "hit"] {

@@ -1,0 +1,16 @@
+# Teks tampilan Andar Bahar (to_text, hasil) dalam dua bahasa.
+[id]
+"middle" = "Kartu tengah: {card}"
+"bets" = "Taruhan: {bets}"
+"place_bet" = "Susun taruhan: bet andar|bahar <jumlah>, lalu deal. clear menarik taruhan, leave berhenti."
+"over.ronde_selesai" = "Ronde selesai, bersih {net} chip. Seed ronde ini dibuka."
+"over.berhenti" = "Kamu berhenti sebelum kartu dibagi. Seed ronde ini dibuka."
+"summary" = "Ronde selesai: bersih {net} chip."
+
+[en]
+"middle" = "Middle card: {card}"
+"bets" = "Bets: {bets}"
+"place_bet" = "Build your bets: bet andar|bahar <amount>, then deal. clear takes the bets back, leave stops."
+"over.ronde_selesai" = "Round finished, net {net} chips. This round's seed is revealed."
+"over.berhenti" = "You stopped before the deal. This round's seed is revealed."
+"summary" = "Round finished. Net: {net} chips."

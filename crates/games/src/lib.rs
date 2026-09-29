@@ -6,6 +6,7 @@
 
 use kyusin_core::{Registry, RegistryError};
 
+pub mod andar_bahar;
 pub mod blackjack;
 pub mod cards;
 pub mod casino_war;
@@ -24,6 +25,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(blackjack::cartridge()?)?;
     registry.register(dragon_tiger::cartridge()?)?;
     registry.register(casino_war::cartridge()?)?;
+    registry.register(andar_bahar::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

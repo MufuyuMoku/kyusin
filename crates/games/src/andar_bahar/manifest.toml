@@ -1,0 +1,32 @@
+id = "andar-bahar"
+nama = { id = "Andar Bahar", en = "Andar Bahar" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP dihitung analitis dari satu dek (kartu pertama selalu ke Andar):
+# peluang Andar menang 0,51501; Andar (0,9:1) 97,851%, Bahar (1:1) 96,999%.
+# Angka manifest = taruhan utama terendah (Bahar). Lihat D-060;
+# diverifikasi simulasi (SPEC §7).
+rtp = 97.0
+tutorial = "tutorials/andar-bahar.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di andar atau bahar (10–2.000 per tempat, kelipatan 10)", en = "Add a bet on andar or bahar (10–2,000 per spot, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan yang belum dibagi", en = "Take back every bet not yet dealt" }
+
+[[perintah]]
+pola = "deal"
+ringkas = { id = "Buka kartu tengah dan bagi sampai ada kartu kembar", en = "Show the middle card and deal until a matching card appears" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum kartu dibagi", en = "Stop before the deal" }

@@ -1,0 +1,86 @@
+game = "andar-bahar"
+judul = { id = "Andar Bahar: dasar", en = "Andar Bahar: basics" }
+
+# Dek tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+kartu = [
+  # Tengah 9h; Andar 4c, Bahar Kd, Andar 2s, Bahar 9d → Bahar menang.
+  "9h", "4c", "Kd", "2s", "9d",
+  # Cadangan.
+  "3c", "5c", "6c", "7c", "8c",
+]
+
+[man.aturan]
+id = """
+Satu kartu tengah dibuka. Lalu kartu dibagi bergantian ke dua sisi, Andar
+(kiri) lebih dulu lalu Bahar (kanan), sampai muncul kartu berperingkat sama
+dengan kartu tengah. Sisi yang menerima kartu itu menang. Jenis kartu tidak
+berpengaruh.
+
+Aturan meja ini: satu dek dikocok setiap ronde. Taruhan 10–2.000 chip per
+sisi (kelipatan 10); boleh bertaruh di satu atau kedua sisi.
+- Andar menang dibayar 0,9:1 (100 menjadi +90), karena Andar menerima kartu
+  pertama dan sedikit lebih sering menang.
+- Bahar menang dibayar 1:1.
+
+RTP: Andar 97,85%, Bahar 97,00%. Dihitung analitis (peluang Andar menang
+0,51501) dan diverifikasi dengan simulasi. Angka di manifest adalah Bahar.
+
+Provably fair per ronde: komitmen seed diumumkan sebelum kartu dibagi, dan
+seed dibuka setelah ronde selesai. Verify lalu memutar ulang ronde itu.
+Setiap ronde adalah pertandingan tersendiri dengan komitmen baru.
+"""
+en = """
+One middle card is shown. Then cards are dealt alternately to two sides,
+Andar (left) first and then Bahar (right), until a card of the same rank as
+the middle card appears. The side that receives it wins. Suits do not
+matter.
+
+This table: one deck, shuffled every round. Bets 10–2,000 chips per side
+(multiples of 10); you may bet on one or both sides.
+- An Andar win pays 0.9:1 (100 becomes +90), because Andar gets the first
+  card and wins slightly more often.
+- A Bahar win pays 1:1.
+
+RTP: Andar 97.85%, Bahar 97.00%. Computed analytically (Andar wins with
+chance 0.51501) and verified by simulation. The manifest figure is Bahar.
+
+Provably fair per round: the seed commitment is announced before the deal,
+and the seed is revealed after the round. Verify then replays that round.
+Every round is its own match with a new commitment.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar chip dengan tombol chip, lalu pilih sisi ([ ANDAR ] atau
+[ BAHAR ]); setiap pilihan menambah taruhan di sisi itu. [ BAGI ] membagi
+kartu, [ ULANG ] menarik taruhan. Setelah ronde selesai, susun taruhan lagi
+untuk ronde berikutnya. Keyboard: panah memindahkan fokus, Enter atau Spasi
+memilih.
+"""
+en = """
+Choose a chip size with the chip buttons, then a side ([ ANDAR ] or
+[ BAHAR ]); each press adds to that side. [ DEAL ] deals, [ CLEAR ] takes
+the bets back. After a round, build bets again for the next round.
+Keyboard: the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Tebak sisi yang akan menerima kartu kembar kartu tengah. Pasang 100 di Bahar."
+teks.en = "Guess which side will receive the card matching the middle card. Put 100 on Bahar."
+aksi = "bet bahar 100"
+sorot = ["aksi:bet bahar 100"]
+petunjuk.id = "Pasang 100 di BAHAR."
+petunjuk.en = "Put 100 on BAHAR."
+
+[[langkah]]
+teks.id = "Bagi kartunya: kartu tengah dibuka, lalu Andar, Bahar, Andar, … sampai ada yang kembar."
+teks.en = "Deal: the middle card is shown, then Andar, Bahar, Andar, … until one matches."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "Kartu tengah 9; kartu 9 kedua jatuh di Bahar: kamu menang 1:1 (+100). Andar dibayar 0,9:1 karena menerima kartu pertama. Seed ronde dibuka dan verify memeriksanya. Tutorial selesai."
+teks.en = "The middle card is a 9; the matching 9 lands on Bahar: you win 1:1 (+100). Andar pays 0.9:1 because it gets the first card. The round seed is revealed and verify checks it. Tutorial finished."
