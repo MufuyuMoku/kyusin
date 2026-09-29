@@ -85,8 +85,10 @@ pub(crate) struct ProfileDto {
     /// Game dari pertandingan terakhir yang selesai.
     last_game: Option<String>,
     name_max: usize,
-    /// Saldo chip profil (M4).
+    /// Saldo chip profil yang bisa dipakai (M4).
     chips: i64,
+    /// Chip yang sedang dipertaruhkan di ronde yang belum selesai (D-059).
+    staked: i64,
 }
 
 pub(crate) fn profile_dto(state: &AppState) -> Result<ProfileDto, Localized> {
@@ -99,6 +101,7 @@ pub(crate) fn profile_dto(state: &AppState) -> Result<ProfileDto, Localized> {
         last_game: s.last_game().map_err(store_error)?,
         name_max: kyusin_store::NAME_MAX,
         chips: s.chips(now_ms()).map_err(store_error)?,
+        staked: s.staked(now_ms()).map_err(store_error)?,
     })
 }
 

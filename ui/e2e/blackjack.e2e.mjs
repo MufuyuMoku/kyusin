@@ -146,6 +146,10 @@ export async function run(s, artifacts, log) {
 		rounds++;
 		const before = await s.exec(state);
 		await press(s, '[ BAGI · 20 ]');
+		// Taruhan tercatat saat dipasang: saldo langsung turun 20 (D-059).
+		const dealt = await s.exec(state);
+		if ((dealt.fase === 'giliran' || dealt.fase === 'asuransi') && dealt.chips !== before.chips - 20)
+			fail(`taruhan belum dipotong saat dipasang: ${before.chips} → ${dealt.chips}`);
 		let guard = 0;
 		for (;;) {
 			const st = await s.exec(state);

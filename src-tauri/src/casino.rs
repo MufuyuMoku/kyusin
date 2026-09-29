@@ -7,12 +7,20 @@
 //! `fase`, `taruhan_meja` (chip yang sedang dipertaruhkan), `biaya` (biaya
 //! aksi seperti `double`/`split`/`insure`), dan `tangan[].taruhan` +
 //! `asuransi` untuk jumlah yang dipertaruhkan di ronde itu.
+//!
+//! Tidak ada yang hanya tinggal di memori (D-059): setelah setiap aksi,
+//! perubahan saldo dan keadaan pertandingan ditulis dalam satu transaksi.
+//! Taruhan dipotong dari saldo saat dipasang, jadi mematikan aplikasi secara
+//! paksa di tengah ronde tidak membatalkan taruhan; saat dibuka lagi ronde
+//! itu dilanjutkan dengan kartu dan taruhan yang sama.
 
 use kyusin_core::Localized;
 use kyusin_core::i18n::core;
 use serde::Serialize;
 use serde_json::Value;
 use tauri::State;
+
+use kyusin_store::{CasinoCheckpoint, Suspended};
 
 use crate::AppState;
 use crate::profile::now_ms;
@@ -30,22 +38,33 @@ fn settled_rounds(view: &Value) -> i64 {
     }
 }
 
-/// Bagian hasil yang sudah dicatat ke profil untuk pertandingan berjalan.
+/// Bagian pertandingan berjalan yang sudah tercatat di profil: hasil bersih
+/// dan ronde yang sudah selesai, plus chip yang sedang dipertaruhkan (sudah
+/// dipotong dari saldo saat dipasang; D-059).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Ledger {
     net: i64,
     rounds: i64,
+    stake: i64,
 }
 
 impl Ledger {
     /// Mulai dari keadaan view sekarang: pertandingan baru mulai dari nol,
-    /// pertandingan yang dilanjutkan sudah mencatat ronde sebelum ditunda.
-    pub(crate) fn from_view(view: &Value) -> Self {
+    /// pertandingan yang dilanjutkan sudah mencatat semua itu di titik simpan
+    /// terakhirnya. `escrowed = false` untuk pertandingan yang ditunda oleh
+    /// versi lama (sebelum D-059), yang taruhannya belum dipotong: titik
+    /// simpan pertama memotongnya.
+    pub(crate) fn from_view(view: &Value, escrowed: bool) -> Self {
         Ledger {
             net: view["bersih"].as_i64().unwrap_or(0),
             rounds: settled_rounds(view),
+            stake: if escrowed { stake(view) } else { 0 },
         }
     }
+}
+
+fn stake(view: &Value) -> i64 {
+    view["taruhan_meja"].as_i64().unwrap_or(0)
 }
 
 /// Biaya chip sebuah perintah (0 bila tidak memakai chip).
@@ -57,16 +76,15 @@ pub(crate) fn cost(view: &Value, command: &str) -> i64 {
     view["biaya"][command].as_i64().unwrap_or(0)
 }
 
-/// Menolak aksi yang biayanya melebihi chip yang tersedia (saldo dikurangi
-/// yang sedang dipertaruhkan di meja).
+/// Menolak aksi yang biayanya melebihi saldo yang bisa dipakai (taruhan
+/// yang sedang berjalan sudah dipotong dari saldo).
 pub(crate) fn check(state: &AppState, view: &Value, command: &str) -> Result<(), Localized> {
     let need = cost(view, command);
     if need <= 0 {
         return Ok(());
     }
     let store = state.store.as_ref().map_err(store_error)?;
-    let chips = store.lock().unwrap().chips(now_ms()).map_err(store_error)?;
-    let available = chips - view["taruhan_meja"].as_i64().unwrap_or(0);
+    let available = store.lock().unwrap().chips(now_ms()).map_err(store_error)?;
     if need > available {
         return Err(core().localized(
             "error.chips",
@@ -79,36 +97,56 @@ pub(crate) fn check(state: &AppState, view: &Value, command: &str) -> Result<(),
     Ok(())
 }
 
-/// Mencatat ronde yang baru selesai ke saldo dan ringkasan casino.
-pub(crate) fn settle(state: &AppState, game: &str, view: &Value, ledger: &mut Ledger) {
+/// Titik simpan setelah setiap aksi (D-059): taruhan baru dipotong dari
+/// saldo, ronde yang baru selesai dikembalikan + hasilnya dan masuk
+/// ringkasan, dan keadaan pertandingan disimpan — satu transaksi.
+/// Mengembalikan saldo baru.
+pub(crate) fn checkpoint(
+    state: &AppState,
+    game: &str,
+    view: &Value,
+    ledger: &mut Ledger,
+    suspended: &Suspended,
+) -> Result<i64, String> {
     let rounds = settled_rounds(view);
-    if rounds <= ledger.rounds {
-        return;
-    }
     let net = view["bersih"].as_i64().unwrap_or(0);
+    let now_stake = stake(view);
+    let finished = rounds - ledger.rounds;
     // Yang dipertaruhkan di ronde yang baru selesai (tangan + insurance).
-    let wagered = view["tangan"]
-        .as_array()
-        .map(|hands| {
-            hands
-                .iter()
-                .filter_map(|h| h["taruhan"].as_i64())
-                .sum::<i64>()
-        })
-        .unwrap_or(0)
-        + view["asuransi"].as_i64().unwrap_or(0);
-    if let Ok(store) = state.store.as_ref() {
-        let recorded = store.lock().unwrap().record_casino(
+    let wagered = if finished > 0 {
+        view["tangan"]
+            .as_array()
+            .map(|hands| {
+                hands
+                    .iter()
+                    .filter_map(|h| h["taruhan"].as_i64())
+                    .sum::<i64>()
+            })
+            .unwrap_or(0)
+            + view["asuransi"].as_i64().unwrap_or(0)
+    } else {
+        0
+    };
+    let store = state.store.as_ref().map_err(Clone::clone)?;
+    let chips = store
+        .lock()
+        .unwrap()
+        .casino_checkpoint(&CasinoCheckpoint {
             game,
-            rounds - ledger.rounds,
+            stake: now_stake - ledger.stake,
+            net: net - ledger.net,
+            rounds: finished,
             wagered,
-            net - ledger.net,
-            now_ms(),
-        );
-        if recorded.is_ok() {
-            *ledger = Ledger { net, rounds };
-        }
-    }
+            suspended,
+            now: now_ms(),
+        })
+        .map_err(|e| e.to_string())?;
+    *ledger = Ledger {
+        net,
+        rounds,
+        stake: now_stake,
+    };
+    Ok(chips)
 }
 
 pub(crate) fn chips(state: &AppState) -> Option<i64> {

@@ -10,7 +10,9 @@ use std::path::Path;
 pub mod chips;
 pub mod profile;
 
-pub use chips::{ALLOWANCE_BELOW, ALLOWANCE_TO, Allowance, CasinoStats, STARTING_CHIPS};
+pub use chips::{
+    ALLOWANCE_BELOW, ALLOWANCE_TO, Allowance, CasinoCheckpoint, CasinoStats, STARTING_CHIPS,
+};
 pub use profile::{GameRecord, GameStats, HistoryRow, NAME_MAX, Profile, StoredRating};
 
 use kyusin_core::replay::Replay;
@@ -18,7 +20,7 @@ use kyusin_core::{GameResult, SeatKind};
 use rusqlite::{Connection, OptionalExtension, params};
 
 /// Versi skema; dinaikkan tiap migrasi.
-const SCHEMA_VERSION: i32 = 4;
+const SCHEMA_VERSION: i32 = 5;
 
 pub struct Store {
     conn: Connection,
@@ -79,6 +81,20 @@ pub struct Suspended {
     pub data: serde_json::Value,
 }
 
+pub(crate) fn put_suspended(conn: &Connection, s: &Suspended) -> Result<(), StoreError> {
+    conn.execute(
+        "INSERT OR REPLACE INTO suspended (game, started_at, suspended_at, data)
+         VALUES (?1, ?2, ?3, ?4)",
+        params![
+            s.game,
+            s.started_at,
+            s.suspended_at,
+            serde_json::to_string(&s.data)?
+        ],
+    )?;
+    Ok(())
+}
+
 impl Store {
     pub fn open(path: &Path) -> Result<Store, StoreError> {
         Self::init(Connection::open(path)?)
@@ -127,6 +143,9 @@ impl Store {
         }
         if version < 4 {
             chips::migrate_v4(&conn)?;
+        }
+        if version < 5 {
+            chips::migrate_v5(&conn)?;
         }
         Ok(Store { conn })
     }
@@ -184,17 +203,24 @@ impl Store {
 
     /// Menyimpan (atau mengganti) pertandingan tertunda untuk satu game.
     pub fn save_suspended(&self, s: &Suspended) -> Result<(), StoreError> {
-        self.conn.execute(
-            "INSERT OR REPLACE INTO suspended (game, started_at, suspended_at, data)
-             VALUES (?1, ?2, ?3, ?4)",
-            params![
-                s.game,
-                s.started_at,
-                s.suspended_at,
-                serde_json::to_string(&s.data)?
-            ],
-        )?;
+        put_suspended(&self.conn, s)
+    }
+
+    /// Menghapus pertandingan tertunda sebuah game (bila ada).
+    pub fn delete_suspended(&self, game: &str) -> Result<(), StoreError> {
+        self.conn
+            .execute("DELETE FROM suspended WHERE game = ?1", [game])?;
         Ok(())
+    }
+
+    /// Sudah ada replay selesai untuk pertandingan ini (game + waktu mulai)?
+    pub fn has_finished_replay(&self, game: &str, started_at: i64) -> Result<bool, StoreError> {
+        Ok(self.conn.query_row(
+            "SELECT EXISTS (SELECT 1 FROM replays
+             WHERE game = ?1 AND started_at = ?2 AND finished = 1)",
+            params![game, started_at],
+            |r| r.get(0),
+        )?)
     }
 
     /// Mengambil dan sekaligus menghapus pertandingan tertunda sebuah game.
@@ -445,6 +471,110 @@ mod tests {
         let a = s.daily_allowance("2026-09-30", 6).unwrap();
         assert_eq!((a.before, a.after, a.granted), (400, 2_000, true));
         assert_eq!(s.chips(7).unwrap(), 2_000);
+    }
+
+    fn bj_suspended(moves: usize) -> Suspended {
+        Suspended {
+            game: "blackjack".into(),
+            started_at: 9,
+            suspended_at: moves as i64,
+            data: serde_json::json!({ "moves": moves }),
+        }
+    }
+
+    #[test]
+    fn casino_checkpoint_books_stakes_when_placed_together_with_the_match() {
+        let mut s = Store::open_in_memory().unwrap();
+        let cp = |stake, net, rounds, wagered, sus| CasinoCheckpoint {
+            game: "blackjack",
+            stake,
+            net,
+            rounds,
+            wagered,
+            suspended: sus,
+            now: 10,
+        };
+        // Taruhan 100 dipasang: saldo langsung turun, pertandingan tersimpan.
+        let one = bj_suspended(1);
+        assert_eq!(s.casino_checkpoint(&cp(100, 0, 0, 0, &one)).unwrap(), 9_900);
+        assert_eq!(s.staked(11).unwrap(), 100);
+        assert_eq!(s.find_suspended("blackjack").unwrap().as_ref(), Some(&one));
+        assert_eq!(s.casino_game("blackjack").unwrap(), None);
+        // Double: 100 lagi.
+        let two = bj_suspended(2);
+        assert_eq!(s.casino_checkpoint(&cp(100, 0, 0, 0, &two)).unwrap(), 9_800);
+        // Ronde selesai kalah: taruhan tidak kembali, ringkasan tercatat.
+        let three = bj_suspended(3);
+        assert_eq!(
+            s.casino_checkpoint(&cp(-200, -200, 1, 200, &three))
+                .unwrap(),
+            9_800
+        );
+        assert_eq!(s.staked(12).unwrap(), 0);
+        let c = s.casino_game("blackjack").unwrap().unwrap();
+        assert_eq!((c.rounds, c.wagered, c.net), (1, 200, -200));
+        // Ronde berikutnya menang +100: taruhan kembali plus hasilnya.
+        s.casino_checkpoint(&cp(100, 0, 0, 0, &three)).unwrap();
+        assert_eq!(s.chips(13).unwrap(), 9_700);
+        assert_eq!(
+            s.casino_checkpoint(&cp(-100, 100, 1, 100, &three)).unwrap(),
+            9_900
+        );
+    }
+
+    #[test]
+    fn allowance_counts_chips_on_the_table() {
+        let mut s = Store::open_in_memory().unwrap();
+        s.record_casino("blackjack", 1, 9_000, -9_000, 1).unwrap();
+        let sus = bj_suspended(1);
+        // Saldo 1.000, 500 sedang dipertaruhkan: tersedia 500, tetap bukan "miskin".
+        s.casino_checkpoint(&CasinoCheckpoint {
+            game: "blackjack",
+            stake: 500,
+            net: 0,
+            rounds: 0,
+            wagered: 0,
+            suspended: &sus,
+            now: 2,
+        })
+        .unwrap();
+        let a = s.daily_allowance("2026-09-30", 3).unwrap();
+        assert_eq!((a.before, a.granted), (1_000, false));
+        // Taruhan itu kalah: saldo 500, tunjangan mengisi sampai 2.000.
+        s.casino_checkpoint(&CasinoCheckpoint {
+            game: "blackjack",
+            stake: -500,
+            net: -500,
+            rounds: 1,
+            wagered: 500,
+            suspended: &sus,
+            now: 4,
+        })
+        .unwrap();
+        let a = s.daily_allowance("2026-09-30", 5).unwrap();
+        assert_eq!((a.before, a.after, a.granted), (500, 2_000, true));
+        assert_eq!(s.chips(6).unwrap(), 2_000);
+    }
+
+    #[test]
+    fn allowance_with_a_stake_on_the_table_fills_the_total_to_2000() {
+        let mut s = Store::open_in_memory().unwrap();
+        s.record_casino("blackjack", 1, 9_400, -9_400, 1).unwrap();
+        let sus = bj_suspended(1);
+        s.casino_checkpoint(&CasinoCheckpoint {
+            game: "blackjack",
+            stake: 100,
+            net: 0,
+            rounds: 0,
+            wagered: 0,
+            suspended: &sus,
+            now: 2,
+        })
+        .unwrap();
+        // Total 600 (500 tersedia + 100 di meja) → total 2.000.
+        let a = s.daily_allowance("2026-10-01", 3).unwrap();
+        assert_eq!((a.before, a.after, a.granted), (600, 2_000, true));
+        assert_eq!(s.chips(4).unwrap() + s.staked(4).unwrap(), 2_000);
     }
 
     #[test]

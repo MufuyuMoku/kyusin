@@ -305,6 +305,7 @@
 	"stats.casino.net": "Net",
 	"stats.casino_total": "Total",
 	"profile.chips": "Chips: {n}",
+	"profile.staked": "At stake in an unfinished round: {n} (already taken from the balance).",
 	"greet.allowance": "Oh, and your daily allowance is in: you now have {chips} {chips|chip|chips}. Don't tell anyone.",
 	"bj.dealer": "Dealer",
 	"bj.you": "You",

@@ -193,7 +193,7 @@ function resignFor(g: Game, seat: number) {
 	g.moves.push({ seat, command: 'resign' });
 }
 
-let profile: ProfileState = { name: null, created_at: Date.now(), last_game: null, name_max: 24, chips: 10_000 };
+let profile: ProfileState = { name: null, created_at: Date.now(), last_game: null, name_max: 24, chips: 10_000, staked: 0 };
 
 let paused = false;
 let suspended: Game | null = null;

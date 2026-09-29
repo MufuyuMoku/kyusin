@@ -160,6 +160,8 @@ export interface ProfileState {
 	last_game: string | null;
 	name_max: number;
 	chips: number;
+	/** Chip yang sedang dipertaruhkan di ronde yang belum selesai. */
+	staked: number;
 }
 
 export interface StatsState {

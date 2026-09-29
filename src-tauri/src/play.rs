@@ -117,12 +117,48 @@ pub(crate) struct Running {
 }
 
 impl Running {
-    /// Mencatat ronde casino yang baru selesai ke chip profil.
-    fn settle_chips(&mut self, state: &AppState) {
-        if let Some(ledger) = self.ledger.as_mut() {
-            let view = self.m.session().view_data(self.human);
-            crate::casino::settle(state, &self.game, &view, ledger);
-            self.chips = crate::casino::chips(state);
+    /// Keadaan pertandingan untuk disimpan: replay sejauh ini + kursi + jam.
+    fn record(&self) -> Result<Suspended, String> {
+        let data = SuspendedMatch {
+            replay: self.m.replay(),
+            human: self.human,
+            clock: self.clock.as_ref().map(|c| SavedClock {
+                remaining_ms: c.remaining,
+                increment_ms: c.increment,
+            }),
+            escrow: true,
+        };
+        Ok(Suspended {
+            game: self.game.clone(),
+            started_at: self.started_at,
+            suspended_at: now_ms(),
+            data: serde_json::to_value(&data).map_err(|e| e.to_string())?,
+        })
+    }
+
+    /// Titik simpan setelah setiap perubahan keadaan (D-059): pertandingan
+    /// (seed + langkah) ditulis ke store, dan untuk casino dalam transaksi
+    /// yang sama dengan perubahan saldo. Aplikasi yang dimatikan paksa
+    /// melanjutkan dari sini. Baris ini baru dihapus di [`finish`], setelah
+    /// hasilnya tersimpan.
+    fn checkpoint(&mut self, state: &AppState) {
+        let saved = self.record().and_then(|rec| match self.ledger.as_mut() {
+            Some(ledger) => {
+                let view = self.m.session().view_data(self.human);
+                crate::casino::checkpoint(state, &self.game, &view, ledger, &rec)
+                    .map(|chips| self.chips = Some(chips))
+            }
+            None => {
+                let store = state.store.as_ref().map_err(Clone::clone)?;
+                store
+                    .lock()
+                    .unwrap()
+                    .save_suspended(&rec)
+                    .map_err(|e| e.to_string())
+            }
+        });
+        if let Err(e) = saved {
+            self.save_error = Some(e);
         }
     }
 
@@ -214,6 +250,10 @@ struct SuspendedMatch {
     replay: Replay,
     human: u8,
     clock: Option<SavedClock>,
+    /// Taruhan casino sudah dipotong dari saldo saat dipasang (D-059).
+    /// `false` untuk pertandingan yang ditunda versi sebelumnya.
+    #[serde(default)]
+    escrow: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -307,8 +347,15 @@ fn is_house(state: &AppState, game: &str) -> bool {
         .is_some_and(|c| c.manifest.is_against_house())
 }
 
-fn ledger_for(state: &AppState, game: &str, m: &Match, human: u8) -> Option<crate::casino::Ledger> {
-    is_house(state, game).then(|| crate::casino::Ledger::from_view(&m.session().view_data(human)))
+fn ledger_for(
+    state: &AppState,
+    game: &str,
+    m: &Match,
+    human: u8,
+    escrowed: bool,
+) -> Option<crate::casino::Ledger> {
+    is_house(state, game)
+        .then(|| crate::casino::Ledger::from_view(&m.session().view_data(human), escrowed))
 }
 
 fn save(state: &AppState, replay: &Replay, started_at: i64) -> Result<i64, String> {
@@ -320,7 +367,10 @@ fn save(state: &AppState, replay: &Replay, started_at: i64) -> Result<i64, Strin
         .map_err(|e| e.to_string())
 }
 
-/// Setelah selesai: simpan replay dan jalankan `verify` otomatis.
+/// Setelah selesai: simpan replay, jalankan `verify` otomatis, catat
+/// riwayat/rating, lalu hapus titik simpannya. Pertandingan yang selesai
+/// tepat sebelum aplikasi mati (titik simpan sudah selesai, replay sudah
+/// tersimpan) tidak dicatat dua kali.
 fn finish(state: &AppState, r: &mut Running) {
     if !r.m.session().is_over() || r.replay_id.is_some() || r.verify.is_some() {
         return;
@@ -329,13 +379,26 @@ fn finish(state: &AppState, r: &mut Running) {
     if let Some(c) = state.registry.get(&r.game) {
         r.verify = Some(replay.verify(c));
     }
-    match save(state, &replay, r.started_at) {
-        Ok(id) => r.replay_id = Some(id),
-        Err(e) => r.save_error = Some(e),
+    let Ok(store) = store_of(state) else {
+        return;
+    };
+    let recorded = store
+        .lock()
+        .unwrap()
+        .has_finished_replay(&r.game, r.started_at)
+        .unwrap_or(false);
+    if !recorded {
+        match save(state, &replay, r.started_at) {
+            Ok(id) => r.replay_id = Some(id),
+            Err(e) => r.save_error = Some(e),
+        }
+        // Riwayat + rating lokal (M3). Pertandingan tertunda sampai di sini
+        // hanya setelah benar-benar selesai.
+        r.rating = crate::profile::record(state, &replay, r.replay_id, now_ms());
     }
-    // Riwayat + rating lokal (M3). Pertandingan tertunda sampai di sini
-    // hanya setelah benar-benar selesai.
-    r.rating = crate::profile::record(state, &replay, r.replay_id, now_ms());
+    if r.save_error.is_none() {
+        let _ = store.lock().unwrap().delete_suspended(&r.game);
+    }
 }
 
 fn store_of(state: &AppState) -> Result<&std::sync::Mutex<kyusin_store::Store>, Localized> {
@@ -343,7 +406,10 @@ fn store_of(state: &AppState) -> Result<&std::sync::Mutex<kyusin_store::Store>, 
 }
 
 /// Menunda pertandingan yang belum selesai: jam berhenti, keadaannya
-/// disimpan (satu per game), dan bisa dilanjutkan dari layar game.
+/// disimpan (satu per game), dan bisa dilanjutkan dari layar game. Langkah
+/// dan saldonya sudah tersimpan di titik simpan terakhir; yang diperbarui
+/// di sini sisa jamnya. Pertandingan yang titik simpannya sudah diganti
+/// pertandingan lain tidak menimpanya.
 fn suspend(state: &AppState, mut r: Running) -> Result<(), Localized> {
     if r.m.session().is_over() {
         return Ok(());
@@ -351,25 +417,13 @@ fn suspend(state: &AppState, mut r: Running) -> Result<(), Localized> {
     if let Some(c) = r.clock.as_mut() {
         c.pause();
     }
-    let data = SuspendedMatch {
-        replay: r.m.replay(),
-        human: r.human,
-        clock: r.clock.as_ref().map(|c| SavedClock {
-            remaining_ms: c.remaining,
-            increment_ms: c.increment,
-        }),
-    };
-    let rec = Suspended {
-        game: r.game.clone(),
-        started_at: r.started_at,
-        suspended_at: now_ms(),
-        data: serde_json::to_value(&data).map_err(store_error)?,
-    };
-    store_of(state)?
-        .lock()
-        .unwrap()
-        .save_suspended(&rec)
-        .map_err(store_error)
+    let rec = r.record().map_err(store_error)?;
+    let store = store_of(state)?.lock().unwrap();
+    let current = store.find_suspended(&r.game).map_err(store_error)?;
+    if current.is_some_and(|c| c.started_at != r.started_at) {
+        return Ok(());
+    }
+    store.save_suspended(&rec).map_err(store_error)
 }
 
 /// Keluar dari pertandingan: yang belum selesai ditunda, bukan dibuang.
@@ -408,13 +462,26 @@ fn bot_players(
     Ok(players)
 }
 
-/// Membangun ulang pertandingan tertunda sebuah game (dan menghapusnya
-/// dari daftar tunda). Jam berjalan lagi dari sisa waktu saat ditunda.
+/// Membangun ulang pertandingan tertunda sebuah game. Titik simpannya tetap
+/// ada sampai pertandingan selesai, jadi aplikasi yang mati lagi setelah
+/// dilanjutkan tetap bisa melanjutkannya. Pertandingan game yang sama yang
+/// masih di memori adalah pertandingan yang sama: ditunda dulu (sisa jam).
+/// Jam berjalan lagi dari sisa waktu saat ditunda.
 fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
+    let same = {
+        let mut play = state.play.lock().unwrap();
+        match play.as_ref() {
+            Some(r) if r.game == game => play.take(),
+            _ => None,
+        }
+    };
+    if let Some(r) = same {
+        leave(state, r);
+    }
     let rec = store_of(state)?
         .lock()
         .unwrap()
-        .take_suspended(game)
+        .find_suspended(game)
         .map_err(store_error)?
         .ok_or_else(|| core().localized("error.no_suspended", &[]))?;
     let data: SuspendedMatch = serde_json::from_value(rec.data).map_err(store_error)?;
@@ -434,8 +501,8 @@ fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
     )
     .map_err(|e| e.message())?;
     let pending = m.session().pending_players().first().copied();
-    let ledger = ledger_for(state, game, &m, data.human);
-    Ok(Running {
+    let ledger = ledger_for(state, game, &m, data.human, data.escrow);
+    let mut running = Running {
         chips: ledger.and_then(|_| crate::casino::chips(state)),
         ledger,
         game: game.to_string(),
@@ -450,7 +517,14 @@ fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
             .map(|c| HostClock::new(c.remaining_ms, c.increment_ms, pending)),
         paused: false,
         rating: None,
-    })
+    };
+    if running.ledger.is_some() && !data.escrow {
+        // Tertunda oleh versi sebelum D-059: potong taruhan yang berjalan.
+        running.checkpoint(state);
+    }
+    // Selesai tepat sebelum aplikasi mati: catat hasilnya sekarang.
+    finish(state, &mut running);
+    Ok(running)
 }
 
 /// Game casino: ronde berjalan diselesaikan secara netral (insurance
@@ -511,7 +585,31 @@ pub(crate) fn match_start(
     clock: Option<ClockSpec>,
     state: State<'_, AppState>,
 ) -> Result<MatchDto, Localized> {
+    start(&state, id, level, seat, player_seed, clock)
+}
+
+fn start(
+    state: &AppState,
+    id: String,
+    level: u8,
+    seat: u8,
+    player_seed: Option<String>,
+    clock: Option<ClockSpec>,
+) -> Result<MatchDto, Localized> {
     let cartridge = state.registry.get(&id).ok_or_else(|| unknown_game(&id))?;
+    // Pertandingan yang sedang berjalan ditunda dulu; pertandingan tertunda
+    // game ini harus dilanjutkan atau diselesaikan (`suspended_forfeit`)
+    // sebelum yang baru dimulai, supaya titik simpannya tidak tertimpa.
+    suspend_running(state);
+    if store_of(state)?
+        .lock()
+        .unwrap()
+        .find_suspended(&id)
+        .map_err(store_error)?
+        .is_some()
+    {
+        return Err(core().localized("error.suspended_exists", &[]));
+    }
     let fair = fair_record(player_seed.as_deref())?;
     let round = fair
         .round_seed_bytes()
@@ -560,13 +658,14 @@ pub(crate) fn match_start(
         chips: None,
     };
     let mut running = running;
-    running.ledger = ledger_for(&state, &running.game, &running.m, running.human);
+    running.ledger = ledger_for(state, &running.game, &running.m, running.human, true);
     if running.ledger.is_some() {
-        running.chips = crate::casino::chips(&state);
+        running.chips = crate::casino::chips(state);
     }
+    running.checkpoint(state);
     let dto = dto(&running);
     if let Some(old) = state.play.lock().unwrap().replace(running) {
-        leave(&state, old);
+        leave(state, old);
     }
     Ok(dto)
 }
@@ -578,20 +677,28 @@ pub(crate) fn match_act(
 ) -> Result<MatchDto, Localized> {
     let mut guard = state.play.lock().unwrap();
     let r = guard.as_mut().ok_or_else(no_match)?;
+    act(&state, r, &command)?;
+    Ok(dto(r))
+}
+
+/// Satu aksi pemain lokal: cek saldo (casino), jalankan, titik simpan, lalu
+/// selesaikan bila pertandingan berakhir. Tampilan baru baru dikirim ke UI
+/// setelah titik simpannya tertulis.
+fn act(state: &AppState, r: &mut Running, command: &str) -> Result<(), Localized> {
     r.unpause();
     if r.ledger.is_some() {
         let view = r.m.session().view_data(r.human);
-        crate::casino::check(&state, &view, &command)?;
+        crate::casino::check(state, &view, command)?;
     }
     // Waktu habis sebelum langkah ini: yang berlaku adalah timeout.
     if !r.flag_if_expired() {
-        r.m.act(r.human, &command).map_err(|e| e.message())?;
+        r.m.act(r.human, command).map_err(|e| e.message())?;
         let human = r.human;
         r.moved(human);
     }
-    r.settle_chips(&state);
-    finish(&state, r);
-    Ok(dto(r))
+    r.checkpoint(state);
+    finish(state, r);
+    Ok(())
 }
 
 /// Dipanggil UI saat jam pemain di layar mencapai nol; host memeriksa
@@ -600,7 +707,9 @@ pub(crate) fn match_act(
 pub(crate) fn match_flag(state: State<'_, AppState>) -> Result<MatchDto, Localized> {
     let mut guard = state.play.lock().unwrap();
     let r = guard.as_mut().ok_or_else(no_match)?;
-    r.flag_if_expired();
+    if r.flag_if_expired() {
+        r.checkpoint(&state);
+    }
     finish(&state, r);
     Ok(dto(r))
 }
@@ -615,8 +724,8 @@ pub(crate) fn match_step(state: State<'_, AppState>) -> Result<MatchDto, Localiz
         && let Some(mv) = r.m.step_auto().map_err(|e| e.message())?
     {
         r.moved(mv.seat);
+        r.checkpoint(&state);
     }
-    r.settle_chips(&state);
     finish(&state, r);
     Ok(dto(r))
 }
@@ -663,7 +772,7 @@ pub(crate) fn match_resign(state: State<'_, AppState>) -> Result<MatchDto, Local
     let r = guard.as_mut().ok_or_else(no_match)?;
     r.unpause();
     resign(r)?;
-    r.settle_chips(&state);
+    r.checkpoint(&state);
     finish(&state, r);
     Ok(dto(r))
 }
@@ -686,7 +795,7 @@ pub(crate) fn match_resume(id: String, state: State<'_, AppState>) -> Result<Mat
 pub(crate) fn suspended_forfeit(id: String, state: State<'_, AppState>) -> Result<(), Localized> {
     let mut r = restore(&state, &id)?;
     resign(&mut r)?;
-    r.settle_chips(&state);
+    r.checkpoint(&state);
     finish(&state, &mut r);
     Ok(())
 }
@@ -1047,8 +1156,16 @@ mod tests {
         let c = back.clock.as_ref().unwrap();
         assert_eq!(c.remaining, left, "sisa jam sama seperti saat ditunda");
         assert_eq!(c.running, Some(0), "jam pemain yang ditunggu berjalan lagi");
-        // Diambil sekali: daftar tunda kosong lagi.
-        assert!(restore(&st, "catur").is_err());
+        // Titik simpannya tetap ada sampai pertandingan selesai.
+        let mut again = restore(&st, "catur").unwrap();
+        assert_eq!(again.m.moves(), moves.as_slice());
+        resign(&mut again).unwrap();
+        again.checkpoint(&st);
+        finish(&st, &mut again);
+        assert!(
+            restore(&st, "catur").is_err(),
+            "selesai: tidak tertunda lagi"
+        );
     }
 
     #[test]
@@ -1146,13 +1263,16 @@ mod tests {
     }
 
     fn house_running(st: &AppState, shoe: &[&str]) -> Running {
+        house_running_with(st, serde_json::json!({ "shoe": shoe, "potong": 1000 }))
+    }
+
+    fn house_running_with(st: &AppState, config: serde_json::Value) -> Running {
         let fair = fair_record(None).unwrap();
-        let config = serde_json::json!({ "shoe": shoe, "potong": 1000 });
         let players: Vec<Box<dyn Player>> = vec![Box::new(Human)];
         let m = Match::new(st.registry.get("blackjack").unwrap(), config, fair, players).unwrap();
-        let ledger = ledger_for(st, "blackjack", &m, 0);
+        let ledger = ledger_for(st, "blackjack", &m, 0, true);
         assert!(ledger.is_some(), "blackjack memakai chip profil");
-        Running {
+        let mut r = Running {
             game: "blackjack".into(),
             m,
             human: 0,
@@ -1165,16 +1285,14 @@ mod tests {
             rating: None,
             ledger,
             chips: None,
-        }
+        };
+        // Sama seperti `match_start`: titik simpan pertama saat mulai.
+        r.checkpoint(st);
+        r
     }
 
     fn house_act(st: &AppState, r: &mut Running, command: &str) -> Result<(), Localized> {
-        let view = r.m.session().view_data(0);
-        crate::casino::check(st, &view, command)?;
-        r.m.act(0, command).map_err(|e| e.message())?;
-        r.settle_chips(st);
-        finish(st, r);
-        Ok(())
+        act(st, r, command)
     }
 
     #[test]
@@ -1185,10 +1303,12 @@ mod tests {
         house_act(&st, &mut r, "bet 100").unwrap();
         assert_eq!(r.chips, Some(10_150));
         house_act(&st, &mut r, "bet 100").unwrap();
+        // Taruhan ronde 2 langsung dipotong dari saldo.
+        assert_eq!(r.chips, Some(10_050));
         // Ditunda di tengah ronde lalu dilanjutkan: ronde 1 tidak dicatat ulang.
         suspend(&st, r).unwrap();
         let mut r = restore(&st, "blackjack").unwrap();
-        assert_eq!(r.chips, Some(10_150));
+        assert_eq!(r.chips, Some(10_050));
         house_act(&st, &mut r, "stand").unwrap();
         assert_eq!(r.chips, Some(10_250));
         let s = store_of(&st).unwrap().lock().unwrap();
@@ -1225,7 +1345,7 @@ mod tests {
         suspend(&st, r).unwrap();
         let mut r = restore(&st, "blackjack").unwrap();
         resign(&mut r).unwrap();
-        r.settle_chips(&st);
+        r.checkpoint(&st);
         finish(&st, &mut r);
         assert!(r.m.session().is_over());
         let moves: Vec<&str> = r.m.moves().iter().map(|m| m.command.as_str()).collect();
@@ -1233,6 +1353,199 @@ mod tests {
         // 16 lawan bandar 16 yang lalu mengambil 9 (bust): menang +100.
         assert_eq!(r.chips, Some(10_100));
         assert!(r.verify.as_ref().unwrap().ok);
+    }
+
+    /// Store di berkas sungguhan: aplikasi "dimatikan paksa" = semua objek
+    /// dibuang tanpa `suspend`/tutup jendela, lalu berkas yang sama dibuka
+    /// oleh `AppState` baru.
+    struct Db(std::path::PathBuf);
+
+    impl Db {
+        fn new(name: &str) -> Db {
+            let path = std::env::temp_dir().join(format!(
+                "kyusin-crash-{name}-{}-{}.sqlite",
+                std::process::id(),
+                now_ms()
+            ));
+            let _ = std::fs::remove_file(&path);
+            Db(path)
+        }
+
+        fn open(&self) -> AppState {
+            AppState {
+                store: Ok(std::sync::Mutex::new(
+                    kyusin_store::Store::open(&self.0).unwrap(),
+                )),
+                ..state()
+            }
+        }
+    }
+
+    impl Drop for Db {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_file(&self.0);
+        }
+    }
+
+    fn booked(st: &AppState) -> (i64, i64) {
+        let s = store_of(st).unwrap().lock().unwrap();
+        (s.chips(1).unwrap(), s.staked(1).unwrap())
+    }
+
+    /// Mematikan paksa: tidak ada `suspend`, `leave`, atau penutupan normal.
+    fn kill(st: AppState, r: Running) {
+        drop(r);
+        drop(st);
+    }
+
+    #[test]
+    fn a_killed_app_keeps_the_casino_bet_and_resumes_the_same_round() {
+        let db = Db::new("bet");
+        let st = db.open();
+        // Pemain T+6 = 16, bandar 9 terbuka + T tertutup = 19.
+        let mut r = house_running(&st, &["Th", "9d", "6s", "Tc", "5h", "5c", "5d", "5s"]);
+        house_act(&st, &mut r, "bet 100").unwrap();
+        // Taruhan tercatat permanen saat dipasang.
+        assert_eq!(booked(&st), (9_900, 100));
+        let before = r.m.session().view_data(0);
+        assert_eq!(before["fase"], "giliran");
+        kill(st, r);
+
+        // Dibuka lagi: saldo tetap terpotong, ronde yang sama menunggu.
+        let st = db.open();
+        assert_eq!(booked(&st), (9_900, 100));
+        let listed = store_of(&st)
+            .unwrap()
+            .lock()
+            .unwrap()
+            .list_suspended()
+            .unwrap();
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].game, "blackjack");
+        let mut r = restore(&st, "blackjack").unwrap();
+        assert_eq!(r.m.session().view_data(0), before, "kartu dan taruhan sama");
+        assert_eq!(r.chips, Some(9_900));
+        let moves: Vec<&str> = r.m.moves().iter().map(|m| m.command.as_str()).collect();
+        assert_eq!(moves, vec!["bet 100"]);
+        // Ronde dilanjutkan dan kalah: taruhan tidak kembali.
+        house_act(&st, &mut r, "stand").unwrap();
+        let after = r.m.session().view_data(0);
+        assert_eq!(after["bersih"], -100);
+        assert_eq!(booked(&st), (9_900, 0));
+        let c = store_of(&st)
+            .unwrap()
+            .lock()
+            .unwrap()
+            .casino_game("blackjack")
+            .unwrap()
+            .unwrap();
+        assert_eq!((c.rounds, c.wagered, c.net), (1, 100, -100));
+    }
+
+    #[test]
+    fn a_killed_app_cannot_escape_a_split_round_even_by_abandoning_it() {
+        let db = Db::new("split");
+        let st = db.open();
+        // 8-8 lawan 6 terbuka (+T tertutup = 16); tangan split mendapat 3 dan 2,
+        // bandar mengambil 4 → 20.
+        let shoe = ["8h", "6d", "8s", "Tc", "3h", "2c", "4s", "9h", "9c", "9d"];
+        let mut r = house_running(&st, &shoe);
+        house_act(&st, &mut r, "bet 100").unwrap();
+        house_act(&st, &mut r, "split").unwrap();
+        // Taruhan tangan kedua juga langsung dipotong.
+        assert_eq!(booked(&st), (9_800, 200));
+        let before = r.m.session().view_data(0);
+        kill(st, r);
+
+        // Mati lagi tepat setelah dilanjutkan, tanpa aksi apa pun.
+        let st = db.open();
+        let r = restore(&st, "blackjack").unwrap();
+        assert_eq!(r.m.session().view_data(0), before);
+        kill(st, r);
+
+        // Pemain memilih membuang pertandingan tertunda: rondenya dimainkan
+        // sampai selesai (stand), bukan dibatalkan dan dikembalikan.
+        let st = db.open();
+        assert_eq!(booked(&st), (9_800, 200));
+        let mut r = restore(&st, "blackjack").unwrap();
+        assert_eq!(r.m.session().view_data(0), before);
+        resign(&mut r).unwrap();
+        r.checkpoint(&st);
+        finish(&st, &mut r);
+        let moves: Vec<&str> = r.m.moves().iter().map(|m| m.command.as_str()).collect();
+        assert_eq!(moves, vec!["bet 100", "split", "stand", "stand", "leave"]);
+        let end = r.m.session().view_data(0);
+        assert_eq!(end["bersih"], -200, "{end}");
+        assert_eq!(booked(&st), (9_800, 0));
+        assert!(r.verify.as_ref().unwrap().ok);
+        // Selesai: tidak tertunda lagi, dan tidak bisa dilanjutkan lagi.
+        assert!(
+            store_of(&st)
+                .unwrap()
+                .lock()
+                .unwrap()
+                .list_suspended()
+                .unwrap()
+                .is_empty()
+        );
+        assert!(restore(&st, "blackjack").is_err());
+    }
+
+    #[test]
+    fn balance_always_equals_start_plus_net_minus_stake() {
+        let db = Db::new("ledger");
+        let mut st = db.open();
+        let mut r = house_running_with(&st, serde_json::Value::Null);
+        // Shoe acak (seed ronde); mainkan beberapa ronde dengan aksi pertama
+        // yang sah, dan matikan aplikasi di antara aksi.
+        for i in 0..60 {
+            let view = r.m.session().view_data(0);
+            if r.m.session().is_over() {
+                break;
+            }
+            let net = view["bersih"].as_i64().unwrap();
+            let stake = view["taruhan_meja"].as_i64().unwrap();
+            assert_eq!(booked(&st), (10_000 + net - stake, stake), "langkah {i}");
+            let legal: Vec<String> =
+                r.m.session()
+                    .legal_actions(0)
+                    .iter()
+                    .map(|a| a.usage())
+                    .collect();
+            let pick = ["double", "split", "insure", "hit", "stand"]
+                .into_iter()
+                .find(|c| legal.iter().any(|l| l == c))
+                .map(str::to_string)
+                .unwrap_or_else(|| "bet 50".into());
+            house_act(&st, &mut r, &pick).unwrap();
+            if i % 7 == 3 {
+                kill(st, r);
+                st = db.open();
+                r = restore(&st, "blackjack").unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn a_killed_app_resumes_a_rated_game_instead_of_dropping_it() {
+        let db = Db::new("catur");
+        let st = db.open();
+        let mut r = running(&st, "catur", false);
+        r.checkpoint(&st);
+        act(&st, &mut r, "e4").unwrap();
+        let mv = r.m.step_auto().unwrap().unwrap();
+        r.moved(mv.seat);
+        r.checkpoint(&st);
+        let moves = r.m.moves().to_vec();
+        kill(st, r);
+        let st = db.open();
+        let r = restore(&st, "catur").unwrap();
+        assert_eq!(r.m.moves(), moves.as_slice());
+        // Game baru untuk game yang sama ditolak selama yang lama tertunda.
+        kill(st, r);
+        let st = db.open();
+        let started = start(&st, "catur".into(), 1, 0, None, None);
+        assert!(started.is_err());
     }
 
     #[test]

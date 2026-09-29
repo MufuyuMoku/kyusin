@@ -74,6 +74,7 @@
 			<p class="dim" id="profile-hint">{t('profile.hint', { n: profile.name_max })}</p>
 			{#if saved}<p role="status">{t('profile.saved')}</p>{/if}
 			<p>{t('profile.chips', { n: profile.chips })}</p>
+			{#if profile.staked > 0}<p class="dim">{t('profile.staked', { n: profile.staked })}</p>{/if}
 			<p class="dim">{t('profile.created', { date: date(profile.created_at) })}</p>
 			<p class="dim">{t('profile.note')}</p>
 		{/if}

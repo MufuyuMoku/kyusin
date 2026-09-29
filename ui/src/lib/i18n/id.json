@@ -305,6 +305,7 @@
 	"stats.casino.net": "Bersih",
 	"stats.casino_total": "Total",
 	"profile.chips": "Chip: {n}",
+	"profile.staked": "Sedang dipertaruhkan di ronde yang belum selesai: {n} (sudah dipotong dari saldo).",
 	"greet.allowance": "Oh, dan tunjangan harian sudah masuk: saldomu sekarang {chips} chip. Jangan bilang siapa-siapa.",
 	"bj.dealer": "Bandar",
 	"bj.you": "Kamu",

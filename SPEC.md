@@ -248,7 +248,8 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M2b | Level catur 5–6 yang lebih kuat (target ≥2000 pada skala kalibrasi yang sama): iterative deepening, tabel transposisi, evaluasi lebih baik, waktu berpikir lebih lama; diukur ulang dengan `calibrate.yml`. Tangga level Reversi dirapikan sesuai aturan tangga level merata (§8). Dikerjakan setelah M3 |
 | M3 | Profil, Glicko-2, riwayat, halaman statistik |
 | M4 | Mesin kartu bersama + ekonomi chip + **Blackjack** |
-| M5 | Casino meja kartu (§6.3) |
+| M5a | Casino meja kartu melawan bandar (§6.3): Baccarat, Three Card Poker, Caribbean Stud, Casino Hold'em, Pai Gow Poker, Let It Ride, Casino War, Red Dog, Dragon Tiger, Andar Bahar |
+| M5b | Casino meja kartu antar-pemain (§6.3): Texas Hold'em, Omaha, Capsa Susun, Domino QiuQiu, Teen Patti |
 | M6 | Casino dadu/roda/ubin + lotere/instan (§6.4, §6.5) |
 | M7 | Kontrak `TickGame` + arcade dopamin (§6.6) |
 | M8 | Papan & kartu non-casino sisanya (§6.1, §6.2). **→ Poin akhir 1** |
@@ -304,3 +305,4 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 - **Revisi 8 (28 Sep 2026):** hasil uji klien atas M1 — papan sebagai grid CSS/SVG, bidak dan simbol sebagai sprite piksel SVG (§4); pengujian jendela asli dengan `tauri-driver` (§11); milestone M1b (§9).
 - **Revisi 9 (28 Sep 2026):** hasil uji klien atas M2 — menu jeda dan penundaan pertandingan, aturan kursor keyboard mengikuti interaksi terakhir (§4); milestone M2b untuk level catur yang lebih kuat (§9).
 - **Revisi 10 (29 Sep 2026):** hasil uji klien atas perbaikan M2 dan M3 — aturan tangga level merata: selisih rating dua level bot berurutan paling besar 400, diperiksa CI (§8); M2b diperluas dengan perapian tangga level Reversi (§9).
+- **Revisi 11 (29 Sep 2026):** hasil uji klien atas M4 — M5 dipecah menjadi M5a (casino meja kartu melawan bandar) dan M5b (casino meja kartu antar-pemain) (§9).
