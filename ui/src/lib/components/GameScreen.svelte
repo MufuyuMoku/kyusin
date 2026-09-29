@@ -31,7 +31,7 @@
 	let clockIndex = $state(0);
 
 	function levelLabel(l: number): string {
-		const name = t(`level.${Math.min(l, 4)}` as Key, { n: l });
+		const name = t(`level.${Math.min(l, 6)}` as Key, { n: l });
 		const elo = game?.bot_ratings?.[l - 1];
 		return elo ? `${name} · ${t('play.rating', { elo })}` : name;
 	}

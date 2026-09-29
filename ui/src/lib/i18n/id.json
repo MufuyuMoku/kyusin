@@ -203,6 +203,8 @@
 	"reversi.count.white": "Putih {n}",
 	"crumb.pgn": "impor pgn",
 	"level.4": "Bot level {n} · ahli",
+	"level.5": "Bot level {n} · master",
+	"level.6": "Bot level {n} · grandmaster",
 	"play.rating": "rating lokal ≈{elo}",
 	"play.clock": "Jam",
 	"clock.none": "Tanpa jam",

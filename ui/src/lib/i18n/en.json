@@ -203,6 +203,8 @@
 	"reversi.count.white": "White {n}",
 	"crumb.pgn": "import pgn",
 	"level.4": "Bot level {n} · expert",
+	"level.5": "Bot level {n} · master",
+	"level.6": "Bot level {n} · grandmaster",
 	"play.rating": "local rating ≈{elo}",
 	"play.clock": "Clock",
 	"clock.none": "No clock",
