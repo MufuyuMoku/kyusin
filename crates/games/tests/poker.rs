@@ -1,13 +1,13 @@
 //! Tes peringkat tangan poker bersama (M5a), ditulis sebelum evaluatornya.
 //!
 //! Lima kartu (Caribbean Stud, Let It Ride, Casino Hold'em terbaik 5 dari
-//! 7, Pai Gow Poker): straight flush > four of a kind > full house > flush
-//! > straight > three of a kind > two pair > one pair > high card; as
-//! tinggi, dan A-2-3-4-5 (wheel) adalah straight terendah (Pai Gow punya
-//! aturan wheel sendiri di modulnya). Royal flush = straight flush as
-//! tinggi. Tiga kartu (Three Card Poker): straight flush > three of a kind
-//! > straight > flush > pair > high card; A-2-3 straight terendah, Q-K-A
-//! tertinggi.
+//! 7, Pai Gow Poker), dari yang tertinggi: straight flush, four of a kind,
+//! full house, flush, straight, three of a kind, two pair, one pair, high
+//! card. As tinggi, dan A-2-3-4-5 (wheel) adalah straight terendah (Pai
+//! Gow punya aturan wheel sendiri di modulnya). Royal flush = straight
+//! flush as tinggi. Tiga kartu (Three Card Poker), dari yang tertinggi:
+//! straight flush, three of a kind, straight, flush, pair, high card; A-2-3
+//! straight terendah, Q-K-A tertinggi.
 
 use kyusin_games::cards::Card;
 use kyusin_games::poker::{Category, Category3, best5, eval3, eval5};
