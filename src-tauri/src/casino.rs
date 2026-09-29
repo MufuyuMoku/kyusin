@@ -67,13 +67,20 @@ fn stake(view: &Value) -> i64 {
     view["taruhan_meja"].as_i64().unwrap_or(0)
 }
 
-/// Biaya chip sebuah perintah (0 bila tidak memakai chip).
+/// Biaya chip sebuah perintah (0 bila tidak memakai chip): `biaya` di view
+/// untuk aksi tetap (`double`, `raise`, …), atau angka terakhir perintah
+/// (`bet 250`, `bet player 100`) dikali `pengali[kata kerja]` (bawaan 1).
 pub(crate) fn cost(view: &Value, command: &str) -> i64 {
-    let command = command.trim();
-    if let Some(n) = command.strip_prefix("bet ") {
-        return n.trim().parse().unwrap_or(0);
+    let command = command.split_whitespace().collect::<Vec<_>>().join(" ");
+    if let Some(c) = view["biaya"][command.as_str()].as_i64() {
+        return c;
     }
-    view["biaya"][command].as_i64().unwrap_or(0)
+    let mut parts = command.split(' ');
+    let verb = parts.next().unwrap_or("");
+    match parts.next_back().and_then(|t| t.parse::<i64>().ok()) {
+        Some(n) => n * view["pengali"][verb].as_i64().unwrap_or(1),
+        None => 0,
+    }
 }
 
 /// Menolak aksi yang biayanya melebihi saldo yang bisa dipakai (taruhan
@@ -112,8 +119,11 @@ pub(crate) fn checkpoint(
     let net = view["bersih"].as_i64().unwrap_or(0);
     let now_stake = stake(view);
     let finished = rounds - ledger.rounds;
-    // Yang dipertaruhkan di ronde yang baru selesai (tangan + insurance).
-    let wagered = if finished > 0 {
+    // Yang dipertaruhkan di ronde yang baru selesai: `dipertaruhkan`, atau
+    // untuk Blackjack tangan + insurance.
+    let wagered = if finished > 0 && view["dipertaruhkan"].is_i64() {
+        view["dipertaruhkan"].as_i64().unwrap_or(0)
+    } else if finished > 0 {
         view["tangan"]
             .as_array()
             .map(|hands| {
@@ -208,6 +218,12 @@ mod tests {
         assert_eq!(cost(&v, "insure"), 50);
         assert_eq!(cost(&v, "hit"), 0);
         assert_eq!(cost(&v, "split"), 0);
+        let spots = json!({ "biaya": { "raise": 200 }, "pengali": { "bet": 3 } });
+        assert_eq!(cost(&spots, "bet 50"), 150);
+        assert_eq!(cost(&spots, "raise"), 200);
+        let multi = json!({});
+        assert_eq!(cost(&multi, "bet  player  100"), 100);
+        assert_eq!(cost(&multi, "deal"), 0);
     }
 
     #[test]

@@ -10,6 +10,7 @@ pub mod blackjack;
 pub mod cards;
 pub mod catur;
 pub mod fixture;
+pub mod meja;
 pub mod poker;
 pub mod reversi;
 
