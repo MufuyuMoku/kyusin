@@ -1,0 +1,106 @@
+game = "caribbean-stud"
+judul = { id = "Caribbean Stud: dasar", en = "Caribbean Stud: basics" }
+
+# Dek tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+kartu = [
+  # Kamu: 8 8 K 5 2 (pair). Bandar: 9 terbuka, lalu A K 6 3 (A-K, memenuhi).
+  "8h", "8c", "Kd", "5s", "2h",
+  "9d", "Ac", "Ks", "6h", "3c",
+  # Cadangan.
+  "4c", "7c", "Tc", "Jc", "Qc",
+]
+
+[man.aturan]
+id = """
+Poker lima kartu melawan bandar. Kamu dan bandar masing-masing mendapat lima
+kartu; satu kartu bandar terbuka. Tangan dinilai seperti poker biasa (royal
+flush tertinggi, kartu tinggi terendah).
+
+Aturan meja ini: satu dek dikocok setiap ronde. Ante 10–2.000 chip
+(kelipatan 10). Tanpa jackpot progresif.
+- Setelah melihat kartumu, pilih raise (taruhan dua kali ante) atau fold
+  (ante kalah).
+- Bandar memenuhi syarat dengan paling sedikit as dan king (A-K), atau pair
+  ke atas. Bila tidak, ante dibayar 1:1 dan raise kembali.
+- Bila memenuhi, tangan lebih tinggi menang. Kamu menang: ante 1:1 dan raise
+  menurut tabel: pair atau kurang 1:1, two pair 2:1, three of a kind 3:1,
+  straight 4:1, flush 5:1, full house 7:1, four of a kind 20:1, straight
+  flush 50:1, royal flush 100:1. Kamu kalah: ante dan raise kalah. Sama:
+  seri.
+
+Strategi yang dipakai untuk RTP (strategi sederhana Wizard of Odds): raise
+dengan pair atau lebih; fold di bawah A-K; dengan A-K raise bila (1) kartu
+terbuka bandar 2–Q dan sama dengan salah satu kartumu, (2) kartu terbuka
+bandar as atau king dan kamu punya Q atau J, atau (3) kartu terbuka bandar
+tidak sama dengan kartumu dan kartu tertinggi keempatmu lebih tinggi
+darinya.
+
+RTP: 94,78% per ante dengan strategi itu (simulasi sangat besar di GitHub
+Actions), diverifikasi dengan simulasi terpisah.
+
+Provably fair per ronde: komitmen seed diumumkan sebelum kartu dibagi, dan
+seed dibuka setelah ronde selesai. Setiap ronde adalah pertandingan
+tersendiri dengan komitmen baru.
+"""
+en = """
+Five-card poker against the dealer. You and the dealer get five cards each;
+one dealer card is face up. Hands rank as in ordinary poker (royal flush
+highest, high card lowest).
+
+This table: one deck, shuffled every round. Ante 10–2,000 chips (multiples
+of 10). No progressive jackpot.
+- After seeing your cards, choose raise (a bet of twice the ante) or fold
+  (the ante loses).
+- The dealer qualifies with at least ace and king (A-K), or a pair or
+  better. If not, the ante pays 1:1 and the raise is returned.
+- If so, the higher hand wins. You win: the ante pays 1:1 and the raise by
+  the table: pair or less 1:1, two pair 2:1, three of a kind 3:1, straight
+  4:1, flush 5:1, full house 7:1, four of a kind 20:1, straight flush 50:1,
+  royal flush 100:1. You lose: ante and raise lose. Equal: push.
+
+Strategy used for the RTP (the Wizard of Odds simple strategy): raise with a
+pair or better; fold below A-K; with A-K raise if (1) the dealer's up card
+is 2–Q and matches one of your cards, (2) the dealer's up card is an ace or
+king and you hold a queen or jack, or (3) the dealer's up card matches none
+of yours and your fourth-highest card beats it.
+
+RTP: 94.78% per ante with that strategy (a very large simulation on GitHub
+Actions), verified by a separate simulation.
+
+Provably fair per round: the seed commitment is announced before the deal,
+and the seed is revealed after the round. Every round is its own match with
+a new commitment.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar ante dengan tombol chip, lalu [ BAGI ]. Setelah melihat kartumu:
+[ RAISE ] atau [ FOLD ]. Keyboard: panah memindahkan fokus, Enter atau
+Spasi memilih.
+"""
+en = """
+Choose your ante with the chip buttons, then [ DEAL ]. After seeing your
+cards: [ RAISE ] or [ FOLD ]. Keyboard: the arrow keys move the focus,
+Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Lima kartu untukmu, lima untuk bandar (satu terbuka). Pasang ante 50."
+teks.en = "Five cards for you, five for the dealer (one face up). Put 50 on the ante."
+aksi = "bet 50"
+sorot = ["aksi:bet 50"]
+petunjuk.id = "Pasang 50 lalu bagi."
+petunjuk.en = "Bet 50, then deal."
+
+[[langkah]]
+teks.id = "Kamu punya pair 8. Dengan pair atau lebih, selalu raise: taruhan dua kali ante (100)."
+teks.en = "You have a pair of 8s. With a pair or better, always raise: a bet of twice the ante (100)."
+aksi = "raise"
+sorot = ["aksi:raise"]
+petunjuk.id = "Pilih RAISE."
+petunjuk.en = "Choose RAISE."
+
+[[langkah]]
+teks.id = "Bandar A-K-9-6-3 memenuhi syarat (A-K), tapi pair 8 lebih tinggi: ante 1:1 (+50) dan raise dibayar 1:1 untuk pair (+100). Seed ronde dibuka dan verify memeriksanya. Tutorial selesai."
+teks.en = "The dealer's A-K-9-6-3 qualifies (A-K), but the pair of 8s is higher: the ante pays 1:1 (+50) and the raise pays 1:1 for a pair (+100). The round seed is revealed and verify checks it. Tutorial finished."

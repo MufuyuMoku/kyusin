@@ -1,0 +1,31 @@
+id = "caribbean-stud"
+nama = { id = "Caribbean Stud Poker", en = "Caribbean Stud Poker" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP ante (per ante) dengan strategi sederhana Wizard of Odds, dari
+# simulasi sangat besar di workflow rtp.yml. Tabel raise baku AS
+# 1-2-3-4-5-7-20-50-100, tanpa jackpot progresif. Lihat D-060.
+rtp = 94.78
+tutorial = "tutorials/caribbean-stud.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang ante dan bagi lima kartu (10–2.000, kelipatan 10)", en = "Place an ante and deal five cards (10–2,000, multiples of 10)" }
+
+[[perintah]]
+pola = "raise"
+ringkas = { id = "Lanjut dengan raise sebesar dua kali ante", en = "Continue with a raise of twice the ante" }
+
+[[perintah]]
+pola = "fold"
+ringkas = { id = "Menyerah; ante kalah", en = "Fold; the ante loses" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum kartu dibagi", en = "Stop before the deal" }

@@ -1,0 +1,26 @@
+# Nama tangan poker bersama untuk meja casino (to_text), dua bahasa.
+[id]
+"high_card" = "kartu tinggi"
+"pair" = "pair"
+"two_pair" = "two pair"
+"trips" = "three of a kind"
+"straight" = "straight"
+"flush" = "flush"
+"full_house" = "full house"
+"quads" = "four of a kind"
+"straight_flush" = "straight flush"
+"royal_flush" = "royal flush"
+"five_aces" = "lima as"
+
+[en]
+"high_card" = "high card"
+"pair" = "pair"
+"two_pair" = "two pair"
+"trips" = "three of a kind"
+"straight" = "straight"
+"flush" = "flush"
+"full_house" = "full house"
+"quads" = "four of a kind"
+"straight_flush" = "straight flush"
+"royal_flush" = "royal flush"
+"five_aces" = "five aces"

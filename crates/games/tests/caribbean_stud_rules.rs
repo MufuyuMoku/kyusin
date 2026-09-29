@@ -93,16 +93,16 @@ fn raise_pays_by_the_player_hand() {
     // Bandar pair 2 (memenuhi); pemain menang dengan berbagai tangan.
     let dealer = "2c 2d 7s 8h 9c";
     let cases = [
-        ("Ah Kd Qc Jh 3s", -1),          // kartu tinggi kalah dari pair
-        ("3h 3d Qh Jd 5s", 1),           // pair
-        ("3h 3d Qh Qd 5s", 2),           // two pair
-        ("3h 3d 3s Qd 5s", 3),           // three of a kind
-        ("Th Jd Qh Kd As", 4),           // straight
-        ("3h 5h Qh Th Ah", 5),           // flush
-        ("3h 3d 3s Qd Qs", 7),           // full house
-        ("Ts Td Th Tc 5s", 20),          // four of a kind
-        ("8s 9s Ts Js Qs", 50),          // straight flush
-        ("Th Jh Qh Kh Ah", 100),         // royal flush
+        ("Ah Kd Qc Jh 3s", -1),  // kartu tinggi kalah dari pair
+        ("3h 3d Qh Jd 5s", 1),   // pair
+        ("3h 3d Qh Qd 5s", 2),   // two pair
+        ("3h 3d 3s Qd 5s", 3),   // three of a kind
+        ("Th Jd Qh Kd As", 4),   // straight
+        ("3h 5h Qh Th Ah", 5),   // flush
+        ("3h 3d 3s Qd Qs", 7),   // full house
+        ("Ts Td Th Tc 5s", 20),  // four of a kind
+        ("8s 9s Ts Js Qs", 50),  // straight flush
+        ("Th Jh Qh Kh Ah", 100), // royal flush
     ];
     for (player, k) in cases {
         let v = raised(player, dealer);

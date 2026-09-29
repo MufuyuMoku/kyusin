@@ -321,3 +321,11 @@ pub struct WagerRtp {
     pub percent: f64,
     pub manifest: bool,
 }
+
+/// Nama tangan poker (`pair`, `royal_flush`, …) dalam bahasa `lang`.
+pub fn hand_name(lang: kyusin_core::i18n::Lang, key: &str) -> String {
+    static CATALOG: std::sync::OnceLock<Catalog> = std::sync::OnceLock::new();
+    CATALOG
+        .get_or_init(|| Catalog::from_toml(include_str!("meja_i18n.toml")).expect("meja_i18n.toml"))
+        .text(lang, key, &[])
+}

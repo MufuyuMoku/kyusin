@@ -1,0 +1,16 @@
+# Teks tampilan Caribbean Stud (to_text, hasil) dalam dua bahasa.
+[id]
+"cards" = "Kamu: {player} · Bandar: {dealer}"
+"place_bet" = "Pasang ante: bet <jumlah> (10–2.000, kelipatan 10), atau leave untuk berhenti."
+"decide" = "raise (taruhan {raise}, dua kali ante) atau fold (ante kalah)."
+"over.ronde_selesai" = "Ronde selesai, bersih {net} chip. Seed ronde ini dibuka."
+"over.berhenti" = "Kamu berhenti sebelum kartu dibagi. Seed ronde ini dibuka."
+"summary" = "Ronde selesai: bersih {net} chip."
+
+[en]
+"cards" = "You: {player} · Dealer: {dealer}"
+"place_bet" = "Place an ante: bet <amount> (10–2,000, multiples of 10), or leave to stop."
+"decide" = "raise (a bet of {raise}, twice the ante) or fold (the ante loses)."
+"over.ronde_selesai" = "Round finished, net {net} chips. This round's seed is revealed."
+"over.berhenti" = "You stopped before the deal. This round's seed is revealed."
+"summary" = "Round finished. Net: {net} chips."
