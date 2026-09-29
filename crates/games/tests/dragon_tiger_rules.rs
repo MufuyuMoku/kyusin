@@ -112,18 +112,30 @@ fn tie_pays_eight_to_one_and_costs_half_of_dragon_and_tiger() {
 fn bets_are_built_up_and_limited_per_spot() {
     let mut g = dt(&["9h", "8c", "2d", "3s"], 100);
     assert!(legal(&g).contains(&"leave".to_string()));
-    assert!(!legal(&g).contains(&"deal".to_string()), "deal butuh taruhan");
+    assert!(
+        !legal(&g).contains(&"deal".to_string()),
+        "deal butuh taruhan"
+    );
     act(&mut g, "bet dragon 1500");
     act(&mut g, "bet dragon 500");
     // Tempat dragon penuh (2.000): tidak bisa ditambah.
     let err = Session::act(&mut g, 0, "bet dragon 10").unwrap_err();
     assert!(matches!(err, GameError::Illegal(_)), "{err:?}");
-    for bad in ["bet tiger 5", "bet tiger 15", "bet tiger 2010", "bet naga 10", "bet 10"] {
+    for bad in [
+        "bet tiger 5",
+        "bet tiger 15",
+        "bet tiger 2010",
+        "bet naga 10",
+        "bet 10",
+    ] {
         assert!(Session::act(&mut g, 0, bad).is_err(), "{bad}");
     }
     let v = view(&g);
     assert_eq!(v["taruhan"]["dragon"], 2000);
-    assert_eq!(v["taruhan_meja"], 2000, "taruhan yang dipasang ikut dipertaruhkan");
+    assert_eq!(
+        v["taruhan_meja"], 2000,
+        "taruhan yang dipasang ikut dipertaruhkan"
+    );
     act(&mut g, "clear");
     assert_eq!(view(&g)["taruhan_meja"], 0);
     assert!(!legal(&g).contains(&"clear".to_string()));
@@ -159,7 +171,14 @@ fn shoe_ends_at_the_cut_and_leave_returns_undealt_bets() {
 #[test]
 fn commands_round_trip_and_text_view() {
     let g = dt(&["Kh", "2c"], 100);
-    for cmd in ["bet dragon 100", "bet tiger 20", "bet tie 10", "clear", "deal", "leave"] {
+    for cmd in [
+        "bet dragon 100",
+        "bet tiger 20",
+        "bet tie 10",
+        "clear",
+        "deal",
+        "leave",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }

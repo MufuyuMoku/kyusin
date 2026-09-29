@@ -159,12 +159,7 @@ pub fn eval_best(cards: &[Card]) -> Value {
         return Value::new(Category::Quads, &r);
     }
     if let Some(&t) = trips.first() {
-        let pair = trips
-            .iter()
-            .skip(1)
-            .chain(pairs.iter())
-            .copied()
-            .max();
+        let pair = trips.iter().skip(1).chain(pairs.iter()).copied().max();
         if let Some(p) = pair {
             return Value::new(Category::FullHouse, &[t, p]);
         }

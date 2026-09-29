@@ -11,7 +11,9 @@
 //!   selesai (untuk ringkasan casino);
 //! - `biaya`: biaya chip aksi tetap (`play`, `raise`, `war`, …); perintah
 //!   berangka (`bet <tempat> <jumlah>`) berbiaya angkanya dikali
-//!   `pengali[kata kerja]` (bawaan 1).
+//!   `pengali[kata kerja]` (bawaan 1);
+//! - `netral`: aksi tanpa tambahan taruhan yang dimainkan host bila pemain
+//!   membuang pertandingan di tengah ronde.
 //!
 //! Dua jenis sesi: game ber-shoe (Baccarat, Dragon Tiger, Casino War, Red
 //! Dog) memakai satu shoe per sesi dengan provably fair per shoe seperti
@@ -28,7 +30,7 @@ use serde::{Deserialize, Serialize};
 use crate::cards::{Card, Shoe};
 
 /// Batas taruhan satu tempat taruhan.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct Limits {
     pub min: i64,
     pub max: i64,
@@ -181,6 +183,10 @@ pub struct Umum {
     pub selesai: bool,
     /// `shoe_habis`, `berhenti`, atau `ronde_selesai`.
     pub alasan: Option<String>,
+    /// Aksi yang dimainkan host bila pemain membuang pertandingan di tengah
+    /// ronde: pilihan yang tidak menambah taruhan (seperti `stand` di
+    /// Blackjack, D-058/D-059). `None` di antara ronde (`leave`).
+    pub netral: Option<String>,
     /// Game ber-shoe: kartu terpakai, sisa, dan titik potong.
     pub kartu_terpakai: Option<usize>,
     pub sisa: Option<usize>,
@@ -227,3 +233,91 @@ pub fn result(catalog: &'static Catalog, key: &'static str, net: i64, rounds: u3
 
 /// Hasil tiap tempat taruhan dalam satu ronde.
 pub type Payouts = BTreeMap<String, i64>;
+
+/// Tempat taruhan yang disusun sebelum kartu dibagi (`bet <tempat>
+/// <jumlah>` berkali-kali sampai batas per tempat, `clear` menarik semua).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Spots {
+    names: &'static [&'static str],
+    limits: Limits,
+    bets: BTreeMap<String, i64>,
+}
+
+impl Spots {
+    pub fn new(names: &'static [&'static str], limits: Limits) -> Spots {
+        Spots {
+            names,
+            limits,
+            bets: BTreeMap::new(),
+        }
+    }
+
+    pub fn get(&self, spot: &str) -> i64 {
+        self.bets.get(spot).copied().unwrap_or(0)
+    }
+
+    pub fn total(&self) -> i64 {
+        self.bets.values().sum()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.bets.is_empty()
+    }
+
+    /// Taruhan yang terpasang (hanya tempat berisi).
+    pub fn bets(&self) -> &BTreeMap<String, i64> {
+        &self.bets
+    }
+
+    /// Mengambil semua taruhan untuk dibagi; tempat kosong lagi.
+    pub fn take(&mut self) -> BTreeMap<String, i64> {
+        std::mem::take(&mut self.bets)
+    }
+
+    pub fn clear(&mut self) {
+        self.bets.clear();
+    }
+
+    /// Templat `bet <tempat> <jumlah>` untuk tempat yang belum penuh.
+    pub fn legal(&self) -> Vec<ActionSpec> {
+        self.names
+            .iter()
+            .filter_map(|s| self.limits.spot(s, self.get(s)))
+            .collect()
+    }
+
+    /// Menambah taruhan; `false` bila tempat atau jumlahnya tidak sah.
+    pub fn place(&mut self, spot: &str, n: i64) -> bool {
+        let Some(name) = self.names.iter().find(|s| **s == spot) else {
+            return false;
+        };
+        let now = self.get(name);
+        if n < self.limits.min || n % self.limits.step != 0 || now + n > self.limits.max {
+            return false;
+        }
+        self.bets.insert((*name).to_string(), now + n);
+        true
+    }
+}
+
+/// View meja yang punya bagian [`Umum`] (untuk simulasi RTP dan host).
+pub trait MejaView {
+    fn meja(&self) -> &Umum;
+
+    /// Ronde yang sudah selesai (sama dengan cara host menghitungnya).
+    fn settled(&self) -> u32 {
+        let m = self.meja();
+        match m.fase.as_str() {
+            "taruhan" | "selesai" => m.ronde,
+            _ => m.ronde.saturating_sub(1),
+        }
+    }
+}
+
+/// RTP satu jenis taruhan: nama, persen, dan apakah ini angka manifest.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WagerRtp {
+    pub wager: &'static str,
+    pub percent: f64,
+    pub manifest: bool,
+}

@@ -1,0 +1,31 @@
+id = "dragon-tiger"
+nama = { id = "Dragon Tiger", en = "Dragon Tiger" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP taruhan utama (dragon/tiger, kalah setengah bila seri), dihitung
+# analitis dari 8 dek: 1 − ½ × 31/415 = 96,265%. Taruhan tie (8:1):
+# 9 × 31/415 = 67,229%. Lihat D-060; diverifikasi simulasi (SPEC §7).
+rtp = 96.27
+tutorial = "tutorials/dragon-tiger.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di dragon, tiger, atau tie (10–2.000 per tempat, kelipatan 10)", en = "Add a bet on dragon, tiger, or tie (10–2,000 per spot, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan yang belum dibagi", en = "Take back every bet not yet dealt" }
+
+[[perintah]]
+pola = "deal"
+ringkas = { id = "Bagi satu kartu Naga dan satu kartu Macan", en = "Deal one Dragon card and one Tiger card" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti di antara ronde (seed shoe dibuka)", en = "Stop between rounds (the shoe seed is revealed)" }

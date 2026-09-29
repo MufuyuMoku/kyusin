@@ -13,7 +13,9 @@ use kyusin_games::cards::Card;
 use kyusin_games::poker::{Category, Category3, best5, eval3, eval5};
 
 fn cards(text: &str) -> Vec<Card> {
-    text.split_whitespace().map(|c| c.parse().unwrap()).collect()
+    text.split_whitespace()
+        .map(|c| c.parse().unwrap())
+        .collect()
 }
 
 fn five(text: &str) -> kyusin_games::poker::Value {
@@ -78,7 +80,10 @@ fn best_five_of_seven() {
     let (v, used) = best5(&cards("4h 5d 6h 7h 8c Kh 2h"));
     assert_eq!(v.category(), Category::Flush);
     assert_eq!(used.len(), 5);
-    assert!(used.iter().all(|c| c.suit == kyusin_games::cards::Suit::Hearts));
+    assert!(
+        used.iter()
+            .all(|c| c.suit == kyusin_games::cards::Suit::Hearts)
+    );
     // Full house dari dua trips: trips tertinggi + pasangan dari yang lain.
     let (v, _) = best5(&cards("9h 9d 9c 4s 4h 4d Ac"));
     assert_eq!(v, five("9h 9d 9c 4s 4h"));
@@ -88,7 +93,10 @@ fn best_five_of_seven() {
     // Lima kartu: sama dengan eval5.
     assert_eq!(best5(&cards("Ah 2d 3c 4s 5h")).0, five("Ah 2d 3c 4s 5h"));
     // Enam kartu.
-    assert_eq!(best5(&cards("Ah Ad 3c 4s 5h Ac")).0.category(), Category::Trips);
+    assert_eq!(
+        best5(&cards("Ah Ad 3c 4s 5h Ac")).0.category(),
+        Category::Trips
+    );
 }
 
 #[test]
@@ -141,7 +149,9 @@ fn full_deck_frequencies() {
     }
     assert_eq!(
         five_counts,
-        [1_302_540, 1_098_240, 123_552, 54_912, 10_200, 5_108, 3_744, 624, 40]
+        [
+            1_302_540, 1_098_240, 123_552, 54_912, 10_200, 5_108, 3_744, 624, 40
+        ]
     );
     assert_eq!(royal, 4);
 

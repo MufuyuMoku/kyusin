@@ -1,0 +1,130 @@
+game = "dragon-tiger"
+judul = { id = "Dragon Tiger: dasar", en = "Dragon Tiger: basics" }
+
+# Shoe tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+potong = 100
+shoe = [
+  # Ronde 1: Naga K lawan Macan 7 → Naga menang.
+  "Kh", "7c",
+  # Ronde 2: 9 lawan 9 → seri.
+  "9d", "9s",
+  # Ronde 3: Naga A lawan Macan J → Macan menang (as terendah).
+  "Ah", "Jc",
+  # Cadangan.
+  "2c", "3c", "4c", "5c", "6c", "7d", "8s", "9h", "Tc", "Qd",
+]
+
+[man.aturan]
+id = """
+Dua kartu dibagi dari shoe: satu untuk Naga (dragon), satu untuk Macan
+(tiger). Kartu yang lebih tinggi menang. As adalah kartu terendah (A, 2, 3,
+… 10, J, Q, K); jenis kartu tidak berpengaruh.
+
+Aturan meja ini: 8 dek; titik potong 75%. Taruhan 10–2.000 chip per tempat
+(kelipatan 10). Susun taruhan di satu tempat atau lebih, lalu bagi.
+- Dragon atau tiger: menang dibayar 1:1. Bila seri, taruhan ini kalah
+  setengah.
+- Tie: menang bila kedua kartu sama peringkatnya, dibayar 8:1.
+
+RTP: dragon dan tiger masing-masing 96,27%; tie 67,23%. Dihitung analitis
+dari komposisi 8 dek (peluang seri 31/415) dan diverifikasi dengan simulasi.
+Angka di manifest adalah taruhan dragon/tiger.
+
+Provably fair per shoe: komitmen seed diumumkan saat shoe dikocok, dan seed
+dibuka saat shoe habis atau kamu berhenti. Verify lalu memutar ulang semua
+ronde dalam shoe itu.
+"""
+en = """
+Two cards are dealt from the shoe: one for the Dragon, one for the Tiger.
+The higher card wins. The ace is the lowest card (A, 2, 3, … 10, J, Q, K);
+suits do not matter.
+
+This table: 8 decks; the cut is at 75%. Bets 10–2,000 chips per spot
+(multiples of 10). Place bets on one or more spots, then deal.
+- Dragon or tiger: a win pays 1:1. On a tie this bet loses half.
+- Tie: wins when both cards have the same rank, pays 8:1.
+
+RTP: dragon and tiger 96.27% each; tie 67.23%. Computed analytically from
+the 8-deck composition (a tie chance of 31/415) and verified by simulation.
+The manifest figure is the dragon/tiger bet.
+
+Provably fair per shoe: the seed commitment is announced when the shoe is
+shuffled, and the seed is revealed when the shoe runs out or you stop.
+Verify then replays every round in that shoe.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar chip dengan tombol chip, lalu pilih tempat taruhan ([ NAGA ],
+[ MACAN ], [ SERI ]); setiap pilihan menambah taruhan di tempat itu. [ BAGI ]
+membagi kartu, [ ULANG ] menarik semua taruhan yang belum dibagi. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih. [ BERHENTI ] di antara
+ronde mengakhiri shoe.
+"""
+en = """
+Choose a chip size with the chip buttons, then a spot ([ DRAGON ],
+[ TIGER ], [ TIE ]); each press adds to that spot. [ DEAL ] deals the cards,
+[ CLEAR ] takes back every bet not yet dealt. Keyboard: the arrow keys move
+the focus, Enter or Space selects. [ STOP ] between rounds ends the shoe.
+"""
+
+[[langkah]]
+teks.id = "Satu kartu untuk Naga, satu untuk Macan; yang lebih tinggi menang. Pasang 100 chip di Naga."
+teks.en = "One card for the Dragon, one for the Tiger; the higher card wins. Put 100 chips on the Dragon."
+aksi = "bet dragon 100"
+sorot = ["aksi:bet dragon 100"]
+petunjuk.id = "Pasang 100 di NAGA."
+petunjuk.en = "Put 100 on DRAGON."
+
+[[langkah]]
+teks.id = "Taruhan terpasang dan sudah dipotong dari saldo. Bagi kartunya."
+teks.en = "The bet is placed and already taken from your balance. Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "Naga K lawan Macan 7: Naga menang, dibayar 1:1 (+100). Sekarang coba taruhan seri: 10 chip di Seri."
+teks.en = "Dragon K against Tiger 7: the Dragon wins, paid 1:1 (+100). Now try the tie bet: 10 chips on Tie."
+aksi = "bet tie 10"
+sorot = ["aksi:bet tie 10"]
+petunjuk.id = "Pasang 10 di SERI."
+petunjuk.en = "Put 10 on TIE."
+
+[[langkah]]
+teks.id = "Tambahkan 20 di Naga juga, supaya terlihat apa yang terjadi pada Naga saat seri."
+teks.en = "Add 20 on the Dragon too, to see what happens to it on a tie."
+aksi = "bet dragon 20"
+sorot = ["aksi:bet dragon 20"]
+petunjuk.id = "Pasang 20 di NAGA."
+petunjuk.en = "Put 20 on DRAGON."
+
+[[langkah]]
+teks.id = "Bagi kartunya."
+teks.en = "Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "9 lawan 9: seri. Tie dibayar 8:1 (+80), taruhan Naga kalah setengah (−10). Satu ronde lagi: 50 di Macan."
+teks.en = "9 against 9: a tie. Tie pays 8:1 (+80), the Dragon bet loses half (−10). One more round: 50 on the Tiger."
+aksi = "bet tiger 50"
+sorot = ["aksi:bet tiger 50"]
+petunjuk.id = "Pasang 50 di MACAN."
+petunjuk.en = "Put 50 on TIGER."
+
+[[langkah]]
+teks.id = "Bagi kartunya."
+teks.en = "Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "Naga as lawan Macan J: as adalah kartu terendah, jadi Macan menang (+50). Seed shoe dibuka saat shoe habis atau kamu berhenti, lalu verify memeriksa semua ronde. Tutorial selesai."
+teks.en = "Dragon ace against Tiger J: the ace is the lowest card, so the Tiger wins (+50). The shoe seed is revealed when the shoe runs out or you stop, then verify checks every round. Tutorial finished."

@@ -9,6 +9,8 @@ pub mod blackjack;
 pub mod calibration;
 pub mod catur;
 mod catur_search;
+pub mod dragon_tiger;
+pub mod meja;
 pub mod reversi;
 
 /// Jumlah level bot untuk sebuah game (0 = tidak ada bot).
