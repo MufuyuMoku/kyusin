@@ -144,7 +144,7 @@
 							{/each}
 						</div>
 						<p class="line">{handLine(i)}</p>
-						<p class="line result">{resultLine(i)}</p>
+						<p class="line outcome">{resultLine(i)}</p>
 						{#if v.aktif === i}<div class="layer active" aria-hidden="true"></div>{/if}
 					{/if}
 				</div>

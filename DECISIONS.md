@@ -478,6 +478,30 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Tes jendela asli meja Blackjack (§11): keselarasan, taruhan, hit/stand/double/split, kursor/hover tidak menggeser elemen.
 - Rujukan: SPEC §2.2, §2.3, §4, §5.4, §6.3, §6.7, §7, §9 M4, §11, D-039.
 
+### D-057 — Blackjack: rincian aturan, strategi dasar, dan RTP
+- Tanggal / milestone: 2026-09-29 / M4
+- Diputuskan oleh: developer (dalam batas D-056)
+- Keputusan:
+  - Rincian aturan di luar D-056: taruhan kelipatan 10 (sehingga 3:2, insurance, dan surrender selalu bilangan bulat); bandar mengintip bila kartu terbuka as atau bernilai 10 (hole card ala AS), jadi late surrender dan double/split hanya kehilangan taruhan awal bila bandar blackjack; split hanya untuk peringkat sama (K-K ya, K-Q tidak); as yang di-split tidak bisa di-split lagi dan tidak bisa di-double; tangan yang mencapai 21 otomatis berdiri; tangan hasil split menerima kartu keduanya saat mulai dimainkan; bila semua tangan bust atau menyerah, bandar tidak mengambil kartu; shoe berakhir di akhir ronde saat kartu terpakai mencapai titik potong 234 dari 312 (75%). Tidak ada "even money" terpisah (setara insurance saat pemain blackjack).
+  - Meja satu kursi (`pemain_maks = 1`, `lan = false`); meja LAN banyak pemain melawan bandar sistem (§6.7) menyusul bersama milestone LAN.
+  - Strategi dasar yang didokumentasikan (`crates/bots/src/blackjack.rs`): tabel baku multi-dek S17 DAS late surrender tanpa resplit as; insurance selalu ditolak.
+  - RTP manifest 99,64%: simulasi 1 miliar ronde strategi dasar menghasilkan 99,6388% (σ 1,1408 per ronde, selang 1σ ±0,0036%). Pendekatan kombinatorial penuh tidak dipakai; §7 mengizinkan simulasi untuk game yang bergantung strategi. RTP = 1 + rata-rata hasil bersih per ronde dibagi taruhan awal.
+  - Verifikasi §7: tes `rtp_matches_the_manifest_within_four_sigma` (100 ribu ronde, CI setiap push) dan workflow `rtp.yml` (10 juta ronde, manual dan terjadwal tiap Senin). Keduanya gagal bila selisih dengan manifest > 4σ/√n.
+  - Provably fair per shoe (D-056): satu pertandingan = satu shoe, jadi komitmen dibuat saat pertandingan (shoe) dimulai dan seed dibuka saat shoe habis atau pemain berhenti; verify memutar ulang semua ronde. Menunda di tengah shoe menyimpan seed tetap tertutup.
+- Rujukan: SPEC §5.4, §6.3, §7, D-056.
+
+### D-058 — Chip profil di meja casino
+- Tanggal / milestone: 2026-09-29 / M4
+- Diputuskan oleh: developer (dalam batas SPEC §6.7 dan D-056)
+- Keputusan:
+  - Game casino tetap murni dan tidak tahu saldo. Host memeriksa saldo sebelum `bet`, `double`, `split`, dan `insure` (biaya dari view; tersedia = saldo − yang sedang dipertaruhkan) dan menolak dengan pesan jelas bila kurang. Setiap ronde yang selesai langsung dicatat ke saldo dan ringkasan casino dalam satu transaksi SQLite, jadi chip tidak hilang bila aplikasi ditutup di tengah shoe. Taruhan ronde yang sedang berjalan baru memengaruhi saldo saat ronde selesai.
+  - Tunjangan harian: diperiksa saat aplikasi dibuka dan saat pertandingan casino dimulai, memakai tanggal lokal dari UI (hanya UI yang tahu zona waktu sistem). Hanya diberikan bila saldo < 1.000 dan belum diberikan hari itu; saldo diisi menjadi 2.000. Hari yang tidak memberi tunjangan (saldo cukup) tidak "terpakai".
+  - Sapaan: `chips_low` memakai saldo sebelum tunjangan (dari profil yang dibaca sebelum pemeriksaan tunjangan); bila tunjangan diberikan, satu baris sesudahnya menyebutnya dengan nada yang sama (D-039).
+  - Menu jeda di meja casino: Lanjutkan, Tunda & keluar, dan Berhenti (mengakhiri shoe, hanya di antara ronde) menggantikan Menyerah. Memulai shoe baru saat masih ada shoe tertunda meminta konfirmasi; shoe tertunda diselesaikan secara netral (insurance ditolak, semua tangan stand, lalu berhenti) dan hasilnya dicatat.
+  - Casino melawan bandar tidak masuk riwayat rating (M3); halaman statistik punya tabel terpisah "Melawan bandar": ronde, total dipertaruhkan (termasuk double/split/insurance), dan hasil bersih per game, plus total.
+  - Sprite kartu: peta piksel 22×30 (bingkai, peringkat 5×7, jenis kecil 5×5, jenis besar 9×9), kartu tertutup berarsir; semua jenis diisi penuh dan dibedakan oleh bentuk. Tes UI memastikan 52 kartu, 13 peringkat, dan 4 jenis berbeda. Alasan tombol yang tidak tersedia ditulis di satu baris tetap di bawah tombol (D-033) supaya tata letak tidak bergeser.
+- Rujukan: SPEC §2.2, §4, §6.7, D-033, D-039, D-051, D-056.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
