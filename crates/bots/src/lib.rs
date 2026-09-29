@@ -7,6 +7,7 @@ use kyusin_core::{Player, Seed};
 
 pub mod blackjack;
 pub mod calibration;
+pub mod casino_war;
 pub mod catur;
 mod catur_search;
 pub mod dragon_tiger;

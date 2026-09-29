@@ -1,0 +1,127 @@
+game = "casino-war"
+judul = { id = "Casino War: dasar", en = "Casino War: basics" }
+
+# Shoe tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+potong = 100
+shoe = [
+  # Ronde 1: kamu Q lawan bandar 9 → menang.
+  "Qh", "9c",
+  # Ronde 2: 7 lawan 7 → seri; perang: buang 3, kamu K lawan bandar 5.
+  "7d", "7s", "2c", "3c", "4c", "Kd", "5h",
+  # Cadangan.
+  "2d", "3d", "4d", "5d", "6d", "8h", "9h", "Th", "Jh", "Ah",
+]
+
+[man.aturan]
+id = """
+Kamu dan bandar masing-masing mendapat satu kartu; yang lebih tinggi menang.
+As adalah kartu tertinggi; jenis kartu tidak berpengaruh.
+
+Aturan meja ini: 6 dek; titik potong 75%. Taruhan 10–2.000 chip per tempat
+(kelipatan 10).
+- Ante (wajib): menang dibayar 1:1.
+- Tie (opsional): menang bila kartu pertama seri, dibayar 10:1.
+- Bila kartu pertama seri, pilih surrender (kehilangan setengah ante) atau
+  war: tambah raise sebesar ante, bandar membuang tiga kartu, lalu satu
+  kartu untukmu dan satu untuk bandar. Kartumu lebih tinggi atau sama: raise
+  dibayar 1:1 dan ante kembali (bersih +ante). Kartu bandar lebih tinggi:
+  ante dan raise kalah.
+
+RTP: ante 97,12% bila selalu memilih war (lebih baik dari surrender); tie
+81,35%. Dihitung analitis dari komposisi 6 dek dan diverifikasi dengan
+simulasi. Angka di manifest adalah ante.
+
+Provably fair per shoe: komitmen seed diumumkan saat shoe dikocok, dan seed
+dibuka saat shoe habis atau kamu berhenti. Verify lalu memutar ulang semua
+ronde dalam shoe itu.
+"""
+en = """
+You and the dealer get one card each; the higher card wins. The ace is the
+highest card; suits do not matter.
+
+This table: 6 decks; the cut is at 75%. Bets 10–2,000 chips per spot
+(multiples of 10).
+- Ante (required): a win pays 1:1.
+- Tie (optional): wins when the first cards tie, pays 10:1.
+- On a first-card tie choose surrender (lose half the ante) or war: add a
+  raise equal to the ante, the dealer burns three cards, then one card to
+  you and one to the dealer. Your card higher or equal: the raise pays 1:1
+  and the ante is returned (net +ante). Dealer higher: ante and raise lose.
+
+RTP: ante 97.12% when always choosing war (better than surrender); tie
+81.35%. Computed analytically from the 6-deck composition and verified by
+simulation. The manifest figure is the ante.
+
+Provably fair per shoe: the seed commitment is announced when the shoe is
+shuffled, and the seed is revealed when the shoe runs out or you stop.
+Verify then replays every round in that shoe.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar chip dengan tombol chip, lalu pilih tempat taruhan ([ ANTE ],
+[ SERI ]); setiap pilihan menambah taruhan di tempat itu. [ BAGI ] membagi
+kartu (butuh ante), [ ULANG ] menarik taruhan yang belum dibagi. Saat seri:
+[ WAR ] atau [ SURRENDER ]. Keyboard: panah memindahkan fokus, Enter atau
+Spasi memilih. [ BERHENTI ] di antara ronde mengakhiri shoe.
+"""
+en = """
+Choose a chip size with the chip buttons, then a spot ([ ANTE ], [ TIE ]);
+each press adds to that spot. [ DEAL ] deals (needs an ante), [ CLEAR ]
+takes back bets not yet dealt. On a tie: [ WAR ] or [ SURRENDER ]. Keyboard:
+the arrow keys move the focus, Enter or Space selects. [ STOP ] between
+rounds ends the shoe.
+"""
+
+[[langkah]]
+teks.id = "Kartumu lawan kartu bandar; yang lebih tinggi menang. Pasang ante 50."
+teks.en = "Your card against the dealer's; the higher card wins. Put 50 on the ante."
+aksi = "bet ante 50"
+sorot = ["aksi:bet ante 50"]
+petunjuk.id = "Pasang 50 di ANTE."
+petunjuk.en = "Put 50 on ANTE."
+
+[[langkah]]
+teks.id = "Bagi kartunya."
+teks.en = "Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "Q lawan 9: kamu menang 1:1 (+50). Ronde berikutnya: ante 50 lagi."
+teks.en = "Q against 9: you win 1:1 (+50). Next round: 50 on the ante again."
+aksi = "bet ante 50"
+sorot = ["aksi:bet ante 50"]
+petunjuk.id = "Pasang 50 di ANTE."
+petunjuk.en = "Put 50 on ANTE."
+
+[[langkah]]
+teks.id = "Tambahkan 10 di Seri: dibayar 10:1 bila kartu pertama seri."
+teks.en = "Add 10 on Tie: it pays 10:1 if the first cards tie."
+aksi = "bet tie 10"
+sorot = ["aksi:bet tie 10"]
+petunjuk.id = "Pasang 10 di SERI."
+petunjuk.en = "Put 10 on TIE."
+
+[[langkah]]
+teks.id = "Bagi kartunya."
+teks.en = "Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "7 lawan 7: seri! Taruhan Seri menang (+100). Sekarang pilih: war lebih baik daripada surrender. Pilih war (raise 50)."
+teks.en = "7 against 7: a tie! The Tie bet wins (+100). Now choose: war is better than surrender. Choose war (a 50 raise)."
+aksi = "war"
+sorot = ["aksi:war"]
+petunjuk.id = "Pilih WAR."
+petunjuk.en = "Choose WAR."
+
+[[langkah]]
+teks.id = "Bandar membuang tiga kartu, lalu K lawan 5: raise dibayar 1:1 dan ante kembali (+50). Seed shoe dibuka saat shoe habis atau kamu berhenti. Tutorial selesai."
+teks.en = "The dealer burns three cards, then K against 5: the raise pays 1:1 and the ante comes back (+50). The shoe seed is revealed when the shoe runs out or you stop. Tutorial finished."

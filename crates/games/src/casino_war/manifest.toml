@@ -1,0 +1,39 @@
+id = "casino-war"
+nama = { id = "Casino War", en = "Casino War" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP ante dengan strategi selalu perang (6 dek; seri setelah perang =
+# menang raise), dihitung analitis: 97,123%. Taruhan tie (10:1): 11 × 23/311
+# = 81,350%. Lihat D-060; diverifikasi simulasi (SPEC §7).
+rtp = 97.12
+tutorial = "tutorials/casino-war.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di ante atau tie (10–2.000 per tempat, kelipatan 10)", en = "Add a bet on ante or tie (10–2,000 per spot, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan yang belum dibagi", en = "Take back every bet not yet dealt" }
+
+[[perintah]]
+pola = "deal"
+ringkas = { id = "Bagi satu kartu untukmu dan satu untuk bandar (butuh ante)", en = "Deal one card to you and one to the dealer (needs an ante)" }
+
+[[perintah]]
+pola = "war"
+ringkas = { id = "Saat seri: tambah raise sebesar ante dan berperang", en = "On a tie: add a raise equal to the ante and go to war" }
+
+[[perintah]]
+pola = "surrender"
+ringkas = { id = "Saat seri: menyerah, kehilangan setengah ante", en = "On a tie: surrender and lose half the ante" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti di antara ronde (seed shoe dibuka)", en = "Stop between rounds (the shoe seed is revealed)" }

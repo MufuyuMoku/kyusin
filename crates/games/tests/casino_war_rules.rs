@@ -85,7 +85,10 @@ fn tie_bet_pays_ten_to_one_on_the_first_tie_only() {
     assert_eq!(v["bayar"]["tie"], 100);
     assert_eq!(v["netral"], "surrender");
     assert_eq!(v["biaya"]["war"], 100);
-    assert_eq!(v["taruhan_meja"], 100, "ante masih dipertaruhkan");
+    assert_eq!(
+        v["taruhan_meja"], 110,
+        "ante dan tie tetap di meja sampai ronde selesai"
+    );
     assert_eq!(legal(&g), vec!["war", "surrender"]);
     act(&mut g, "surrender");
     let v = view(&g);
@@ -102,7 +105,13 @@ fn tie_bet_pays_ten_to_one_on_the_first_tie_only() {
 #[test]
 fn going_to_war() {
     // Seri 8-8, buang 3, pemain K lawan bandar 4: bersih +ante.
-    let mut g = war(&["8h", "8c", "2d", "3d", "4d", "Kh", "4c", "5h", "5c", "2h", "2s", "6s", "Ah", "3c", "Td", "Th", "Tc", "9s", "9c", "Ac", "Jd"], 100);
+    let mut g = war(
+        &[
+            "8h", "8c", "2d", "3d", "4d", "Kh", "4c", "5h", "5c", "2h", "2s", "6s", "Ah", "3c",
+            "Td", "Th", "Tc", "9s", "9c", "Ac", "Jd",
+        ],
+        100,
+    );
     act(&mut g, "bet ante 100");
     act(&mut g, "deal");
     act(&mut g, "war");
@@ -130,7 +139,12 @@ fn going_to_war() {
 #[test]
 fn war_tie_wins_the_raise_and_dealer_high_loses_both() {
     // Seri 6-6, buang 3, 9 lawan 9: seri lagi → bersih +ante.
-    let mut g = war(&["6h", "6c", "2d", "3d", "4d", "9h", "9c", "Qh", "Qc", "2h", "3h", "4h", "5h", "Kc"], 100);
+    let mut g = war(
+        &[
+            "6h", "6c", "2d", "3d", "4d", "9h", "9c", "Qh", "Qc", "2h", "3h", "4h", "5h", "Kc",
+        ],
+        100,
+    );
     act(&mut g, "bet ante 100");
     act(&mut g, "deal");
     act(&mut g, "war");
@@ -187,7 +201,15 @@ fn shoe_ends_at_the_cut_after_the_round() {
 #[test]
 fn commands_round_trip_and_text_view() {
     let g = war(&["Kh", "2c"], 100);
-    for cmd in ["bet ante 100", "bet tie 20", "clear", "deal", "war", "surrender", "leave"] {
+    for cmd in [
+        "bet ante 100",
+        "bet tie 20",
+        "clear",
+        "deal",
+        "war",
+        "surrender",
+        "leave",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }
