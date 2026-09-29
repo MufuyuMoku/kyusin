@@ -11,8 +11,8 @@ use crate::meja::{Rtp, Wager, simulate};
 pub fn decide(v: &View, wager: &str) -> String {
     match v.meja.fase.as_str() {
         "perang" => "war".into(),
-        _ if v.taruhan.get(wager).is_none() => format!("bet {wager} 100"),
-        _ if v.taruhan.get("ante").is_none() => "bet ante 100".into(),
+        _ if !v.taruhan.contains_key(wager) => format!("bet {wager} 100"),
+        _ if !v.taruhan.contains_key("ante") => "bet ante 100".into(),
         _ => "deal".into(),
     }
 }
