@@ -1,0 +1,30 @@
+id = "red-dog"
+nama = { id = "Red Dog", en = "Red Dog" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP dengan strategi raise pada jarak 7 ke atas (optimal), dihitung
+# analitis dari 8 dek: 97,2491%. Lihat D-060; diverifikasi simulasi (SPEC §7).
+rtp = 97.25
+tutorial = "tutorials/red-dog.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang taruhan dan bagi dua kartu (10–2.000, kelipatan 10)", en = "Place a bet and deal two cards (10–2,000, multiples of 10)" }
+
+[[perintah]]
+pola = "raise"
+ringkas = { id = "Gandakan taruhan sebelum kartu ketiga", en = "Double the bet before the third card" }
+
+[[perintah]]
+pola = "call"
+ringkas = { id = "Lanjut tanpa menambah taruhan", en = "Continue without adding to the bet" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti di antara ronde (seed shoe dibuka)", en = "Stop between rounds (the shoe seed is revealed)" }

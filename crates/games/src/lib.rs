@@ -16,6 +16,7 @@ pub mod dragon_tiger;
 pub mod fixture;
 pub mod meja;
 pub mod poker;
+pub mod red_dog;
 pub mod reversi;
 
 /// Game katalog yang dikirim bersama aplikasi.
@@ -28,6 +29,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(casino_war::cartridge()?)?;
     registry.register(andar_bahar::cartridge()?)?;
     registry.register(baccarat::cartridge()?)?;
+    registry.register(red_dog::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

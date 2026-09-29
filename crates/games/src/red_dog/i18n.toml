@@ -1,0 +1,28 @@
+# Teks tampilan Red Dog (to_text, hasil) dalam dua bahasa.
+[id]
+"cards" = "Kartu: {cards}"
+"spread" = " · jarak {spread}, dibayar {pays}:1"
+"result.seri" = "Seri, taruhan kembali"
+"result.tiga" = "Three of a kind 11:1"
+"result.menang" = "Kartu ketiga di antara: menang"
+"result.kalah" = "Kartu ketiga di luar: kalah"
+"net" = "Bersih shoe ini: {net} · sisa {left} kartu"
+"place_bet" = "Pasang taruhan: bet <jumlah> (10–2.000, kelipatan 10), atau leave untuk berhenti."
+"raise" = "raise (gandakan taruhan) atau call, lalu kartu ketiga dibagi."
+"over.shoe_habis" = "Shoe habis. Seed dibuka; shoe baru dikocok di pertandingan berikutnya."
+"over.berhenti" = "Kamu berhenti. Seed shoe ini dibuka."
+"summary" = "Shoe selesai: {rounds} ronde, bersih {net} chip."
+
+[en]
+"cards" = "Cards: {cards}"
+"spread" = " · spread {spread}, pays {pays}:1"
+"result.seri" = "Push, bet returned"
+"result.tiga" = "Three of a kind 11:1"
+"result.menang" = "Third card in between: win"
+"result.kalah" = "Third card outside: lose"
+"net" = "Net this shoe: {net} · {left} cards left"
+"place_bet" = "Place a bet: bet <amount> (10–2,000, multiples of 10), or leave to stop."
+"raise" = "raise (double the bet) or call, then the third card is dealt."
+"over.shoe_habis" = "The shoe is finished. The seed is revealed; a new shoe is shuffled for the next match."
+"over.berhenti" = "You stopped. This shoe's seed is revealed."
+"summary" = "Shoe finished. Rounds: {rounds}. Net: {net} chips."

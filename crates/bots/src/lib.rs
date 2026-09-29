@@ -14,6 +14,7 @@ pub mod catur;
 mod catur_search;
 pub mod dragon_tiger;
 pub mod meja;
+pub mod red_dog;
 pub mod reversi;
 
 /// Jumlah level bot untuk sebuah game (0 = tidak ada bot).

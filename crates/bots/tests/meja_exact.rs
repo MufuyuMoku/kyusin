@@ -139,3 +139,28 @@ fn baccarat_by_exact_enumeration() {
     close(100.0 * (1.0 + 0.95 * b - p), rtp, "banker");
     close(100.0 * (9.0 * t), rtp, "tie");
 }
+
+#[test]
+fn red_dog_from_eight_decks_with_the_raise_strategy() {
+    use kyusin_bots::red_dog::RAISE_FROM;
+    use kyusin_games::red_dog::{TRIPS_PAYS, spread_pays};
+    let (n, c) = (416.0, 32.0);
+    let mut ev = 0.0;
+    for a in 2..=14u8 {
+        for b in 2..=14u8 {
+            let p = c / n * if a == b { c - 1.0 } else { c } / (n - 1.0);
+            if a == b {
+                ev += p * (c - 2.0) / (n - 2.0) * TRIPS_PAYS as f64;
+                continue;
+            }
+            let spread = a.abs_diff(b).saturating_sub(1);
+            if spread == 0 {
+                continue;
+            }
+            let win = f64::from(spread) * c / (n - 2.0);
+            let units = if spread >= RAISE_FROM { 2.0 } else { 1.0 };
+            ev += p * units * (win * spread_pays(spread) as f64 - (1.0 - win));
+        }
+    }
+    close(100.0 * (1.0 + ev), kyusin_games::red_dog::RTP, "bet");
+}

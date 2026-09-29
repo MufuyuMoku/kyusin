@@ -1,0 +1,116 @@
+game = "red-dog"
+judul = { id = "Red Dog: dasar", en = "Red Dog: basics" }
+
+# Shoe tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+potong = 100
+shoe = [
+  # Ronde 1: 3 dan Q (jarak 8) → raise → kartu ketiga 9, menang 1:1.
+  "3h", "Qc", "9d",
+  # Ronde 2: 6 dan 7 berurutan → seri.
+  "6s", "7h",
+  # Ronde 3: 8 dan T (jarak 1, dibayar 5:1) → call → kartu ketiga 9.
+  "8c", "Td", "9s",
+  # Cadangan.
+  "2c", "3c", "4c", "5c", "6c", "7d", "8s", "9h", "Kd", "Qd",
+]
+
+[man.aturan]
+id = """
+Dua kartu dibuka. Kamu menang bila kartu ketiga jatuh di antara keduanya.
+As adalah kartu tertinggi; jenis kartu tidak berpengaruh.
+
+Aturan meja ini: 8 dek; titik potong 75%. Taruhan 10–2.000 chip
+(kelipatan 10).
+- Dua kartu berurutan (misalnya 7 dan 8): seri, taruhan kembali.
+- Sepasang: kartu ketiga dibagi. Three of a kind dibayar 11:1; selain itu
+  seri.
+- Selain itu, jarak (spread) = banyaknya peringkat di antara kedua kartu.
+  Sebelum kartu ketiga kamu boleh raise (menggandakan taruhan) atau call.
+  Kartu ketiga di antara keduanya menang; sama dengan salah satu atau di
+  luar kalah.
+- Pembayaran menurut jarak: 1 → 5:1, 2 → 4:1, 3 → 2:1, 4–11 → 1:1.
+
+RTP: 97,25% dengan strategi raise pada jarak 7 ke atas (strategi terbaik).
+Dihitung analitis dari komposisi 8 dek dan diverifikasi dengan simulasi.
+
+Provably fair per shoe: komitmen seed diumumkan saat shoe dikocok, dan seed
+dibuka saat shoe habis atau kamu berhenti. Verify lalu memutar ulang semua
+ronde dalam shoe itu.
+"""
+en = """
+Two cards are shown. You win if the third card falls between them. The ace
+is the highest card; suits do not matter.
+
+This table: 8 decks; the cut is at 75%. Bets 10–2,000 chips (multiples of
+10).
+- Two consecutive cards (for example 7 and 8): a push, bet returned.
+- A pair: a third card is dealt. Three of a kind pays 11:1; otherwise push.
+- Otherwise the spread is the number of ranks between the two cards. Before
+  the third card you may raise (double the bet) or call. A third card in
+  between wins; equal to either card or outside loses.
+- Payout by spread: 1 → 5:1, 2 → 4:1, 3 → 2:1, 4–11 → 1:1.
+
+RTP: 97.25% raising on a spread of 7 or more (the best strategy). Computed
+analytically from the 8-deck composition and verified by simulation.
+
+Provably fair per shoe: the seed commitment is announced when the shoe is
+shuffled, and the seed is revealed when the shoe runs out or you stop.
+Verify then replays every round in that shoe.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar taruhan dengan tombol chip, lalu [ BAGI ]. Saat ada jarak,
+pilih [ RAISE ] atau [ CALL ]. Keyboard: panah memindahkan fokus, Enter atau
+Spasi memilih. [ BERHENTI ] di antara ronde mengakhiri shoe.
+"""
+en = """
+Choose your bet with the chip buttons, then [ DEAL ]. When there is a
+spread, choose [ RAISE ] or [ CALL ]. Keyboard: the arrow keys move the
+focus, Enter or Space selects. [ STOP ] between rounds ends the shoe.
+"""
+
+[[langkah]]
+teks.id = "Dua kartu dibuka; kamu menang bila kartu ketiga jatuh di antaranya. Pasang 50 chip."
+teks.en = "Two cards are shown; you win if the third card lands between them. Bet 50 chips."
+aksi = "bet 50"
+sorot = ["aksi:bet 50"]
+petunjuk.id = "Pasang 50 lalu bagi."
+petunjuk.en = "Bet 50, then deal."
+
+[[langkah]]
+teks.id = "3 dan Q: jarak 8 (4 sampai J), dibayar 1:1. Jarak 7 atau lebih layak di-raise: gandakan taruhan."
+teks.en = "3 and Q: a spread of 8 (4 to J), paying 1:1. A spread of 7 or more is worth a raise: double the bet."
+aksi = "raise"
+sorot = ["aksi:raise"]
+petunjuk.id = "Pilih RAISE."
+petunjuk.en = "Choose RAISE."
+
+[[langkah]]
+teks.id = "Kartu ketiga 9, di antara 3 dan Q: menang 1:1 atas taruhan 100 (+100). Ronde berikutnya: 50 lagi."
+teks.en = "The third card is a 9, between 3 and Q: a 1:1 win on the 100 bet (+100). Next round: 50 again."
+aksi = "bet 50"
+sorot = ["aksi:bet 50"]
+petunjuk.id = "Pasang 50 lalu bagi."
+petunjuk.en = "Bet 50, then deal."
+
+[[langkah]]
+teks.id = "6 dan 7 berurutan: tidak ada yang bisa di antara keduanya, jadi seri. Satu ronde lagi: 50."
+teks.en = "6 and 7 are consecutive: nothing can fall between them, so it is a push. One more round: 50."
+aksi = "bet 50"
+sorot = ["aksi:bet 50"]
+petunjuk.id = "Pasang 50 lalu bagi."
+petunjuk.en = "Bet 50, then deal."
+
+[[langkah]]
+teks.id = "8 dan 10: jarak 1, hanya 9 yang menang, tapi dibayar 5:1. Jarak kecil jarang menang, jadi jangan raise: call."
+teks.en = "8 and 10: a spread of 1, only a 9 wins, but it pays 5:1. Small spreads rarely win, so do not raise: call."
+aksi = "call"
+sorot = ["aksi:call"]
+petunjuk.id = "Pilih CALL."
+petunjuk.en = "Choose CALL."
+
+[[langkah]]
+teks.id = "Kartu ketiga 9: menang 5:1 (+250). Seed shoe dibuka saat shoe habis atau kamu berhenti. Tutorial selesai."
+teks.en = "The third card is a 9: a 5:1 win (+250). The shoe seed is revealed when the shoe runs out or you stop. Tutorial finished."
