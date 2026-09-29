@@ -9,7 +9,7 @@ kompetitif = false
 lan = false
 agen = true
 # RTP Ante/Play dengan strategi Q-6-4 (ante bonus 1-4-5), per ante, dari
-# enumerasi tepat semua pasangan tangan pemain–bandar (rtp.yml). Pair Plus
+# enumerasi tepat semua pasangan tangan pemain–bandar (rtp.yml): 96,627%. Pair Plus
 # 40-30-6-3-1: 92,724% (analitis). Lihat D-060; diverifikasi simulasi.
 rtp = 96.63
 tutorial = "tutorials/three-card-poker.toml"
