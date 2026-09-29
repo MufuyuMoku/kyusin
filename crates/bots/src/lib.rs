@@ -16,6 +16,7 @@ pub mod dragon_tiger;
 pub mod meja;
 pub mod red_dog;
 pub mod reversi;
+pub mod three_card_poker;
 
 /// Jumlah level bot untuk sebuah game (0 = tidak ada bot).
 pub fn levels(game: &str) -> u8 {

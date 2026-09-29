@@ -1,0 +1,123 @@
+game = "three-card-poker"
+judul = { id = "Three Card Poker: dasar", en = "Three Card Poker: basics" }
+
+# Dek tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+kartu = [
+  # Kamu: 9 9 4 (pair). Bandar: K 8 2 (K-high, memenuhi syarat).
+  "9h", "9d", "4c", "Ks", "8h", "2d",
+  # Cadangan.
+  "3c", "5c", "6c", "7c", "8c",
+]
+
+[man.aturan]
+id = """
+Kamu dan bandar masing-masing mendapat tiga kartu. Peringkat tangan tiga
+kartu, dari yang tertinggi: straight flush, three of a kind, straight,
+flush, pair, kartu tinggi. (Straight lebih tinggi dari flush karena lebih
+jarang dengan tiga kartu.) A-2-3 adalah straight terendah, Q-K-A
+tertinggi.
+
+Aturan meja ini: satu dek dikocok setiap ronde. Taruhan 10–2.000 chip per
+tempat (kelipatan 10).
+- Ante: setelah melihat kartumu, pilih play (tambah taruhan play sebesar
+  ante) atau fold (ante kalah).
+- Bandar memenuhi syarat dengan Q-high atau lebih. Bila tidak, ante dibayar
+  1:1 dan play kembali. Bila ya, tangan lebih tinggi menang: ante dan play
+  masing-masing 1:1; sama = seri.
+- Ante bonus, dibayar bila kamu bermain apa pun tangan bandar: straight 1:1,
+  three of a kind 4:1, straight flush 5:1.
+- Pair Plus (terpisah dari ante, boleh dimainkan sendiri): pair 1:1, flush
+  3:1, straight 6:1, three of a kind 30:1, straight flush 40:1; selain itu
+  kalah. Tetap dihitung walau kamu fold.
+
+Strategi yang dipakai untuk RTP: play dengan Q-6-4 atau lebih baik, fold
+selain itu.
+
+RTP: Ante/Play 96,63% per ante dengan strategi itu (enumerasi tepat semua
+pasangan tangan); Pair Plus 92,72% (analitis). Diverifikasi dengan
+simulasi. Angka di manifest adalah Ante/Play.
+
+Provably fair per ronde: komitmen seed diumumkan sebelum kartu dibagi, dan
+seed dibuka setelah ronde selesai. Setiap ronde adalah pertandingan
+tersendiri dengan komitmen baru.
+"""
+en = """
+You and the dealer get three cards each. Three-card hand ranks, highest
+first: straight flush, three of a kind, straight, flush, pair, high card.
+(A straight beats a flush because it is rarer with three cards.) A-2-3 is
+the lowest straight, Q-K-A the highest.
+
+This table: one deck, shuffled every round. Bets 10–2,000 chips per spot
+(multiples of 10).
+- Ante: after seeing your cards, choose play (add a play bet equal to the
+  ante) or fold (the ante loses).
+- The dealer qualifies with queen-high or better. If not, the ante pays 1:1
+  and the play bet is returned. If so, the higher hand wins: ante and play
+  pay 1:1 each; equal hands push.
+- Ante bonus, paid whenever you play, whatever the dealer holds: straight
+  1:1, three of a kind 4:1, straight flush 5:1.
+- Pair Plus (separate from the ante, may be played alone): pair 1:1, flush
+  3:1, straight 6:1, three of a kind 30:1, straight flush 40:1; otherwise
+  it loses. It still counts if you fold.
+
+Strategy used for the RTP: play queen-6-4 or better, fold otherwise.
+
+RTP: Ante/Play 96.63% per ante with that strategy (exact enumeration of
+every hand pair); Pair Plus 92.72% (analytic). Verified by simulation. The
+manifest figure is Ante/Play.
+
+Provably fair per round: the seed commitment is announced before the deal,
+and the seed is revealed after the round. Every round is its own match with
+a new commitment.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar chip dengan tombol chip, lalu pilih tempat ([ ANTE ] atau
+[ PAIR PLUS ]). [ BAGI ] membagi kartu, [ ULANG ] menarik taruhan. Setelah
+melihat kartumu: [ PLAY ] atau [ FOLD ]. Keyboard: panah memindahkan fokus,
+Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip size with the chip buttons, then a spot ([ ANTE ] or
+[ PAIR PLUS ]). [ DEAL ] deals, [ CLEAR ] takes the bets back. After seeing
+your cards: [ PLAY ] or [ FOLD ]. Keyboard: the arrow keys move the focus,
+Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Tiga kartu untukmu, tiga untuk bandar. Pasang ante 50."
+teks.en = "Three cards for you, three for the dealer. Put 50 on the ante."
+aksi = "bet ante 50"
+sorot = ["aksi:bet ante 50"]
+petunjuk.id = "Pasang 50 di ANTE."
+petunjuk.en = "Put 50 on ANTE."
+
+[[langkah]]
+teks.id = "Tambahkan 10 di Pair Plus: dibayar bila kamu mendapat pair atau lebih, apa pun tangan bandar."
+teks.en = "Add 10 on Pair Plus: it pays if you get a pair or better, whatever the dealer holds."
+aksi = "bet pairplus 10"
+sorot = ["aksi:bet pairplus 10"]
+petunjuk.id = "Pasang 10 di PAIR PLUS."
+petunjuk.en = "Put 10 on PAIR PLUS."
+
+[[langkah]]
+teks.id = "Bagi kartunya."
+teks.en = "Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "Kamu punya pair 9, lebih baik dari Q-6-4, jadi bermain: play menambah taruhan sebesar ante (50)."
+teks.en = "You have a pair of 9s, better than queen-6-4, so play: play adds a bet equal to the ante (50)."
+aksi = "play"
+sorot = ["aksi:play"]
+petunjuk.id = "Pilih PLAY."
+petunjuk.en = "Choose PLAY."
+
+[[langkah]]
+teks.id = "Bandar K-high memenuhi syarat, tapi pair 9 lebih tinggi: ante dan play masing-masing 1:1 (+100), Pair Plus 1:1 (+10). Seed ronde dibuka dan verify memeriksanya. Tutorial selesai."
+teks.en = "The dealer's king-high qualifies, but the pair of 9s is higher: ante and play pay 1:1 each (+100), Pair Plus 1:1 (+10). The round seed is revealed and verify checks it. Tutorial finished."

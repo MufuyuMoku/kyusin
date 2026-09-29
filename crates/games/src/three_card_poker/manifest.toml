@@ -1,0 +1,39 @@
+id = "three-card-poker"
+nama = { id = "Three Card Poker", en = "Three Card Poker" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP Ante/Play dengan strategi Q-6-4 (ante bonus 1-4-5), per ante, dari
+# enumerasi tepat semua pasangan tangan pemain–bandar (rtp.yml). Pair Plus
+# 40-30-6-3-1: 92,724% (analitis). Lihat D-060; diverifikasi simulasi.
+rtp = 96.63
+tutorial = "tutorials/three-card-poker.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di ante atau pairplus (10–2.000 per tempat, kelipatan 10)", en = "Add a bet on ante or pairplus (10–2,000 per spot, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan yang belum dibagi", en = "Take back every bet not yet dealt" }
+
+[[perintah]]
+pola = "deal"
+ringkas = { id = "Bagi tiga kartu untukmu dan tiga untuk bandar", en = "Deal three cards to you and three to the dealer" }
+
+[[perintah]]
+pola = "play"
+ringkas = { id = "Lanjut dengan taruhan play sebesar ante", en = "Continue with a play bet equal to the ante" }
+
+[[perintah]]
+pola = "fold"
+ringkas = { id = "Menyerah; ante kalah (Pair Plus tetap dihitung)", en = "Fold; the ante loses (Pair Plus still counts)" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum kartu dibagi", en = "Stop before the deal" }

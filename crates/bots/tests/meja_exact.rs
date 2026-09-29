@@ -164,3 +164,26 @@ fn red_dog_from_eight_decks_with_the_raise_strategy() {
     }
     close(100.0 * (1.0 + ev), kyusin_games::red_dog::RTP, "bet");
 }
+
+#[test]
+fn three_card_pair_plus_by_enumeration() {
+    use kyusin_games::cards::Card;
+    use kyusin_games::poker::eval3;
+    use kyusin_games::three_card_poker::pair_plus;
+    let deck = Card::deck();
+    let (mut sum, mut n) = (0i64, 0i64);
+    for a in 0..52 {
+        for b in a + 1..52 {
+            for c in b + 1..52 {
+                let k = pair_plus(eval3(&[deck[a], deck[b], deck[c]]).category());
+                sum += if k > 0 { k } else { -1 };
+                n += 1;
+            }
+        }
+    }
+    close(
+        100.0 * (1.0 + sum as f64 / n as f64),
+        kyusin_games::three_card_poker::RTP,
+        "pairplus",
+    );
+}

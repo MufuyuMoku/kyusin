@@ -2,14 +2,19 @@ name: Verifikasi RTP
 
 # SPEC §7: RTP game casino diverifikasi dengan simulasi ≥10.000.000 ronde
 # lewat workflow terjadwal/manual (CI setiap push menjalankan ≥100.000).
-# Gagal bila RTP simulasi di luar angka manifest ± 4 × σ/√n.
+# Gagal bila RTP simulasi di luar angka yang diumumkan ± 4 × σ/√n.
+# Perhitungan tepat yang berat (enumerasi) juga dijalankan di sini, bukan
+# di laptop (M5a).
 
 on:
   workflow_dispatch:
     inputs:
       rounds:
-        description: "Jumlah ronde per game (minimal 10000000)"
+        description: "Jumlah ronde per taruhan (minimal 10000000)"
         default: "10000000"
+      game:
+        description: "Meja M5a yang disimulasikan (all atau id game)"
+        default: "all"
   schedule:
     - cron: "17 3 * * 1"
 
@@ -36,3 +41,39 @@ jobs:
             --threads "$(nproc)" \
             --seed "ci-$GITHUB_RUN_ID" \
             --check
+
+  meja:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: rtp
+
+      - name: Meja M5a (semua taruhan)
+        run: |
+          cargo run --release -p kyusin-bots --example rtp_meja -- \
+            --rounds "${{ inputs.rounds || '10000000' }}" \
+            --threads "$(nproc)" \
+            --game "${{ inputs.game || 'all' }}" \
+            --seed "ci-$GITHUB_RUN_ID" \
+            --check
+
+  tepat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: rtp
+
+      - name: RTP tepat (enumerasi)
+        run: cargo run --release -p kyusin-bots --example rtp_exact -- --check

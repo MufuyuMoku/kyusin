@@ -18,6 +18,7 @@ pub mod meja;
 pub mod poker;
 pub mod red_dog;
 pub mod reversi;
+pub mod three_card_poker;
 
 /// Game katalog yang dikirim bersama aplikasi.
 pub fn builtin() -> Result<Registry, RegistryError> {
@@ -30,6 +31,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(andar_bahar::cartridge()?)?;
     registry.register(baccarat::cartridge()?)?;
     registry.register(red_dog::cartridge()?)?;
+    registry.register(three_card_poker::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

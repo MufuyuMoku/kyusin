@@ -181,7 +181,15 @@ fn bets_and_leave() {
 #[test]
 fn commands_round_trip_and_text_view() {
     let g = tcp(&["2h", "5d", "9c", "Ac", "Ks", "4h"]);
-    for cmd in ["bet ante 100", "bet pairplus 10", "clear", "deal", "play", "fold", "leave"] {
+    for cmd in [
+        "bet ante 100",
+        "bet pairplus 10",
+        "clear",
+        "deal",
+        "play",
+        "fold",
+        "leave",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }
