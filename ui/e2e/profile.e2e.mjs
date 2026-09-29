@@ -18,7 +18,7 @@ async function openFromMenu(s, label) {
 
 /** Kolom tabel: tepi kiri dan lebar tiap `data-col` sama di semua baris. */
 const tableShape = () => {
-	const rows = [...document.querySelectorAll('.stats [role="row"]')];
+	const rows = [...document.querySelectorAll('.stats [role="table"]:not(.casino) [role="row"]')];
 	const cols = {};
 	for (const row of rows) {
 		for (const cell of row.querySelectorAll('[data-col]')) {
@@ -26,7 +26,7 @@ const tableShape = () => {
 			(cols[cell.dataset.col] ??= []).push([Math.round(r.left * 10) / 10, Math.round(r.width * 10) / 10]);
 		}
 	}
-	const table = document.querySelector('.stats [role="table"]');
+	const table = document.querySelector('.stats [role="table"]:not(.casino)');
 	const frame = table.parentElement;
 	return {
 		rows: rows.length,
@@ -55,7 +55,7 @@ export async function run(s, artifacts, log) {
 	log(`profil: nama "${before}" → "Mufuyu", tetap setelah muat ulang`);
 
 	await s.click(await s.find('xpath', "//button[normalize-space(.)='[ STATISTIK ]']"));
-	await s.waitFor(() => document.querySelectorAll('.stats [role="row"]').length >= 3, 'tabel statistik');
+	await s.waitFor(() => document.querySelectorAll('.stats [role="table"]:not(.casino) [role="row"]').length >= 3, 'tabel statistik');
 	const shape = await s.exec(tableShape);
 	if (shape.overflow) fail('tabel statistik meluber');
 	for (const [col, cells] of Object.entries(shape.cols)) {

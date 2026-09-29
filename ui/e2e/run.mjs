@@ -21,6 +21,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run as board } from './board.e2e.mjs';
 import { run as chess } from './chess.e2e.mjs';
+import { run as blackjack } from './blackjack.e2e.mjs';
 import { run as pause } from './pause.e2e.mjs';
 import { run as profile } from './profile.e2e.mjs';
 import { Session } from './webdriver.mjs';
@@ -149,6 +150,8 @@ try {
 		await chess(s, artifacts, log);
 		console.log('menu jeda, penundaan, dan kursor (jendela asli):');
 		await pause(s, artifacts, log);
+		console.log('meja Blackjack (jendela asli):');
+		await blackjack(s, artifacts, log);
 		console.log('profil dan statistik (jendela asli):');
 		await profile(s, artifacts, log);
 	} finally {
