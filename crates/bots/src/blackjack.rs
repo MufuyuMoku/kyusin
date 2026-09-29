@@ -46,10 +46,9 @@ pub fn decide_hand(hand: &HandView, up: u8, o: Options) -> &'static str {
     let total = hand.nilai;
     let dealer = |range: std::ops::RangeInclusive<u8>| range.contains(&up);
 
-    if o.surrender && !hand.lunak && !(pair && first == 8) {
-        if (total == 16 && dealer(9..=11)) || (total == 15 && up == 10) {
-            return "surrender";
-        }
+    let surrender = (total == 16 && dealer(9..=11)) || (total == 15 && up == 10);
+    if o.surrender && !hand.lunak && !(pair && first == 8) && surrender {
+        return "surrender";
     }
     if o.split && pair {
         let split = match first {
