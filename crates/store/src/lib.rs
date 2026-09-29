@@ -3,12 +3,14 @@
 //! M1: replay setiap pertandingan (SPEC §2.5).
 //! Rev. 9: pertandingan yang ditunda (SPEC §4), satu per game.
 //! M3: profil, rating lokal, dan riwayat hasil ([`profile`]).
-//! Chip menyusul di M4 sebagai migrasi berikutnya.
+//! M4: saldo chip, tunjangan harian, ringkasan casino ([`chips`]).
 
 use std::path::Path;
 
+pub mod chips;
 pub mod profile;
 
+pub use chips::{ALLOWANCE_BELOW, ALLOWANCE_TO, Allowance, CasinoStats, STARTING_CHIPS};
 pub use profile::{GameRecord, GameStats, HistoryRow, NAME_MAX, Profile, StoredRating};
 
 use kyusin_core::replay::Replay;
@@ -16,7 +18,7 @@ use kyusin_core::{GameResult, SeatKind};
 use rusqlite::{Connection, OptionalExtension, params};
 
 /// Versi skema; dinaikkan tiap migrasi.
-const SCHEMA_VERSION: i32 = 3;
+const SCHEMA_VERSION: i32 = 4;
 
 pub struct Store {
     conn: Connection,
@@ -122,6 +124,9 @@ impl Store {
         }
         if version < 3 {
             profile::migrate_v3(&conn)?;
+        }
+        if version < 4 {
+            chips::migrate_v4(&conn)?;
         }
         Ok(Store { conn })
     }
@@ -397,6 +402,52 @@ mod tests {
     }
 
     #[test]
+    fn chips_start_at_10000_and_casino_rounds_move_them() {
+        let mut s = Store::open_in_memory().unwrap();
+        assert_eq!(s.chips(1).unwrap(), STARTING_CHIPS);
+        assert_eq!(
+            s.record_casino("blackjack", 1, 100, -100, 5).unwrap(),
+            9_900
+        );
+        assert_eq!(
+            s.record_casino("blackjack", 1, 300, 450, 6).unwrap(),
+            10_350
+        );
+        assert_eq!(s.chips(7).unwrap(), 10_350);
+        let stats = s.casino_stats().unwrap();
+        assert_eq!(
+            stats,
+            vec![CasinoStats {
+                game: "blackjack".into(),
+                rounds: 2,
+                wagered: 400,
+                net: 350,
+                last_played: 6
+            }]
+        );
+        assert_eq!(s.casino_game("baccarat").unwrap(), None);
+    }
+
+    #[test]
+    fn daily_allowance_once_per_day_only_below_1000() {
+        let mut s = Store::open_in_memory().unwrap();
+        // Saldo cukup: tidak ada tunjangan, dan hari itu belum terpakai.
+        let a = s.daily_allowance("2026-09-29", 1).unwrap();
+        assert_eq!((a.before, a.after, a.granted), (10_000, 10_000, false));
+        s.record_casino("blackjack", 1, 9_500, -9_500, 2).unwrap();
+        let a = s.daily_allowance("2026-09-29", 3).unwrap();
+        assert_eq!((a.before, a.after, a.granted), (500, ALLOWANCE_TO, true));
+        // Hari yang sama: tidak lagi, walau saldo turun lagi.
+        s.record_casino("blackjack", 1, 1_600, -1_600, 4).unwrap();
+        let a = s.daily_allowance("2026-09-29", 5).unwrap();
+        assert_eq!((a.before, a.granted), (400, false));
+        // Hari berikutnya: lagi.
+        let a = s.daily_allowance("2026-09-30", 6).unwrap();
+        assert_eq!((a.before, a.after, a.granted), (400, 2_000, true));
+        assert_eq!(s.chips(7).unwrap(), 2_000);
+    }
+
+    #[test]
     fn suspended_one_per_game_taken_once() {
         let s = Store::open_in_memory().unwrap();
         let rec = |game: &str, at: i64, n: i64| Suspended {
@@ -440,7 +491,7 @@ mod tests {
             let conn = Connection::open(&path).unwrap();
             conn.execute_batch(
                 "DROP TABLE suspended; DROP TABLE profile; DROP TABLE ratings;
-                 DROP TABLE results; PRAGMA user_version = 1;",
+                 DROP TABLE results; DROP TABLE casino; PRAGMA user_version = 1;",
             )
             .unwrap();
         }

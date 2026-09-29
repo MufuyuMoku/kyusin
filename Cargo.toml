@@ -45,6 +45,9 @@ debug = false
 
 # Pencarian bot catur dan generator langkahnya terlalu lambat tanpa optimasi,
 # bahkan untuk tes. Hanya dua paket ini; sisanya tetap cepat dikompilasi.
+[profile.dev.package.kyusin-games]
+opt-level = 3
+
 [profile.dev.package.kyusin-bots]
 opt-level = 3
 
