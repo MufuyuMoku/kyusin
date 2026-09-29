@@ -146,6 +146,11 @@
 						<p class="line">{handLine(i)}</p>
 						<p class="line outcome">{resultLine(i)}</p>
 						{#if v.aktif === i}<div class="layer active" aria-hidden="true"></div>{/if}
+					{:else}
+						<!-- Kotak kosong berukuran sama: split tidak mengubah ukuran apa pun. -->
+						<div class="cards"></div>
+						<p class="line"></p>
+						<p class="line"></p>
 					{/if}
 				</div>
 			{/each}
