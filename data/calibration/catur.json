@@ -1,7 +1,7 @@
 {
-  "date": "2026-09-28",
+  "date": "2026-09-29",
   "game": "catur",
-  "games_per_pairing": 16,
+  "games_per_pairing": 24,
   "levels": [
     {
       "ci95": [
@@ -124,6 +124,90 @@
           "games": 16,
           "opponent_elo": 1900,
           "points": 2.0
+        }
+      ]
+    },
+    {
+      "ci95": [
+        1748.0,
+        1904.0
+      ],
+      "elo": 1826.0,
+      "extrapolated": false,
+      "level": 5,
+      "nodes": 10000,
+      "results": [
+        {
+          "games": 24,
+          "opponent_elo": 1500,
+          "points": 19.0
+        },
+        {
+          "games": 24,
+          "opponent_elo": 1700,
+          "points": 10.5
+        },
+        {
+          "games": 24,
+          "opponent_elo": 1900,
+          "points": 11.5
+        },
+        {
+          "games": 24,
+          "opponent_elo": 2100,
+          "points": 5.0
+        },
+        {
+          "games": 24,
+          "opponent_elo": 2300,
+          "points": 5.0
+        },
+        {
+          "games": 24,
+          "opponent_elo": 2500,
+          "points": 1.5
+        }
+      ]
+    },
+    {
+      "ci95": [
+        2016.0,
+        2170.0
+      ],
+      "elo": 2093.0,
+      "extrapolated": false,
+      "level": 6,
+      "nodes": 40000,
+      "results": [
+        {
+          "games": 24,
+          "opponent_elo": 1500,
+          "points": 23.0
+        },
+        {
+          "games": 24,
+          "opponent_elo": 1700,
+          "points": 14.5
+        },
+        {
+          "games": 24,
+          "opponent_elo": 1900,
+          "points": 14.0
+        },
+        {
+          "games": 24,
+          "opponent_elo": 2100,
+          "points": 16.5
+        },
+        {
+          "games": 24,
+          "opponent_elo": 2300,
+          "points": 8.0
+        },
+        {
+          "games": 24,
+          "opponent_elo": 2500,
+          "points": 6.5
         }
       ]
     }

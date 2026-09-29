@@ -447,6 +447,18 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - §9: M2b = level catur 5–6 (target ≥2000) + perapian tangga level Reversi. Kalibrasi catur tetap lewat `calibrate.yml` di GitHub Actions; kalibrasi Reversi boleh lokal.
 - Rujukan: SPEC §8, §9, §12 Rev. 10.
 
+### D-054 — M2b: level catur 5–6 dan tangga Reversi
+- Tanggal / milestone: 2026-09-29 / M2b
+- Diputuskan oleh: developer (dalam batas D-053)
+- Keputusan:
+  - Pemeriksaan CI: `calibration::ladder_violations` + tes `every_competitive_game_has_an_even_level_ladder` membaca data kalibrasi setiap game kompetitif ber-bot dan gagal bila selisih dua level berurutan > 400. Level terbawah dikecualikan hanya bila taksirannya ekstrapolasi (semua kalah, sehingga hanya ada batas atas).
+  - Reversi: empat level. Level 3 baru = alpha-beta 2 langkah; level 4 = alpha-beta 3 langkah + hitung 8 petak terakhir sampai akhir. Level 3 lama (4 langkah + hitung akhir) tidak dipertahankan: dengan tangga yang lebih rapat ia hanya ≈65 di atas alpha-beta 4 langkah biasa, dan jaraknya ke level di bawahnya terlalu lebar. Kalibrasi lokal antar-bot, 1000 partai per pasangan: 1000 / 1344 / 1680 / 2001 (selisih 344 / 336 / 321). Partai Reversi level 3 dari sebelum M2b tercatat dengan level lama.
+  - Catur level 5–6: mesin kedua (`catur_search`) — iterative deepening, PVS, tabel transposisi (dikosongkan tiap langkah), null-move pruning, LMR, reverse futility pruning, perpanjangan skak, killer/history, quiescence dengan delta pruning, evaluasi bertahap buatan sendiri (bahan, tabel posisi, mobilitas, pasangan gajah, struktur pion, benteng, perisai raja). Level 1–4 tidak diubah sehingga data kalibrasinya tetap berlaku.
+  - Batas node, bukan waktu (deterministik). Mesin baru jauh lebih efisien: 15 ribu node sudah ≈+300 atas level 4 lama (600 ribu node) dalam adu antar-bot. Karena itu "waktu berpikir lebih lama" tidak dipakai: batas node yang memenuhi tangga ≤ 400 kecil (level 5: 10 ribu, level 6: 40 ribu), jadi bot tetap cepat.
+  - Pemilihan: tiga kandidat diukur paralel terhadap Stockfish (UCI_Elo 1500–2500, 24 partai per lawan, 100 ms/langkah, pembukaan dan metode sama dengan kalibrasi M2) lewat input baru `calibrate.yml` (`levels`, `merge`, `nodes`). Kandidat 10 ribu / 40 ribu dipilih; hasil run itu dipakai langsung sebagai data resmi karena parameternya sama persis dengan konstanta di kode (batas node dicatat per level di berkas data). Level 1–4 di berkas data tetap dari kalibrasi M2 (16 partai per lawan, UCI_Elo 1320–1900); level 5–6 memakai 24 partai per lawan pada UCI_Elo 1500–2500 (jumlah per lawan tercatat di tiap baris hasil). Hasil: level 5 ≈1826 (95%: 1748–1904), level 6 ≈2093 (2016–2170); tangga 1283 / 1459 / 1604 / 1826 / 2093.
+  - Label UI level 5 "master", level 6 "grandmaster".
+- Rujukan: SPEC §8, §9 M2b, D-047, D-052, D-053.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

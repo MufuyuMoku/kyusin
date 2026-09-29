@@ -12,7 +12,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M1 | selesai | 2026-09-28 | Kontrak final, provably fair + verify, replay, Reversi memenuhi §7 |
 | M1b | selesai | 2026-09-28 | Papan grid CSS + sprite piksel, komponen papan bersama, tes jendela asli tauri-driver di CI Windows, sapaan baru + bentuk jamak |
 | M2 | selesai | 2026-09-28 | Catur: mesin (cozy-chess), SAN/PGN, 4 level terkalibrasi Stockfish 19, jam host, tutorial, seret-lepas + klik, tes jendela asli |
-| M2b | belum mulai | | Level catur 5–6 (≥2000), setelah M3 (SPEC Rev. 9) |
+| M2b | selesai | 2026-09-29 | Catur level 5–6 (mesin kedua; ≈1826, ≈2093 vs Stockfish), tangga Reversi 4 level, aturan tangga ≤ 400 di CI (SPEC Rev. 10) |
 | M3 | selesai | 2026-09-28 | Profil tunggal, Glicko-2 (rating lokal), riwayat, statistik; kalibrasi antar-bot Reversi. Sebelumnya: perbaikan Rev. 9 (menu jeda, penundaan, kursor) |
 | M4 | belum mulai | | |
 | M5 | belum mulai | | |
@@ -36,6 +36,16 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Catur | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M2); rating lokal di M3 |
 
 ## Log sesi
+
+### 2026-09-29 — M2b: level catur 5–6 dan tangga level (SPEC Rev. 10)
+- Hasil uji klien atas perbaikan M2 dan M3: sesuai; D-048–D-052 disetujui. SPEC disunting menjadi Revisi 10 (D-053): aturan tangga level merata (§8), M2b diperluas (§9), entri §12.
+- Pemeriksaan CI baru: selisih rating dua level bot berurutan ≤ 400 untuk setiap game kompetitif (level terbawah yang hanya punya batas atas dikecualikan). Saat dipasang, pemeriksaan ini langsung menangkap Reversi level 2 → 3 (selisih 789).
+- Reversi (D-054): empat level, kalibrasi lokal antar-bot 1000 partai per pasangan: 1000 / 1344 / 1680 / 2001 (selisih 344 / 336 / 321).
+- Catur level 5–6 (D-054): mesin kedua (PVS, tabel transposisi, null move, LMR, evaluasi bertahap); level 1–4 tidak diubah. Tiga kandidat batas node diukur paralel terhadap Stockfish 19 di GitHub Actions (cabang `m2b`, run 36506334919 / 36506342288 / 36506349760). Terpilih 10 ribu / 40 ribu node: level 5 ≈1826 (95%: 1748–1904), level 6 ≈2093 (2016–2170). Tangga catur: (level 1 < 1320) / 1283 / 1459 / 1604 / 1826 / 2093.
+- Alat: `calibrate.yml` mendapat input `levels`, `merge`, `nodes`; `calibrate_internal --pair A,B` untuk adu dua level.
+- Tes: 135 tes Rust (termasuk tangga level, mesin kedua: evaluasi simetris, mat, determinisme; kekuatan level 5 > 4 dan 6 > 5), 34 tes UI.
+- Belum/sisa: tidak ada layar baru, jadi tidak ada tes jendela asli baru; pilihan level di layar catur kini 6 dan Reversi 4 (tes jendela asli yang ada tetap memakai level 1).
+- Langkah berikutnya: M4.
 
 ### 2026-09-28 — Perbaikan hasil uji M2 (SPEC Rev. 9) dan M3
 - SPEC Revisi 9 ditimpa (D-048): menu jeda + penundaan, kursor mengikuti interaksi terakhir, milestone M2b.

@@ -58,7 +58,7 @@ fn finds_mate_in_one_at_every_level_above_one() {
     let board: Board = "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4"
         .parse()
         .unwrap();
-    for level in 2..=4 {
+    for level in 2..=6 {
         let mv = ChessBot::new(level, [1; 32]).choose(&board).unwrap();
         assert_eq!(mv.to.to_string(), "f7", "level {level}");
     }
@@ -76,7 +76,7 @@ fn does_not_hang_the_queen() {
 
 #[test]
 fn all_levels_play_legal_games() {
-    for (w, b) in [(1, 4), (4, 1), (2, 3)] {
+    for (w, b) in [(1, 4), (4, 1), (2, 3), (5, 6), (6, 4)] {
         play(w, b, w * 10 + b);
     }
 }
@@ -99,15 +99,31 @@ fn stronger_levels_score_more() {
     assert!(p43 >= 7, "level 4 hanya {} dari 6 poin", p43 as f64 / 2.0);
 }
 
+/// M2b: level 5–6 (mesin kedua) di atas level 4 dan saling berurutan.
+#[test]
+fn strong_levels_score_more() {
+    let p54 = points(5, 4, 6);
+    eprintln!("level 5 vs 4: {}/{}", p54 as f64 / 2.0, 6);
+    assert!(p54 >= 8, "level 5 hanya {} dari 6 poin", p54 as f64 / 2.0);
+    let p65 = points(6, 5, 6);
+    eprintln!("level 6 vs 5: {}/{}", p65 as f64 / 2.0, 6);
+    assert!(p65 >= 7, "level 6 hanya {} dari 6 poin", p65 as f64 / 2.0);
+}
+
+#[test]
+fn strong_levels_are_deterministic() {
+    assert_eq!(play(5, 6, 3), play(5, 6, 3));
+}
+
 #[test]
 fn ratings_from_calibration() {
     let r = kyusin_bots::ratings(kyusin_games::catur::ID);
-    assert_eq!(r.len(), 4);
+    assert_eq!(r.len(), 6);
     // Level 1 hanya punya taksiran ekstrapolasi: tidak ditampilkan.
     assert_eq!(r[0], None);
     let known: Vec<i64> = r[1..]
         .iter()
-        .map(|x| x.expect("level 2-4 terkalibrasi"))
+        .map(|x| x.expect("level 2-6 terkalibrasi"))
         .collect();
     assert!(
         known.windows(2).all(|w| w[0] < w[1]),
