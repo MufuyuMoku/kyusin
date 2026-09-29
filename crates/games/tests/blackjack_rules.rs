@@ -507,9 +507,7 @@ fn random_playouts_settle_every_chip_and_end_at_the_cut() {
 fn same_seed_same_game_and_text_view() {
     let play = |seed: u8| {
         let mut g = fresh(seed);
-        for cmd in ["bet 100"] {
-            act(&mut g, cmd);
-        }
+        act(&mut g, "bet 100");
         (Session::state_hash(&g), view(&g))
     };
     assert_eq!(play(5), play(5));

@@ -6,6 +6,8 @@
 
 use kyusin_core::{Registry, RegistryError};
 
+pub mod blackjack;
+pub mod cards;
 pub mod catur;
 pub mod fixture;
 pub mod reversi;
@@ -15,6 +17,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     let mut registry = Registry::new();
     registry.register(catur::cartridge()?)?;
     registry.register(reversi::cartridge()?)?;
+    registry.register(blackjack::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

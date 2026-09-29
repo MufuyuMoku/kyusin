@@ -1,0 +1,191 @@
+game = "blackjack"
+judul = { id = "Blackjack: dasar", en = "Blackjack: basics" }
+
+# Shoe tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+potong = 100
+shoe = [
+  # Ronde 1: 9 7 lawan bandar 10 (hole 7) → hit 4 → stand.
+  "9h", "Td", "7c", "7s", "4d",
+  # Ronde 2: 6 5 lawan bandar 6 (hole 10) → double → K; bandar ambil 9, bust.
+  "6s", "6d", "5h", "Tc", "Kd", "9c",
+  # Ronde 3: 8 8 lawan bandar 7 (hole 10) → split → 8 T, 8 9.
+  "8c", "7h", "8d", "Ts", "Th", "9s",
+  # Ronde 4: T 6 lawan bandar 10 (hole 8) → surrender.
+  "Td", "Tc", "6s", "8h",
+  # Cadangan.
+  "2c", "3c", "4c", "5c", "6c", "7d", "8s", "9d", "Kc", "Qd",
+]
+
+[man.aturan]
+id = """
+Kamu melawan bandar. Tujuan: nilai kartumu lebih dekat ke 21 daripada bandar
+tanpa lewat 21. Kartu 2–10 bernilai sesuai angkanya, J/Q/K bernilai 10, as
+bernilai 1 atau 11. Dua kartu pertama as + kartu bernilai 10 adalah blackjack.
+
+Aturan meja ini: 6 dek; taruhan 10–2.000 chip (kelipatan 10). Pemain dan
+bandar masing-masing mendapat dua kartu; satu kartu bandar tertutup.
+- Blackjack dibayar 3:2. Menang biasa 1:1. Nilai sama = seri (taruhan kembali).
+- Bila kartu terbuka bandar as atau bernilai 10, bandar mengintip; bila
+  bandar blackjack, ronde langsung selesai.
+- Insurance: bila bandar menunjukkan as, kamu boleh memasang setengah
+  taruhan bahwa bandar blackjack; dibayar 2:1. Strategi dasar: tolak.
+- Hit = ambil kartu; stand = berhenti. Lewat 21 (bust) langsung kalah.
+- Double: gandakan taruhan di dua kartu pertama mana pun (juga setelah
+  split), lalu ambil tepat satu kartu.
+- Split: dua kartu peringkat sama dipisah jadi dua tangan dengan taruhan
+  sama, sampai 4 tangan. As yang di-split hanya mendapat satu kartu
+  masing-masing, dan 21 setelah split bukan blackjack.
+- Late surrender: sebagai aksi pertama (bukan setelah split), kamu boleh
+  menyerah dan mendapat kembali setengah taruhan.
+- Bandar mengambil kartu sampai 17 dan berdiri di semua 17, termasuk soft 17.
+- Shoe dikocok ulang setelah sekitar 75% kartu terpakai.
+
+RTP di bawah berlaku untuk strategi dasar aturan ini; bermain tanpa
+strategi dasar memberi hasil lebih buruk.
+
+Provably fair per shoe: komitmen seed diumumkan saat shoe dikocok, dan seed
+dibuka saat shoe habis atau kamu berhenti. Verify lalu memutar ulang semua
+ronde dalam shoe itu. Seed tidak dibuka tiap ronde karena itu akan
+membocorkan urutan sisa kartu.
+"""
+en = """
+You play against the dealer. Goal: a hand closer to 21 than the dealer's
+without going over. Cards 2–10 count their number, J/Q/K count 10, an ace
+counts 1 or 11. An ace plus a ten-value card as the first two cards is a
+blackjack.
+
+This table: 6 decks; bets 10–2,000 chips (multiples of 10). Player and dealer
+get two cards each; one dealer card is face down.
+- Blackjack pays 3:2. A normal win pays 1:1. Equal totals push (bet returned).
+- If the dealer's up card is an ace or a ten-value card, the dealer peeks;
+  with a dealer blackjack the round ends at once.
+- Insurance: when the dealer shows an ace you may bet half your bet that the
+  dealer has blackjack; it pays 2:1. Basic strategy: decline.
+- Hit = take a card; stand = stop. Going over 21 (bust) loses at once.
+- Double: double your bet on any first two cards (also after a split), then
+  take exactly one card.
+- Split: two cards of the same rank become two hands with the same bet, up
+  to 4 hands. Split aces get one card each, and 21 after a split is not a
+  blackjack.
+- Late surrender: as your first action (not after a split) you may give up
+  and get half your bet back.
+- The dealer draws to 17 and stands on all 17s, including soft 17.
+- The shoe is reshuffled after about 75% of the cards are used.
+
+The RTP below applies to basic strategy for these rules; playing without
+basic strategy does worse.
+
+Provably fair per shoe: the seed commitment is announced when the shoe is
+shuffled, and the seed is revealed when the shoe runs out or you stop.
+Verify then replays every round in that shoe. The seed is not revealed after
+each round because that would leak the order of the remaining cards.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar taruhan dengan tombol chip, lalu [ BAGI ]. Saat giliranmu, pilih
+[ HIT ], [ STAND ], [ DOUBLE ], [ SPLIT ], atau [ SURRENDER ]; tombol yang
+tidak tersedia tampil redup dengan alasannya. Saat bandar menunjukkan as,
+pilih [ INSURANCE ] atau [ TOLAK ]. Keyboard: panah memindahkan fokus,
+Enter atau Spasi memilih. [ BERHENTI ] di antara ronde mengakhiri shoe.
+"""
+en = """
+Choose your bet with the chip buttons, then [ DEAL ]. On your turn choose
+[ HIT ], [ STAND ], [ DOUBLE ], [ SPLIT ], or [ SURRENDER ]; unavailable
+buttons are dimmed with the reason. When the dealer shows an ace, choose
+[ INSURANCE ] or [ DECLINE ]. Keyboard: the arrow keys move the focus, Enter
+or Space selects. [ STOP ] between rounds ends the shoe.
+"""
+
+[[langkah]]
+teks.id = "Kamu melawan bandar: dekati 21 tanpa lewat. Mulai dengan taruhan 10 chip."
+teks.en = "You play against the dealer: get close to 21 without going over. Start with a 10-chip bet."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pasang taruhan 10 lalu bagi kartu."
+petunjuk.en = "Bet 10, then deal."
+
+[[langkah]]
+teks.id = "Kamu punya 16 (9 + 7), bandar menunjukkan 10. Dengan 16 lawan 10, strategi dasar mengambil kartu: hit."
+teks.en = "You have 16 (9 + 7) and the dealer shows 10. With 16 against 10, basic strategy takes a card: hit."
+aksi = "hit"
+sorot = ["aksi:hit"]
+petunjuk.id = "Pilih HIT."
+petunjuk.en = "Choose HIT."
+
+[[langkah]]
+teks.id = "20. Berhenti di sini: stand. Bandar lalu membuka kartunya dan mengambil kartu sampai 17."
+teks.en = "20. Stop here: stand. The dealer then turns over the hidden card and draws to 17."
+aksi = "stand"
+sorot = ["aksi:stand"]
+petunjuk.id = "Pilih STAND."
+petunjuk.en = "Choose STAND."
+
+[[langkah]]
+teks.id = "Bandar 17, kamu 20: menang 1:1. Ronde berikutnya: taruhan 10 lagi."
+teks.en = "Dealer 17, you 20: a 1:1 win. Next round: bet 10 again."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pasang taruhan 10."
+petunjuk.en = "Bet 10."
+
+[[langkah]]
+teks.id = "11 lawan 6 bandar: saat yang bagus untuk double. Taruhan menjadi dua kali, dan kamu mendapat tepat satu kartu."
+teks.en = "11 against a dealer 6: a good time to double. Your bet doubles and you get exactly one card."
+aksi = "double"
+sorot = ["aksi:double"]
+petunjuk.id = "Pilih DOUBLE."
+petunjuk.en = "Choose DOUBLE."
+
+[[langkah]]
+teks.id = "21 dengan taruhan ganda, dan bandar bust. Ronde berikutnya: taruhan 10."
+teks.en = "21 on a doubled bet, and the dealer busts. Next round: bet 10."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pasang taruhan 10."
+petunjuk.en = "Bet 10."
+
+[[langkah]]
+teks.id = "Sepasang 8. Strategi dasar selalu memisah 8: split menjadi dua tangan dengan taruhan sama."
+teks.en = "A pair of 8s. Basic strategy always splits 8s: split into two hands with the same bet."
+aksi = "split"
+sorot = ["aksi:split"]
+petunjuk.id = "Pilih SPLIT."
+petunjuk.en = "Choose SPLIT."
+
+[[langkah]]
+teks.id = "Tangan pertama 18 (8 + 10). Stand."
+teks.en = "The first hand is 18 (8 + 10). Stand."
+aksi = "stand"
+sorot = ["aksi:stand"]
+petunjuk.id = "Pilih STAND untuk tangan pertama."
+petunjuk.en = "Choose STAND for the first hand."
+
+[[langkah]]
+teks.id = "Tangan kedua 17 (8 + 9). Stand juga."
+teks.en = "The second hand is 17 (8 + 9). Stand as well."
+aksi = "stand"
+sorot = ["aksi:stand"]
+petunjuk.id = "Pilih STAND untuk tangan kedua."
+petunjuk.en = "Choose STAND for the second hand."
+
+[[langkah]]
+teks.id = "Bandar 17: tangan 18 menang, tangan 17 seri. Satu ronde lagi: taruhan 10."
+teks.en = "Dealer 17: the 18 wins and the 17 pushes. One more round: bet 10."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pasang taruhan 10."
+petunjuk.en = "Bet 10."
+
+[[langkah]]
+teks.id = "16 lawan 10 lagi, tapi kali ini sebagai aksi pertama kamu boleh menyerah: surrender mengembalikan setengah taruhan."
+teks.en = "16 against 10 again, but as your first action you may give up: surrender returns half your bet."
+aksi = "surrender"
+sorot = ["aksi:surrender"]
+petunjuk.id = "Pilih SURRENDER."
+petunjuk.en = "Choose SURRENDER."
+
+[[langkah]]
+teks.id = "Bila bandar menunjukkan as, kamu ditawari insurance; strategi dasar menolaknya. Seed shoe dibuka saat shoe habis atau kamu berhenti, lalu verify memeriksa semua ronde. Tutorial selesai."
+teks.en = "When the dealer shows an ace you are offered insurance; basic strategy declines it. The shoe seed is revealed when the shoe runs out or you stop, then verify checks every round. Tutorial finished."

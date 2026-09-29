@@ -1,0 +1,51 @@
+id = "blackjack"
+nama = { id = "Blackjack", en = "Blackjack" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP strategi dasar untuk aturan meja ini (6 dek, S17, 3:2, DAS, split
+# sampai 4 tangan, as split satu kartu, late surrender, potong 75%).
+# Dihitung dengan simulasi (lihat D-057); CI memverifikasinya setiap push.
+rtp = 99.60
+tutorial = "tutorials/blackjack.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang taruhan dan bagi kartu (10–2.000, kelipatan 10)", en = "Place a bet and deal (10–2,000, multiples of 10)" }
+
+[[perintah]]
+pola = "hit"
+ringkas = { id = "Ambil satu kartu", en = "Take a card" }
+
+[[perintah]]
+pola = "stand"
+ringkas = { id = "Berhenti mengambil kartu", en = "Stop taking cards" }
+
+[[perintah]]
+pola = "double"
+ringkas = { id = "Gandakan taruhan, ambil tepat satu kartu", en = "Double the bet and take exactly one card" }
+
+[[perintah]]
+pola = "split"
+ringkas = { id = "Pisah pasangan jadi dua tangan (taruhan sama)", en = "Split a pair into two hands (same bet)" }
+
+[[perintah]]
+pola = "surrender"
+ringkas = { id = "Menyerah: kembalikan setengah taruhan (aksi pertama saja)", en = "Surrender: get half the bet back (first action only)" }
+
+[[perintah]]
+pola = "insure"
+ringkas = { id = "Ambil insurance saat bandar menunjukkan as", en = "Take insurance when the dealer shows an ace" }
+
+[[perintah]]
+pola = "decline"
+ringkas = { id = "Tolak insurance", en = "Decline insurance" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti di antara ronde (seed shoe dibuka)", en = "Stop between rounds (the shoe seed is revealed)" }
