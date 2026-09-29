@@ -5,12 +5,15 @@
 //! Level dibatasi kedalaman dan jumlah node (bukan waktu), jadi hasilnya
 //! deterministik dari seed dan sama di semua mesin. Perkiraan rating tiap
 //! level berasal dari kalibrasi terhadap Stockfish (data/calibration).
+//!
+//! Level 5–6 (M2b) memakai mesin yang lebih kuat di [`crate::catur_search`];
+//! level 1–4 tidak diubah supaya data kalibrasinya tetap berlaku.
 
 use cozy_chess::{Board, Color, Move, Piece, Square};
 use kyusin_core::{GameRng, Player, PlayerId, SeatKind, Seed, Session};
 use kyusin_games::catur::{View, san};
 
-pub const LEVELS: u8 = 4;
+pub const LEVELS: u8 = 6;
 
 const MATE: i32 = 1_000_000;
 
@@ -48,6 +51,26 @@ fn params(level: u8) -> Params {
             noise: 0,
             node_limit: 600_000,
         },
+    }
+}
+
+/// Batas node mesin kuat untuk level 5–6 (D-054), bila level itu memakainya.
+pub fn strong_nodes(level: u8) -> Option<u64> {
+    strong_limits(level).map(|l| l.nodes)
+}
+
+/// Batas mesin kuat untuk level 5–6 (D-054).
+fn strong_limits(level: u8) -> Option<crate::catur_search::Limits> {
+    match level {
+        5 => Some(crate::catur_search::Limits {
+            nodes: 10_000,
+            noise: 5,
+        }),
+        6 => Some(crate::catur_search::Limits {
+            nodes: 40_000,
+            noise: 0,
+        }),
+        _ => None,
     }
 }
 
@@ -227,6 +250,8 @@ impl Search {
 pub struct ChessBot {
     level: u8,
     rng: GameRng,
+    /// Batas node pengganti untuk level 5–6; hanya untuk alat kalibrasi.
+    nodes: Option<u64>,
 }
 
 impl ChessBot {
@@ -234,17 +259,47 @@ impl ChessBot {
         ChessBot {
             level,
             rng: GameRng::from_seed(seed),
+            nodes: None,
+        }
+    }
+
+    /// Seperti [`ChessBot::new`], dengan batas node pengganti untuk level
+    /// 5–6. Dipakai alat kalibrasi untuk mengukur beberapa kandidat
+    /// sebelum konstantanya ditetapkan.
+    pub fn with_nodes(level: u8, seed: Seed, nodes: Option<u64>) -> Self {
+        ChessBot {
+            nodes,
+            ..ChessBot::new(level, seed)
         }
     }
 
     /// Langkah terbaik menurut level ini (sandi cozy-chess); `None` bila
     /// tidak ada langkah sah.
     pub fn choose(&mut self, board: &Board) -> Option<Move> {
-        let p = params(self.level);
         let mut moves = moves_of(board);
         if moves.is_empty() {
             return None;
         }
+        if let Some(mut limits) = strong_limits(self.level) {
+            if let Some(n) = self.nodes {
+                limits.nodes = n;
+            }
+            self.rng.shuffle(&mut moves);
+            let noise: Vec<i32> = moves
+                .iter()
+                .map(|_| {
+                    if limits.noise == 0 {
+                        0
+                    } else {
+                        self.rng.below(2 * limits.noise as u32 + 1) as i32 - limits.noise
+                    }
+                })
+                .collect();
+            return Some(crate::catur_search::best_move(
+                board, &moves, &noise, &limits,
+            ));
+        }
+        let p = params(self.level);
         self.rng.shuffle(&mut moves);
         order(board, &mut moves);
         // Gangguan tetap per langkah akar selama pencarian ini.

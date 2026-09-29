@@ -12,6 +12,11 @@
 //! cargo run --release -p kyusin-bots --example calibrate_catur -- \
 //!   --stockfish PATH --games 16 --elos 1320,1500,1700,1900 \
 //!   --levels 1,2,3,4 --movetime 100 --date 2026-09-28 --out data/calibration/catur.json
+//!
+//! M2b (D-054): `--merge BERKAS` mempertahankan level lain dari berkas yang
+//! ada (misalnya hanya mengukur level 5–6); `--nodes 5:10000,6:40000`
+//! mengganti batas node level 5–6 untuk mengukur kandidat. Batas node yang
+//! dipakai dicatat per level di keluaran.
 
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
@@ -124,10 +129,15 @@ fn game(
     opening: &[&str],
     seed: u64,
     movetime: u32,
+    nodes: Option<u64>,
 ) -> f64 {
     let mut g = Catur::new(Config::default(), [0; 32]).unwrap();
     let mut uci = Vec::new();
-    let mut bot = ChessBot::new(level, derive(&[level; 32], &format!("kalibrasi:{seed}")));
+    let mut bot = ChessBot::with_nodes(
+        level,
+        derive(&[level; 32], &format!("kalibrasi:{seed}")),
+        nodes,
+    );
     let apply = |g: &mut Catur, uci: &mut Vec<String>, san_text: &str| {
         let legal = g.legal().to_vec();
         let i = san::find(&legal, san_text).expect("langkah sah");
@@ -186,6 +196,16 @@ fn main() {
     let movetime: u32 = arg("--movetime", "100").parse().unwrap();
     let out = arg("--out", "data/calibration/catur.json");
     let date = arg("--date", "");
+    let merge = arg("--merge", "");
+    let overrides: Vec<(u32, u64)> = arg("--nodes", "")
+        .split(',')
+        .filter(|x| !x.trim().is_empty())
+        .map(|x| {
+            let (l, n) = x.split_once(':').expect("format --nodes LEVEL:NODE");
+            (l.trim().parse().unwrap(), n.trim().parse().unwrap())
+        })
+        .collect();
+    let node_of = |level: u32| overrides.iter().find(|o| o.0 == level).map(|o| o.1);
 
     let mut sf = Stockfish::start(&path);
     eprintln!("mesin lawan: {}", sf.name);
@@ -199,7 +219,15 @@ fn main() {
             for i in 0..games {
                 let opening = OPENINGS[(i as usize / 2) % OPENINGS.len()];
                 let seed = u64::from(level) * 1_000_000 + u64::from(elo) * 100 + u64::from(i);
-                points += game(&mut sf, level as u8, i % 2 == 0, opening, seed, movetime);
+                points += game(
+                    &mut sf,
+                    level as u8,
+                    i % 2 == 0,
+                    opening,
+                    seed,
+                    movetime,
+                    node_of(level),
+                );
             }
             eprintln!("level {level} vs UCI_Elo {elo}: {points}/{games}");
             rows.push((f64::from(elo), points, f64::from(games)));
@@ -210,13 +238,30 @@ fn main() {
             "level {level}: ~{elo:.0} ± {half:.0}{}",
             if extrapolated { " (ekstrapolasi)" } else { "" }
         );
-        report.push(json!({
+        let mut entry = json!({
             "level": level,
             "elo": elo.round(),
             "ci95": [(elo - half).round(), (elo + half).round()],
             "extrapolated": extrapolated,
             "results": per_opponent,
-        }));
+        });
+        if let Some(n) = node_of(level).or(kyusin_bots::catur::strong_nodes(level as u8)) {
+            entry["nodes"] = json!(n);
+        }
+        report.push(entry);
+    }
+    // Level yang tidak diukur ulang diambil dari berkas lama.
+    if !merge.is_empty() {
+        let old: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&merge).expect("berkas --merge"))
+                .unwrap();
+        for l in old["levels"].as_array().cloned().unwrap_or_default() {
+            let n = l["level"].as_u64().unwrap_or(0) as u32;
+            if !levels.contains(&n) {
+                report.push(l);
+            }
+        }
+        report.sort_by_key(|l| l["level"].as_u64().unwrap_or(0));
     }
     let doc = json!({
         "game": "catur",

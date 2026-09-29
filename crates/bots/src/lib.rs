@@ -7,6 +7,7 @@ use kyusin_core::{Player, Seed};
 
 pub mod calibration;
 pub mod catur;
+mod catur_search;
 pub mod reversi;
 
 /// Jumlah level bot untuk sebuah game (0 = tidak ada bot).

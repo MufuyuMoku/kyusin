@@ -73,6 +73,30 @@ fn main() {
     let levels = kyusin_bots::levels(&id);
     assert!(levels > 0, "game `{id}` tidak punya bot");
 
+    // `--pair A,B`: hanya adu level A lawan B (alat bantu menyetel level),
+    // tanpa menulis berkas.
+    let pair = arg("--pair", "");
+    if !pair.is_empty() {
+        let ab: Vec<u8> = pair.split(',').map(|x| x.trim().parse().unwrap()).collect();
+        let start = std::time::Instant::now();
+        let points: f64 = (0..games)
+            .map(|i| game(&id, ab[0], ab[1], (i % 2) as u8, i, random_plies))
+            .sum();
+        let score = points / f64::from(games);
+        let diff = if score > 0.0 && score < 1.0 {
+            format!("{:+.0}", -400.0 * (1.0 / score - 1.0).log10())
+        } else {
+            "tak berhingga".into()
+        };
+        eprintln!(
+            "level {} vs level {}: {points}/{games} (selisih ≈{diff}), {:.1} s",
+            ab[0],
+            ab[1],
+            start.elapsed().as_secs_f64()
+        );
+        return;
+    }
+
     let mut elos: Vec<f64> = vec![ANCHOR];
     let mut report = vec![json!({
         "level": 1,

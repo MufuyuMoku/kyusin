@@ -18,6 +18,15 @@ on:
       movetime:
         description: "Waktu pikir Stockfish per langkah (ms)"
         default: "100"
+      levels:
+        description: "Level bot yang diukur, dipisah koma"
+        default: "1,2,3,4,5,6"
+      merge:
+        description: "Pertahankan level lain dari data/calibration/catur.json (true/false)"
+        default: "false"
+      nodes:
+        description: "Kandidat batas node level 5–6, misalnya 5:10000,6:40000 (kosong = konstanta di kode)"
+        default: ""
 
 permissions:
   contents: read
@@ -57,8 +66,12 @@ jobs:
             --games "${{ inputs.games }}" \
             --elos "${{ inputs.elos }}" \
             --movetime "${{ inputs.movetime }}" \
+            --levels "${{ inputs.levels }}" \
+            --nodes "${{ inputs.nodes }}" \
+            $([ "${{ inputs.merge }}" = "true" ] && echo --merge data/calibration/catur.json) \
             --date "$(date -u +%F)" \
-            --out data/calibration/catur.json
+            --out "$RUNNER_TEMP/catur.json"
+          cp "$RUNNER_TEMP/catur.json" data/calibration/catur.json
 
       - uses: actions/upload-artifact@v4
         with:
