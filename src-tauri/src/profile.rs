@@ -41,8 +41,13 @@ pub(crate) fn record(
     replay_id: Option<i64>,
     finished_at: i64,
 ) -> Option<RatingChange> {
+    let manifest = &state.registry.get(&replay.game)?.manifest;
+    // Casino melawan bandar dicatat per ronde di ringkasan casino (M4).
+    if manifest.is_against_house() {
+        return None;
+    }
     let (outcome, level) = human_outcome(replay)?;
-    let competitive = state.registry.get(&replay.game)?.manifest.competitive;
+    let competitive = manifest.competitive;
     let store = state.store.as_ref().ok()?;
     let mut s = store.lock().unwrap();
     let rating = match (competitive, level) {
@@ -80,6 +85,8 @@ pub(crate) struct ProfileDto {
     /// Game dari pertandingan terakhir yang selesai.
     last_game: Option<String>,
     name_max: usize,
+    /// Saldo chip profil (M4).
+    chips: i64,
 }
 
 pub(crate) fn profile_dto(state: &AppState) -> Result<ProfileDto, Localized> {
@@ -91,6 +98,7 @@ pub(crate) fn profile_dto(state: &AppState) -> Result<ProfileDto, Localized> {
         created_at: p.created_at,
         last_game: s.last_game().map_err(store_error)?,
         name_max: kyusin_store::NAME_MAX,
+        chips: s.chips(now_ms()).map_err(store_error)?,
     })
 }
 
@@ -145,10 +153,21 @@ pub(crate) struct HistoryDto {
     rating: Option<RatingChange>,
 }
 
+/// Ringkasan sepanjang waktu terhadap bandar, per game casino (M4).
+#[derive(Serialize)]
+pub(crate) struct CasinoDto {
+    game: String,
+    rounds: i64,
+    wagered: i64,
+    net: i64,
+    last_played: i64,
+}
+
 #[derive(Serialize)]
 pub(crate) struct StatsDto {
     games: Vec<GameStatsDto>,
     history: Vec<HistoryDto>,
+    casino: Vec<CasinoDto>,
 }
 
 /// Jumlah baris riwayat di halaman statistik.
@@ -194,7 +213,23 @@ pub(crate) fn stats_dto(state: &AppState, game: Option<&str>) -> Result<StatsDto
             }),
         })
         .collect();
-    Ok(StatsDto { games, history })
+    let casino = s
+        .casino_stats()
+        .map_err(store_error)?
+        .into_iter()
+        .map(|c| CasinoDto {
+            game: c.game,
+            rounds: c.rounds,
+            wagered: c.wagered,
+            net: c.net,
+            last_played: c.last_played,
+        })
+        .collect();
+    Ok(StatsDto {
+        games,
+        history,
+        casino,
+    })
 }
 
 #[tauri::command]

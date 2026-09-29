@@ -109,9 +109,23 @@ pub(crate) struct Running {
     paused: bool,
     /// Perubahan rating lokal setelah selesai (M3).
     rating: Option<crate::profile::RatingChange>,
+    /// Game casino melawan bandar: bagian hasil yang sudah dicatat ke chip
+    /// profil (M4). `None` untuk game lain.
+    ledger: Option<crate::casino::Ledger>,
+    /// Saldo chip terakhir yang diketahui (game casino).
+    chips: Option<i64>,
 }
 
 impl Running {
+    /// Mencatat ronde casino yang baru selesai ke chip profil.
+    fn settle_chips(&mut self, state: &AppState) {
+        if let Some(ledger) = self.ledger.as_mut() {
+            let view = self.m.session().view_data(self.human);
+            crate::casino::settle(state, &self.game, &view, ledger);
+            self.chips = crate::casino::chips(state);
+        }
+    }
+
     fn pending(&self) -> Option<u8> {
         self.m.session().pending_players().first().copied()
     }
@@ -189,6 +203,8 @@ pub(crate) struct MatchDto {
     paused: bool,
     /// Perubahan rating lokal bila pertandingan ini dihitung.
     rating: Option<crate::profile::RatingChange>,
+    /// Saldo chip profil (game casino).
+    chips: Option<i64>,
 }
 
 /// Isi pertandingan tertunda di store: replay sejauh ini (konfigurasi,
@@ -279,7 +295,20 @@ fn dto(r: &Running) -> MatchDto {
         started_at: r.started_at,
         paused: r.paused,
         rating: r.rating,
+        chips: r.chips,
     }
+}
+
+/// Game casino yang melawan bandar (chip profil dipakai).
+fn is_house(state: &AppState, game: &str) -> bool {
+    state
+        .registry
+        .get(game)
+        .is_some_and(|c| c.manifest.is_against_house())
+}
+
+fn ledger_for(state: &AppState, game: &str, m: &Match, human: u8) -> Option<crate::casino::Ledger> {
+    is_house(state, game).then(|| crate::casino::Ledger::from_view(&m.session().view_data(human)))
 }
 
 fn save(state: &AppState, replay: &Replay, started_at: i64) -> Result<i64, String> {
@@ -405,7 +434,10 @@ fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
     )
     .map_err(|e| e.message())?;
     let pending = m.session().pending_players().first().copied();
+    let ledger = ledger_for(state, game, &m, data.human);
     Ok(Running {
+        chips: ledger.and_then(|_| crate::casino::chips(state)),
+        ledger,
         game: game.to_string(),
         m,
         human: data.human,
@@ -421,10 +453,34 @@ fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
     })
 }
 
+/// Game casino: ronde berjalan diselesaikan secara netral (insurance
+/// ditolak, semua tangan stand), lalu sesi diakhiri dengan `leave` (D-058).
+fn close_house(r: &mut Running) -> Result<(), Localized> {
+    let mut guard = 0;
+    while !r.m.session().is_over() && guard < 64 {
+        let legal: Vec<String> =
+            r.m.session()
+                .legal_actions(r.human)
+                .iter()
+                .map(|a| a.usage())
+                .collect();
+        let pick = ["leave", "decline", "stand"]
+            .into_iter()
+            .find(|c| legal.iter().any(|l| l == c))
+            .ok_or_else(no_match)?;
+        r.m.act(r.human, pick).map_err(|e| e.message())?;
+        guard += 1;
+    }
+    Ok(())
+}
+
 /// Menyerah atas nama pemain lokal. Bila sedang giliran bot, bot
 /// melangkah dulu sampai giliran pemain (aturan hanya menerima aksi dari
 /// kursi yang ditunggu).
 fn resign(r: &mut Running) -> Result<(), Localized> {
+    if r.ledger.is_some() {
+        return close_house(r);
+    }
     while !r.m.session().is_over() && !r.human_pending() {
         match r.m.step_auto().map_err(|e| e.message())? {
             Some(mv) => r.moved(mv.seat),
@@ -500,7 +556,14 @@ pub(crate) fn match_start(
         }),
         paused: false,
         rating: None,
+        ledger: None,
+        chips: None,
     };
+    let mut running = running;
+    running.ledger = ledger_for(&state, &running.game, &running.m, running.human);
+    if running.ledger.is_some() {
+        running.chips = crate::casino::chips(&state);
+    }
     let dto = dto(&running);
     if let Some(old) = state.play.lock().unwrap().replace(running) {
         leave(&state, old);
@@ -516,12 +579,17 @@ pub(crate) fn match_act(
     let mut guard = state.play.lock().unwrap();
     let r = guard.as_mut().ok_or_else(no_match)?;
     r.unpause();
+    if r.ledger.is_some() {
+        let view = r.m.session().view_data(r.human);
+        crate::casino::check(&state, &view, &command)?;
+    }
     // Waktu habis sebelum langkah ini: yang berlaku adalah timeout.
     if !r.flag_if_expired() {
         r.m.act(r.human, &command).map_err(|e| e.message())?;
         let human = r.human;
         r.moved(human);
     }
+    r.settle_chips(&state);
     finish(&state, r);
     Ok(dto(r))
 }
@@ -548,6 +616,7 @@ pub(crate) fn match_step(state: State<'_, AppState>) -> Result<MatchDto, Localiz
     {
         r.moved(mv.seat);
     }
+    r.settle_chips(&state);
     finish(&state, r);
     Ok(dto(r))
 }
@@ -594,6 +663,7 @@ pub(crate) fn match_resign(state: State<'_, AppState>) -> Result<MatchDto, Local
     let r = guard.as_mut().ok_or_else(no_match)?;
     r.unpause();
     resign(r)?;
+    r.settle_chips(&state);
     finish(&state, r);
     Ok(dto(r))
 }
@@ -616,6 +686,7 @@ pub(crate) fn match_resume(id: String, state: State<'_, AppState>) -> Result<Mat
 pub(crate) fn suspended_forfeit(id: String, state: State<'_, AppState>) -> Result<(), Localized> {
     let mut r = restore(&state, &id)?;
     resign(&mut r)?;
+    r.settle_chips(&state);
     finish(&state, &mut r);
     Ok(())
 }
@@ -936,6 +1007,8 @@ mod tests {
             clock: clock.then(|| HostClock::new([300_000; 2], 0, Some(0))),
             paused: false,
             rating: None,
+            ledger: None,
+            chips: None,
         }
     }
 
@@ -1062,12 +1135,104 @@ mod tests {
             clock: None,
             paused: false,
             rating: None,
+            ledger: None,
+            chips: None,
         };
         finish(&st, &mut r);
         assert!(r.rating.is_none());
         let s = store_of(&st).unwrap().lock().unwrap();
         assert_eq!(s.history(None, 10).unwrap().len(), 1);
         assert!(s.rating("fixture").unwrap().is_none());
+    }
+
+    fn house_running(st: &AppState, shoe: &[&str]) -> Running {
+        let fair = fair_record(None).unwrap();
+        let config = serde_json::json!({ "shoe": shoe, "potong": 1000 });
+        let players: Vec<Box<dyn Player>> = vec![Box::new(Human)];
+        let m = Match::new(st.registry.get("blackjack").unwrap(), config, fair, players).unwrap();
+        let ledger = ledger_for(st, "blackjack", &m, 0);
+        assert!(ledger.is_some(), "blackjack memakai chip profil");
+        Running {
+            game: "blackjack".into(),
+            m,
+            human: 0,
+            started_at: 7,
+            replay_id: None,
+            verify: None,
+            save_error: None,
+            clock: None,
+            paused: false,
+            rating: None,
+            ledger,
+            chips: None,
+        }
+    }
+
+    fn house_act(st: &AppState, r: &mut Running, command: &str) -> Result<(), Localized> {
+        let view = r.m.session().view_data(0);
+        crate::casino::check(st, &view, command)?;
+        r.m.act(0, command).map_err(|e| e.message())?;
+        r.settle_chips(st);
+        finish(st, r);
+        Ok(())
+    }
+
+    #[test]
+    fn casino_rounds_move_profile_chips_once() {
+        let st = state();
+        // Ronde 1: blackjack +150. Ronde 2: 20 lawan 17 → +100 (setelah tunda).
+        let mut r = house_running(&st, &["Ah", "9c", "Kd", "7s", "Th", "7d", "Tc", "Kh"]);
+        house_act(&st, &mut r, "bet 100").unwrap();
+        assert_eq!(r.chips, Some(10_150));
+        house_act(&st, &mut r, "bet 100").unwrap();
+        // Ditunda di tengah ronde lalu dilanjutkan: ronde 1 tidak dicatat ulang.
+        suspend(&st, r).unwrap();
+        let mut r = restore(&st, "blackjack").unwrap();
+        assert_eq!(r.chips, Some(10_150));
+        house_act(&st, &mut r, "stand").unwrap();
+        assert_eq!(r.chips, Some(10_250));
+        let s = store_of(&st).unwrap().lock().unwrap();
+        let c = s.casino_game("blackjack").unwrap().unwrap();
+        assert_eq!((c.rounds, c.wagered, c.net), (2, 200, 250));
+        // Casino tidak masuk riwayat rating.
+        assert!(s.history(None, 10).unwrap().is_empty());
+    }
+
+    #[test]
+    fn casino_actions_need_enough_chips() {
+        let st = state();
+        store_of(&st)
+            .unwrap()
+            .lock()
+            .unwrap()
+            .record_casino("blackjack", 1, 9_950, -9_950, 1)
+            .unwrap();
+        // Saldo 50.
+        let mut r = house_running(&st, &["6h", "9d", "5s", "7c", "Th", "Kd"]);
+        assert!(house_act(&st, &mut r, "bet 100").is_err());
+        house_act(&st, &mut r, "bet 50").unwrap();
+        // Double butuh 50 lagi, padahal 50 sedang dipertaruhkan.
+        let err = house_act(&st, &mut r, "double").unwrap_err();
+        assert!(err.id.contains("Chip tidak cukup"), "{err:?}");
+        house_act(&st, &mut r, "hit").unwrap();
+    }
+
+    #[test]
+    fn abandoning_a_suspended_casino_match_finishes_it_neutrally() {
+        let st = state();
+        let mut r = house_running(&st, &["Th", "6d", "6s", "Tc", "9h", "2c"]);
+        house_act(&st, &mut r, "bet 100").unwrap();
+        suspend(&st, r).unwrap();
+        let mut r = restore(&st, "blackjack").unwrap();
+        resign(&mut r).unwrap();
+        r.settle_chips(&st);
+        finish(&st, &mut r);
+        assert!(r.m.session().is_over());
+        let moves: Vec<&str> = r.m.moves().iter().map(|m| m.command.as_str()).collect();
+        assert_eq!(moves, vec!["bet 100", "stand", "leave"]);
+        // 16 lawan bandar 16 yang lalu mengambil 9 (bust): menang +100.
+        assert_eq!(r.chips, Some(10_100));
+        assert!(r.verify.as_ref().unwrap().ok);
     }
 
     #[test]

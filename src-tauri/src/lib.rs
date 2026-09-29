@@ -14,6 +14,7 @@ use kyusin_store::Store;
 use serde::Serialize;
 use tauri::{Manager, State, WebviewWindowBuilder};
 
+mod casino;
 mod play;
 mod profile;
 mod tutorial;
@@ -213,6 +214,7 @@ pub fn run() {
             profile::profile_get,
             profile::profile_set_name,
             profile::stats,
+            casino::chips_daily,
             play::replay_pgn,
             play::pgn_open,
             play::replay_list,
