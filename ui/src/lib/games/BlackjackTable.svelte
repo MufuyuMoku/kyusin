@@ -257,10 +257,13 @@
 		outline: 1px solid var(--fg);
 		outline-offset: -1px;
 	}
+	/* Satu baris tetap: angka yang berubah tidak boleh melipat baris dan
+	   menggeser kontrol di bawahnya. */
 	.info {
-		flex-wrap: wrap;
 		gap: 3ch;
-		min-height: var(--cell-h);
+		height: var(--cell-h);
+		white-space: nowrap;
+		overflow: hidden;
 	}
 	.controls {
 		display: flex;

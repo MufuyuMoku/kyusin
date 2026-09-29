@@ -114,9 +114,20 @@ export async function resetToMenu(s) {
 			'kyusin.settings.v2',
 			JSON.stringify({ bootMode: 'off', lang: 'id', theme: 'p1', intensity: 30 })
 		);
+		// Penanda di dokumen lama: hilang setelah muat ulang benar-benar terjadi.
+		window.__kyusinReset = true;
 		location.reload();
 	});
-	await s.waitFor(() => !!document.querySelector('.shell main .menu'), 'menu utama');
+	// Tunggu dokumen baru dan daftar game (dimuat asinkron dari backend),
+	// bukan sekadar kerangka menu.
+	await s.waitFor(
+		() =>
+			!window.__kyusinReset &&
+			!!document.querySelector('.shell main .menu') &&
+			[...document.querySelectorAll('.shell main .menu button')].some((b) => b.textContent.includes('Catur')),
+		'menu utama',
+		15000
+	);
 }
 
 /** Ganti tema lewat konsol (perintah teks yang sama dengan pemain). */
