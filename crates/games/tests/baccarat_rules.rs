@@ -115,7 +115,11 @@ fn banker_third_card_tableau() {
     ];
     for (banker, p3, draws) in cases {
         // Pemain K+K = 0 menarik p3; bankir dari K + total.
-        let b2 = if banker == 0 { "K" } else { &banker.to_string() };
+        let b2 = if banker == 0 {
+            "K"
+        } else {
+            &banker.to_string()
+        };
         let b2 = format!("{}d", if b2 == "1" { "A" } else { b2 });
         let p3c = format!("{p3}h");
         let cards = ["Kh", "Kc", "Ks", b2.as_str(), p3c.as_str(), "9c"];
@@ -128,7 +132,10 @@ fn banker_third_card_tableau() {
 #[test]
 fn payouts_commission_and_ties() {
     // Bankir menang: banker dibayar 0,95 (100 → 95).
-    let mut g = bac(&["2h", "Kc", "3d", "8s", "9h", "9c", "Kh", "Kd", "2c", "2d"], 100);
+    let mut g = bac(
+        &["2h", "Kc", "3d", "8s", "9h", "9c", "Kh", "Kd", "2c", "2d"],
+        100,
+    );
     act(&mut g, "bet banker 100");
     act(&mut g, "bet tie 20");
     act(&mut g, "deal");
@@ -153,7 +160,12 @@ fn payouts_commission_and_ties() {
 #[test]
 fn bets_limits_and_shoe_end() {
     let mut g = bac(&["4h", "3c", "5d", "3s", "4h", "3c", "5d", "3s"], 4);
-    for bad in ["bet player 10", "bet player 30", "bet banker 2020", "bet pair 20"] {
+    for bad in [
+        "bet player 10",
+        "bet player 30",
+        "bet banker 2020",
+        "bet pair 20",
+    ] {
         assert!(Session::act(&mut g, 0, bad).is_err(), "{bad}");
     }
     act(&mut g, "bet player 20");
@@ -172,7 +184,14 @@ fn bets_limits_and_shoe_end() {
 #[test]
 fn commands_round_trip_and_text_view() {
     let g = bac(&["4h", "3c"], 100);
-    for cmd in ["bet player 20", "bet banker 40", "bet tie 20", "clear", "deal", "leave"] {
+    for cmd in [
+        "bet player 20",
+        "bet banker 40",
+        "bet tie 20",
+        "clear",
+        "deal",
+        "leave",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }

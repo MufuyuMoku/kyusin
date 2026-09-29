@@ -1,0 +1,128 @@
+game = "baccarat"
+judul = { id = "Baccarat: dasar", en = "Baccarat: basics" }
+
+# Shoe tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+potong = 100
+shoe = [
+  # Ronde 1: pemain 4+4 = 8 natural, bankir 3+2 = 5 → pemain menang.
+  "4h", "3c", "4d", "2s",
+  # Ronde 2: pemain 2+3 = 5 menarik A → 6; bankir K+6 = 6, kartu ketiga
+  # pemain A → bankir berdiri; seri 6-6.
+  "2h", "Kc", "3d", "6s", "Ah",
+  # Cadangan.
+  "2c", "3c", "4c", "5c", "6c", "7d", "8s", "9d", "Kd", "Qd",
+]
+
+[man.aturan]
+id = """
+Dua tangan dibagi: pemain (player) dan bankir (banker). Kamu tidak memainkan
+tangan itu; kamu bertaruh tangan mana yang lebih dekat ke 9, atau seri.
+Nilai kartu: as 1, 2–9 sesuai angka, 10/J/Q/K 0; hanya angka satuan total
+yang dihitung (7 + 8 = 15 bernilai 5).
+
+Aturan meja ini: 8 dek; shoe selesai saat tersisa 16 kartu. Taruhan
+20–2.000 chip per tempat (kelipatan 20).
+- Player menang dibayar 1:1.
+- Banker menang dibayar 0,95:1 (komisi 5%: 100 menjadi +95).
+- Tie dibayar 8:1; bila seri, taruhan player dan banker kembali.
+- Natural: 8 atau 9 di dua kartu pertama salah satu tangan; tidak ada kartu
+  ketiga.
+- Pemain menarik kartu ketiga pada total 0–5, berdiri pada 6–7.
+- Bila pemain berdiri, bankir menarik pada 0–5. Bila pemain menarik kartu
+  ketiga bernilai p: bankir 0–2 menarik; 3 menarik kecuali p = 8; 4 menarik
+  bila p 2–7; 5 bila p 4–7; 6 bila p 6–7; 7 berdiri.
+
+RTP: player 98,76%, banker 98,94%, tie 85,64%. Dihitung dengan enumerasi
+tepat semua urutan kartu dari 8 dek dan diverifikasi dengan simulasi. Angka
+di manifest adalah player.
+
+Provably fair per shoe: komitmen seed diumumkan saat shoe dikocok, dan seed
+dibuka saat shoe habis atau kamu berhenti. Verify lalu memutar ulang semua
+ronde dalam shoe itu.
+"""
+en = """
+Two hands are dealt: player and banker. You do not play either hand; you bet
+on which one is closer to 9, or on a tie. Card values: ace 1, 2–9 their
+number, 10/J/Q/K 0; only the last digit of the total counts (7 + 8 = 15 is
+worth 5).
+
+This table: 8 decks; the shoe ends when 16 cards remain. Bets 20–2,000
+chips per spot (multiples of 20).
+- Player wins pay 1:1.
+- Banker wins pay 0.95:1 (5% commission: 100 becomes +95).
+- Tie pays 8:1; on a tie the player and banker bets are returned.
+- Natural: 8 or 9 in the first two cards of either hand; no third cards.
+- The player draws a third card on 0–5 and stands on 6–7.
+- If the player stands, the banker draws on 0–5. If the player drew a third
+  card worth p: banker 0–2 draws; 3 draws unless p = 8; 4 draws when p is
+  2–7; 5 when p is 4–7; 6 when p is 6–7; 7 stands.
+
+RTP: player 98.76%, banker 98.94%, tie 85.64%. Computed by exact
+enumeration of every card sequence from 8 decks and verified by simulation.
+The manifest figure is the player bet.
+
+Provably fair per shoe: the seed commitment is announced when the shoe is
+shuffled, and the seed is revealed when the shoe runs out or you stop.
+Verify then replays every round in that shoe.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar chip dengan tombol chip, lalu pilih tempat taruhan ([ PEMAIN ],
+[ BANKIR ], [ SERI ]); setiap pilihan menambah taruhan di tempat itu.
+[ BAGI ] membagi kartu, [ ULANG ] menarik taruhan yang belum dibagi. Semua
+kartu ketiga dibagi otomatis. Keyboard: panah memindahkan fokus, Enter atau
+Spasi memilih. [ BERHENTI ] di antara ronde mengakhiri shoe.
+"""
+en = """
+Choose a chip size with the chip buttons, then a spot ([ PLAYER ],
+[ BANKER ], [ TIE ]); each press adds to that spot. [ DEAL ] deals,
+[ CLEAR ] takes back bets not yet dealt. Third cards are dealt
+automatically. Keyboard: the arrow keys move the focus, Enter or Space
+selects. [ STOP ] between rounds ends the shoe.
+"""
+
+[[langkah]]
+teks.id = "Kamu bertaruh pada tangan pemain atau bankir, bukan memainkannya. Pasang 100 di Pemain."
+teks.en = "You bet on the player or banker hand; you do not play it. Put 100 on Player."
+aksi = "bet player 100"
+sorot = ["aksi:bet player 100"]
+petunjuk.id = "Pasang 100 di PEMAIN."
+petunjuk.en = "Put 100 on PLAYER."
+
+[[langkah]]
+teks.id = "Bagi kartunya."
+teks.en = "Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "Pemain 4 + 4 = 8, sebuah natural: tidak ada kartu ketiga. Bankir 5. Pemain menang 1:1 (+100). Sekarang coba Bankir: 100 di Bankir."
+teks.en = "Player 4 + 4 = 8, a natural: no third cards. Banker 5. Player wins 1:1 (+100). Now try the Banker: 100 on Banker."
+aksi = "bet banker 100"
+sorot = ["aksi:bet banker 100"]
+petunjuk.id = "Pasang 100 di BANKIR."
+petunjuk.en = "Put 100 on BANKER."
+
+[[langkah]]
+teks.id = "Tambahkan 20 di Seri, dibayar 8:1."
+teks.en = "Add 20 on Tie, which pays 8:1."
+aksi = "bet tie 20"
+sorot = ["aksi:bet tie 20"]
+petunjuk.id = "Pasang 20 di SERI."
+petunjuk.en = "Put 20 on TIE."
+
+[[langkah]]
+teks.id = "Bagi kartunya."
+teks.en = "Deal the cards."
+aksi = "deal"
+sorot = ["aksi:deal"]
+petunjuk.id = "Pilih BAGI."
+petunjuk.en = "Choose DEAL."
+
+[[langkah]]
+teks.id = "Pemain 5 menarik as → 6. Bankir 6, dan kartu ketiga pemain as, jadi bankir berdiri. 6 lawan 6: seri. Tie dibayar 8:1 (+160) dan taruhan Bankir kembali. Seed shoe dibuka saat shoe habis atau kamu berhenti. Tutorial selesai."
+teks.en = "Player 5 draws an ace → 6. Banker 6, and the player's third card is an ace, so the banker stands. 6 against 6: a tie. Tie pays 8:1 (+160) and the Banker bet comes back. The shoe seed is revealed when the shoe runs out or you stop. Tutorial finished."

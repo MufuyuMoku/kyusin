@@ -1,0 +1,24 @@
+# Teks tampilan Baccarat (to_text, hasil) dalam dua bahasa.
+[id]
+"cards" = "Pemain (player) {player} · Bankir (banker) {banker} → {winner}"
+"winner.player" = "pemain menang"
+"winner.banker" = "bankir menang"
+"winner.tie" = "seri"
+"bets" = "Taruhan: {bets}"
+"net" = "Bersih shoe ini: {net} · sisa {left} kartu"
+"place_bet" = "Susun taruhan: bet player|banker|tie <jumlah> (kelipatan 20), lalu deal. clear menarik taruhan, leave berhenti."
+"over.shoe_habis" = "Shoe habis. Seed dibuka; shoe baru dikocok di pertandingan berikutnya."
+"over.berhenti" = "Kamu berhenti. Seed shoe ini dibuka."
+"summary" = "Shoe selesai: {rounds} ronde, bersih {net} chip."
+
+[en]
+"cards" = "Player {player} · Banker {banker} → {winner}"
+"winner.player" = "player wins"
+"winner.banker" = "banker wins"
+"winner.tie" = "tie"
+"bets" = "Bets: {bets}"
+"net" = "Net this shoe: {net} · {left} cards left"
+"place_bet" = "Build your bets: bet player|banker|tie <amount> (multiples of 20), then deal. clear takes the bets back, leave stops."
+"over.shoe_habis" = "The shoe is finished. The seed is revealed; a new shoe is shuffled for the next match."
+"over.berhenti" = "You stopped. This shoe's seed is revealed."
+"summary" = "Shoe finished. Rounds: {rounds}. Net: {net} chips."

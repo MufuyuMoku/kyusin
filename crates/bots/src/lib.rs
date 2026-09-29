@@ -6,6 +6,7 @@ use kyusin_core::rng::derive;
 use kyusin_core::{Player, Seed};
 
 pub mod andar_bahar;
+pub mod baccarat;
 pub mod blackjack;
 pub mod calibration;
 pub mod casino_war;

@@ -1,0 +1,32 @@
+id = "baccarat"
+nama = { id = "Baccarat (Punto Banco)", en = "Baccarat (Punto Banco)" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP dihitung dengan enumerasi tepat semua urutan kartu dari 8 dek penuh:
+# player 98,7649%, banker (komisi 5%) 98,9421%, tie (8:1) 85,6404%. Angka
+# manifest = taruhan utama terendah (player). Lihat D-060; diverifikasi
+# simulasi (SPEC §7).
+rtp = 98.76
+tutorial = "tutorials/baccarat.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di player, banker, atau tie (20–2.000 per tempat, kelipatan 20)", en = "Add a bet on player, banker, or tie (20–2,000 per spot, multiples of 20)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan yang belum dibagi", en = "Take back every bet not yet dealt" }
+
+[[perintah]]
+pola = "deal"
+ringkas = { id = "Bagi kartu pemain dan bankir menurut aturan kartu ketiga", en = "Deal the player and banker hands by the third-card rules" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti di antara ronde (seed shoe dibuka)", en = "Stop between rounds (the shoe seed is revealed)" }

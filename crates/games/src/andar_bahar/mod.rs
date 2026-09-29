@@ -26,12 +26,12 @@ pub type Config = RoundConfig;
 pub const RTP: &[WagerRtp] = &[
     WagerRtp {
         wager: "andar",
-        percent: 97.851,
+        percent: 97.8511,
         manifest: false,
     },
     WagerRtp {
         wager: "bahar",
-        percent: 96.999,
+        percent: 96.9988,
         manifest: true,
     },
 ];

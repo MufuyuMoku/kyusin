@@ -33,12 +33,12 @@ pub type Config = ShoeConfig;
 pub const RTP: &[WagerRtp] = &[
     WagerRtp {
         wager: "ante",
-        percent: 97.123,
+        percent: 97.1229,
         manifest: true,
     },
     WagerRtp {
         wager: "tie",
-        percent: 81.350,
+        percent: 81.3505,
         manifest: false,
     },
 ];
