@@ -6,6 +6,7 @@
  */
 
 import type {
+	Allowance,
 	FairRecord,
 	MatchState,
 	Move,
@@ -182,7 +183,8 @@ function state(g: Game): MatchState {
 		clock: null,
 		started_at: g.startedAt,
 		paused,
-		rating: null
+		rating: null,
+		chips: null
 	};
 }
 
@@ -191,7 +193,7 @@ function resignFor(g: Game, seat: number) {
 	g.moves.push({ seat, command: 'resign' });
 }
 
-let profile: ProfileState = { name: null, created_at: Date.now(), last_game: null, name_max: 24 };
+let profile: ProfileState = { name: null, created_at: Date.now(), last_game: null, name_max: 24, chips: 10_000 };
 
 let paused = false;
 let suspended: Game | null = null;
@@ -338,9 +340,11 @@ export const reversiMock = {
 				opponent_level: 1,
 				outcome: outcome(r) as 'win' | 'draw' | 'loss',
 				rating: null
-			}))
+			})),
+			casino: []
 		};
 	},
+	chips_daily: async (): Promise<Allowance> => ({ before: profile.chips, after: profile.chips, granted: false }),
 	suspended_list: async (): Promise<SuspendedMatch[]> =>
 		suspended
 			? [

@@ -25,6 +25,10 @@
 
 	const game = $derived(findGame(id));
 	const levels = $derived(game?.bot_levels ?? 0);
+	/** Casino melawan bandar: dimainkan tanpa pilihan lawan. */
+	const house = $derived(game?.lawan === 'bandar');
+	const playable = $derived(levels > 0 || house);
+	let chips = $state<number | null>(null);
 	const seatKeys = $derived(GAME_UI[id]?.seats ?? []);
 	const clocks = $derived(GAME_UI[id]?.clocks ?? []);
 	const hasPgn = $derived(!!GAME_UI[id]?.pgn);
@@ -59,6 +63,10 @@
 			.then((a) => a.replay_list(target))
 			.then((list) => (replays = list.slice(0, 8)))
 			.catch(() => (replays = []));
+		api()
+			.then((a) => a.profile_get())
+			.then((p) => (chips = p.chips))
+			.catch(() => (chips = null));
 		api()
 			.then((a) => a.suspended_list())
 			.then((list) => (suspended = list.find((s) => s.game === target) ?? null))
@@ -135,10 +143,13 @@
 		<NavButton onclick={back}>[ {t('action.back')} ]</NavButton>
 	</div>
 
-	{#if levels > 0}
+	{#if playable}
 		<Frame title={t('play.frame')}>
+			{#if house}
+				<p>{t('play.house', { chips: chips ?? '-', min: 10, max: 2000 })}</p>
+			{/if}
 			<div class="choices">
-				<div>
+				{#if levels > 0}<div>
 					<p class="dim">{t('play.level')}</p>
 					{#each Array.from({ length: levels }, (_, i) => i + 1) as l (l)}
 						<div>
@@ -147,7 +158,7 @@
 							>
 						</div>
 					{/each}
-				</div>
+				</div>{/if}
 				{#if seatKeys.length}
 					<div>
 						<p class="dim">{t('play.seat')}</p>
@@ -175,7 +186,7 @@
 			</div>
 			<div class="start">
 				{#if confirmNew}
-					<p>{t('suspended.forfeit')}</p>
+					<p>{t(house ? 'suspended.forfeit_house' : 'suspended.forfeit')}</p>
 					<div class="actions">
 						<NavButton onclick={() => (confirmNew = false)}>[ {t('action.cancel')} ]</NavButton>
 						<NavButton onclick={play}>[ {t('action.new_game')} ]</NavButton>
@@ -187,7 +198,7 @@
 		</Frame>
 	{/if}
 
-	{#if levels > 0}
+	{#if playable}
 		<Frame title={t('replay.list')}>
 			{#if hasPgn}
 				<div class="import">

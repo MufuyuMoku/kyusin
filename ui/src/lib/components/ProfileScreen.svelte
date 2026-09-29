@@ -73,6 +73,7 @@
 			</form>
 			<p class="dim" id="profile-hint">{t('profile.hint', { n: profile.name_max })}</p>
 			{#if saved}<p role="status">{t('profile.saved')}</p>{/if}
+			<p>{t('profile.chips', { n: profile.chips })}</p>
 			<p class="dim">{t('profile.created', { date: date(profile.created_at) })}</p>
 			<p class="dim">{t('profile.note')}</p>
 		{/if}

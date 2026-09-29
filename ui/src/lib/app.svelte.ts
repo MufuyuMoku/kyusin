@@ -6,6 +6,7 @@
 import {
 	api,
 	type AppInfo,
+	type Allowance,
 	type Category,
 	type MatchState,
 	type ReplayData,
@@ -36,6 +37,8 @@ export const app = $state({
 	replay: null as ReplayData | null,
 	/** Jam pertandingan terakhir, untuk "main lagi". */
 	lastClock: null as { minutes: number; increment: number } | null,
+	/** Tunjangan harian yang diperiksa saat aplikasi dibuka (M4). */
+	allowance: null as Allowance | null,
 	/** Menu jeda pertandingan terbuka (SPEC §4). */
 	pauseMenu: false,
 	/** Konsol sedang dibuka lewat `:` atau `` ` ``. */
@@ -170,6 +173,9 @@ export async function load() {
 	marks.info = performance.now();
 	app.catalog = await a.catalog();
 	marks.catalog = performance.now();
+	// Tunjangan harian (SPEC §6.7) memakai tanggal lokal pemain; saldo
+	// sebelumnya sudah ada di `app.info.profile` untuk sapaan (D-039).
+	app.allowance = await a.chips_daily(localDate()).catch(() => null);
 	await document.fonts.ready;
 	for (const name of FONT_FACES) {
 		// Memuat eksplisit supaya hasilnya tidak bergantung pada apakah teks
@@ -231,8 +237,20 @@ async function runBots() {
 
 export type Clock = { minutes: number; increment: number } | null;
 
+/** Tanggal kalender lokal `YYYY-MM-DD`. */
+export function localDate(d = new Date()): string {
+	const p = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 export async function startMatch(id: string, level: number, seat: number, clock: Clock = null) {
 	const a = await api();
+	// Game casino: tunjangan harian bisa berlaku lagi (hari berganti, atau
+	// saldo sudah di bawah ambang).
+	if (findGame(id)?.lawan === 'bandar') {
+		const got = await a.chips_daily(localDate()).catch(() => null);
+		if (got?.granted) app.allowance = got;
+	}
 	const seed = settings.playerSeed.trim() || null;
 	app.lastClock = clock;
 	app.pauseMenu = false;

@@ -41,6 +41,7 @@
 					interactive={!!tut.step?.aksi}
 					highlight={highlighted}
 					onplay={tutorialAct}
+					actions={tut.actions.map((a) => a.usage)}
 				/>
 				<ui.status view={tut.view_data} />
 			</div>

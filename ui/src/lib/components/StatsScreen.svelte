@@ -51,6 +51,8 @@
 	}
 
 	const COLS = ['game', 'rating', 'played', 'record', 'best'] as const;
+	const CASINO_COLS = ['game', 'rounds', 'wagered', 'net'] as const;
+	const sum = (k: 'rounds' | 'wagered' | 'net') => stats?.casino.reduce((s, c) => s + c[k], 0) ?? 0;
 </script>
 
 <div class="stats">
@@ -84,6 +86,33 @@
 			</div>
 		{/if}
 	</Frame>
+
+	{#if stats && stats.casino.length > 0}
+		<Frame title={t('stats.casino')}>
+			<p class="dim">{t('stats.casino_note')}</p>
+			<div class="table casino" role="table" aria-label={t('stats.casino')}>
+				<div class="tr head dim" role="row">
+					{#each CASINO_COLS as c (c)}<span role="columnheader" data-col={c}>{t(`stats.casino.${c}` as Key)}</span>{/each}
+				</div>
+				{#each stats.casino as c (c.game)}
+					<div class="tr" role="row" data-game={c.game}>
+						<span role="cell" data-col="game">{name(c.game)}</span>
+						<span role="cell" data-col="rounds" class="num">{c.rounds}</span>
+						<span role="cell" data-col="wagered" class="num">{c.wagered}</span>
+						<span role="cell" data-col="net" class="num">{signed(c.net)}</span>
+					</div>
+				{/each}
+				{#if stats.casino.length > 1}
+					<div class="tr total" role="row" data-game="total">
+						<span role="cell" data-col="game">{t('stats.casino_total')}</span>
+						<span role="cell" data-col="rounds" class="num">{sum('rounds')}</span>
+						<span role="cell" data-col="wagered" class="num">{sum('wagered')}</span>
+						<span role="cell" data-col="net" class="num">{signed(sum('net'))}</span>
+					</div>
+				{/if}
+			</div>
+		</Frame>
+	{/if}
 
 	<Frame title={t('stats.history')}>
 		{#if stats && stats.history.length === 0}
@@ -123,6 +152,9 @@
 	}
 	.num {
 		text-align: right;
+	}
+	.casino .tr {
+		grid-template-columns: 16ch 8ch 14ch 12ch;
 	}
 	.head span:not(:first-child) {
 		text-align: right;

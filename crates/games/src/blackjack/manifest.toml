@@ -10,8 +10,9 @@ lan = false
 agen = true
 # RTP strategi dasar untuk aturan meja ini (6 dek, S17, 3:2, DAS, split
 # sampai 4 tangan, as split satu kartu, late surrender, potong 75%).
-# Dihitung dengan simulasi (lihat D-057); CI memverifikasinya setiap push.
-rtp = 99.60
+# Simulasi 1 miliar ronde: 99,6388% (σ 1,1408 per ronde); lihat D-057.
+# CI memverifikasi setiap push (100 ribu ronde), workflow rtp.yml 10 juta.
+rtp = 99.64
 tutorial = "tutorials/blackjack.toml"
 
 [[perintah]]

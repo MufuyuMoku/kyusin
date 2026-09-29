@@ -137,6 +137,14 @@ export interface MatchState {
 	paused: boolean;
 	/** Perubahan rating lokal setelah selesai, bila dihitung (M3). */
 	rating: RatingChange | null;
+	/** Saldo chip profil (game casino, M4). */
+	chips: number | null;
+}
+
+export interface Allowance {
+	before: number;
+	after: number;
+	granted: boolean;
 }
 
 export interface RatingChange {
@@ -151,6 +159,7 @@ export interface ProfileState {
 	created_at: number;
 	last_game: string | null;
 	name_max: number;
+	chips: number;
 }
 
 export interface StatsState {
@@ -172,6 +181,8 @@ export interface StatsState {
 		outcome: 'win' | 'draw' | 'loss';
 		rating: RatingChange | null;
 	}[];
+	/** Menang/kalah terhadap bandar sepanjang waktu, per game casino (M4). */
+	casino: { game: string; rounds: number; wagered: number; net: number; last_played: number }[];
 }
 
 /** Pertandingan yang ditunda (SPEC §4), satu per game. */
@@ -270,6 +281,7 @@ type Api = {
 	profile_get(): Promise<ProfileState>;
 	profile_set_name(name: string): Promise<ProfileState>;
 	stats(game: string | null): Promise<StatsState>;
+	chips_daily(date: string): Promise<Allowance>;
 	replay_list(game: string | null): Promise<ReplaySummary[]>;
 	replay_open(id: number): Promise<ReplayData>;
 };
@@ -300,6 +312,7 @@ const tauriApi: Api = {
 	profile_get: () => invoke('profile_get'),
 	profile_set_name: (name) => invoke('profile_set_name', { name }),
 	stats: (game) => invoke('stats', { game }),
+	chips_daily: (date) => invoke('chips_daily', { date }),
 	replay_list: (game) => invoke('replay_list', { game }),
 	replay_open: (id) => invoke('replay_open', { id })
 };

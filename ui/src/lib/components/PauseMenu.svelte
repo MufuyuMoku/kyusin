@@ -5,11 +5,21 @@
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { resignMatch, resumePlay, suspendMatch } from '$lib/app.svelte';
+	import { matchAct, resignMatch, resumePlay, suspendMatch } from '$lib/app.svelte';
 	import { NAV_SELECTOR } from '$lib/nav';
 	import { t } from '$lib/i18n.svelte';
 	import Frame from './Frame.svelte';
 	import NavButton from './NavButton.svelte';
+
+	let {
+		house = false,
+		canLeave = false
+	}: {
+		/** Casino melawan bandar: Berhenti (akhiri sesi) menggantikan Menyerah. */
+		house?: boolean;
+		/** `leave` sah sekarang (di antara ronde). */
+		canLeave?: boolean;
+	} = $props();
 
 	let box: HTMLElement | undefined = $state();
 	let confirmResign = $state(false);
@@ -27,7 +37,19 @@
 	<div class="dialog" role="dialog" aria-modal="true" aria-label={t('pause.title')} bind:this={box}>
 		<Frame title={t('pause.title')}>
 			<div class="items">
-				{#if !confirmResign}
+				{#if house}
+					<NavButton onclick={resumePlay}>[ {t('action.continue')} ]</NavButton>
+					<NavButton onclick={suspendMatch}>[ {t('action.suspend')} ]</NavButton>
+					<NavButton
+						disabled={!canLeave}
+						reason={t('pause.leave_between_rounds')}
+						onclick={async () => {
+							await resumePlay();
+							await matchAct('leave');
+						}}>[ {t('bj.leave')} ]</NavButton
+					>
+					<p class="dim">{t('pause.note_house')}</p>
+				{:else if !confirmResign}
 					<NavButton onclick={resumePlay}>[ {t('action.continue')} ]</NavButton>
 					<NavButton onclick={suspendMatch}>[ {t('action.suspend')} ]</NavButton>
 					<NavButton

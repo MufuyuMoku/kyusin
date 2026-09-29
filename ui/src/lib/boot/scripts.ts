@@ -168,7 +168,20 @@ export function greeting(previous: SessionRecord): { script: Script; id: string 
 		script: {
 			charMs: 38,
 			hold: 1600,
-			lines: [{ text: t(g.key as Key, g.params), typed: true, pause: 500, style: 'plain' }]
+			lines: [
+				{ text: t(g.key as Key, g.params), typed: true, pause: 500, style: 'plain' },
+				// Tunjangan harian disebut sesudah sapaan, dengan nada yang sama (D-039).
+				...(app.allowance?.granted
+					? [
+							{
+								text: t('greet.allowance', { chips: app.allowance.after }),
+								typed: true,
+								pause: 500,
+								style: 'plain' as const
+							}
+						]
+					: [])
+			]
 		}
 	};
 }

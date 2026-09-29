@@ -6,6 +6,8 @@
 
 import type { Component } from 'svelte';
 import type { Key } from '$lib/i18n.svelte';
+import BlackjackStatus from './BlackjackStatus.svelte';
+import BlackjackTable from './BlackjackTable.svelte';
 import ChessBoard from './ChessBoard.svelte';
 import ChessStatus from './ChessStatus.svelte';
 import ReversiBoard from './ReversiBoard.svelte';
@@ -16,6 +18,10 @@ export interface BoardProps {
 	interactive?: boolean;
 	highlight?: Set<string>;
 	onplay?: (command: string) => void;
+	/** Bentuk perintah yang sah sekarang (`usage`), untuk kontrol meja. */
+	actions?: string[];
+	/** Saldo chip profil (game casino); `null` di tutorial dan replay. */
+	chips?: number | null;
 }
 
 export interface StatusProps {
@@ -54,5 +60,10 @@ export const GAME_UI: Record<string, GameUi> = {
 		board: ReversiBoard,
 		status: ReversiStatus,
 		seats: ['reversi.black_first', 'reversi.white_second']
+	},
+	blackjack: {
+		board: BlackjackTable,
+		status: BlackjackStatus,
+		seats: []
 	}
 };

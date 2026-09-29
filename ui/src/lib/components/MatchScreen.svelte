@@ -37,6 +37,9 @@
 	const moveButtons = $derived(buttons.filter((b) => b !== RESIGN));
 	const canPass = $derived(m?.your_turn && moveButtons.length === 1 && moveButtons[0] === PASS);
 	const paused = $derived(app.pauseMenu && !!m && !m.over);
+	/** Casino melawan bandar: tanpa kalimat menang/kalah dan tanpa lawan bot. */
+	const house = $derived(game?.lawan === 'bandar');
+	const usages = $derived(m?.actions.map((a) => a.usage) ?? []);
 	const canResign = $derived(!!m && !m.over && m.your_turn && buttons.includes(RESIGN));
 	let confirmResign = $state(false);
 
@@ -67,11 +70,11 @@
 {#if m}
 	<div class="match">
 		{#if paused}
-			<PauseMenu />
+			<PauseMenu {house} canLeave={usages.includes('leave')} />
 		{/if}
 		<div class="head" inert={paused}>
 			<span class="display big">{game ? L(game.nama) : m.game}</span>
-			<span class="dim">{t('match.vs', { level })}</span>
+			<span class="dim">{house ? t('match.vs_house') : t('match.vs', { level })}</span>
 			<NavButton onclick={requestBack}>[ {t('action.exit')} ]</NavButton>
 		</div>
 
@@ -80,7 +83,13 @@
 				{#if ui}
 					<!-- Dipasang ulang per pertandingan: kursor mulai dari posisi awal game. -->
 					{#key m.started_at}
-						<ui.board view={m.view_data} interactive={m.your_turn && !paused} onplay={matchAct} />
+						<ui.board
+							view={m.view_data}
+							interactive={m.your_turn && !paused}
+							onplay={matchAct}
+							actions={usages}
+							chips={m.chips}
+						/>
 					{/key}
 					<ui.status view={m.view_data} botTurn={m.bot_turn} />
 				{:else}
@@ -107,7 +116,7 @@
 					{/if}
 				</div>
 				{#if m.over}
-					<p class="result" role="status">{outcome} {m.result ? L(m.result.summary) : ''}</p>
+					<p class="result" role="status">{house ? '' : outcome} {m.result ? L(m.result.summary) : ''}</p>
 					{#if m.rating}
 						<p class="rating">
 							{t('match.rating', {
@@ -119,7 +128,7 @@
 					{/if}
 					<div class="controls">
 						<NavButton onclick={() => startMatch(m.game, level, m.seat, app.lastClock)}
-							>[ {t('action.again')} ]</NavButton
+							>[ {house ? t('action.new_shoe') : t('action.again')} ]</NavButton
 						>
 						{#if m.replay_id !== null}
 							<NavButton onclick={() => m.replay_id !== null && openReplay(m.replay_id)}
