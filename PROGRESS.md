@@ -14,7 +14,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M2 | selesai | 2026-09-28 | Catur: mesin (cozy-chess), SAN/PGN, 4 level terkalibrasi Stockfish 19, jam host, tutorial, seret-lepas + klik, tes jendela asli |
 | M2b | selesai | 2026-09-29 | Catur level 5–6 (mesin kedua; ≈1826, ≈2093 vs Stockfish), tangga Reversi 4 level, aturan tangga ≤ 400 di CI (SPEC Rev. 10) |
 | M3 | selesai | 2026-09-28 | Profil tunggal, Glicko-2 (rating lokal), riwayat, statistik; kalibrasi antar-bot Reversi. Sebelumnya: perbaikan Rev. 9 (menu jeda, penundaan, kursor) |
-| M4 | belum mulai | | |
+| M4 | selesai | 2026-09-29 | Mesin kartu bersama, ekonomi chip (saldo, tunjangan harian, ringkasan bandar), Blackjack (RTP 99,64% strategi dasar, provably fair per shoe), label level deskriptif |
 | M5 | belum mulai | | |
 | M6 | belum mulai | | |
 | M7 | belum mulai | | |
@@ -34,8 +34,23 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 |------|---|---|---|---|---|---|---|---|---|---------|
 | Reversi | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M1); rating lokal di M3 |
 | Catur | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M2); rating lokal di M3 |
+| Blackjack | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M4); meja LAN menyusul |
 
 ## Log sesi
+
+### 2026-09-29 — M4: mesin kartu, ekonomi chip, Blackjack
+- Hasil uji M2b: sesuai, dengan perubahan label level (D-055): tanpa gelar resmi; 1 Pemula, 2 Menengah, 3 Mahir, 4 Kuat, 5 Ahli, 6 Sangat kuat (EN: Beginner … Very strong), perkiraan rating tetap tampil.
+- Keputusan klien M4: D-056. Keputusan developer: D-057 (rincian aturan, strategi dasar, RTP), D-058 (chip di meja casino).
+- Tes aturan dan pembayaran ditulis dan di-commit lebih dulu (commit 72a9716): 6 tes mesin kartu, 25 tes Blackjack (3:2, insurance 2:1, peek, S17, double termasuk setelah split, split sampai 4 tangan, as split satu kartu, 21 setelah split bukan blackjack, late surrender, titik potong 75%, berhenti, konservasi chip pada 40 shoe acak).
+- Dikerjakan:
+  - `kyusin_games::cards`: kartu, notasi `Ah`/`Td`, shoe beberapa dek dikocok RNG yang disuntikkan.
+  - Blackjack: satu pertandingan = satu shoe (provably fair per shoe; verify memeriksa semua ronde). Tutorial dua bahasa (hit, stand, double, split, surrender; insurance dan provably fair dijelaskan) + `man` dengan RTP.
+  - RTP: strategi dasar terdokumentasi; simulasi 1 miliar ronde 99,6388% → manifest 99,64%. CI setiap push 100 ribu ronde; workflow `rtp.yml` 10 juta ronde (manual + tiap Senin; run 36529816166: 99,6259%, toleransi ±0,1443%, lulus).
+  - Chip: store skema 4 (saldo 10.000, tunjangan harian, ringkasan casino); host memeriksa saldo sebelum aksi berbiaya dan mencatat tiap ronde; sapaan `chips_low` dari saldo sebelum tunjangan lalu tunjangan disebut sesudahnya; halaman statistik "Melawan bandar".
+  - UI: meja dengan sprite piksel kartu (peringkat, jenis, bingkai, sisi belakang), kotak tangan berukuran tetap dan kartu diposisikan absolut, kontrol chip + BAGI, HIT/STAND/DOUBLE/SPLIT/SURRENDER, INSURANCE/TOLAK, alasan tombol nonaktif di satu baris tetap; menu jeda casino dengan Berhenti.
+- Tes: 175 tes Rust, 37 tes UI. Tes jendela asli (CI Windows, run 36560697511, semua job hijau): meja selaras (kotak tangan tetap, kartu 44×60, jarak 18px), 7 kontrol taruhan dan 5 kontrol aksi tanpa pergeseran saat hover/kursor, split tidak menggeser kotak mana pun, hit/stand/double/split dimainkan dengan saldo sesuai hasil ronde (10000 → 10060), tema P3/P4 selaras, berhenti membuka seed dan verify cocok, statistik melawan bandar tampil. Dua perbaikan dari CI: `resetToMenu` kini menunggu muat ulang dan daftar game (balapan), dan kotak tangan kosong berukuran sama dengan tangan terisi.
+- Belum/sisa: meja Blackjack LAN banyak pemain (bersama milestone LAN); taruhan ronde yang sedang berjalan saat shoe ditunda belum mengurangi saldo sampai ronde selesai (D-058).
+- Langkah berikutnya: M5 (casino meja kartu §6.3).
 
 ### 2026-09-29 — M2b: level catur 5–6 dan tangga level (SPEC Rev. 10)
 - Hasil uji klien atas perbaikan M2 dan M3: sesuai; D-048–D-052 disetujui. SPEC disunting menjadi Revisi 10 (D-053): aturan tangga level merata (§8), M2b diperluas (§9), entri §12.
