@@ -62,6 +62,14 @@ impl Rating {
     /// Rating baru setelah satu periode berisi `games` (lawan + hasil).
     /// Periode tanpa pertandingan hanya menaikkan RD.
     pub fn update(&self, games: &[(Rating, Outcome)], tau: f64) -> Rating {
+        let scores: Vec<(Rating, f64)> = games.iter().map(|(r, o)| (*r, o.score())).collect();
+        self.update_scores(&scores, tau)
+    }
+
+    /// Seperti [`Rating::update`], dengan skor pecahan 0–1 per pertandingan
+    /// (Glicko-2 menerima skor di antara kalah dan menang; dipakai sesi meja
+    /// multipemain, D-063).
+    pub fn update_scores(&self, games: &[(Rating, f64)], tau: f64) -> Rating {
         let mu = (self.rating - 1500.0) / SCALE;
         let phi = self.rd / SCALE;
         let sigma = self.vol;
@@ -77,13 +85,13 @@ impl Rating {
         // Langkah 3–4: varians v dan perbaikan Δ.
         let mut v_inv = 0.0;
         let mut delta_sum = 0.0;
-        for (opp, outcome) in games {
+        for &(opp, outcome) in games {
             let mu_j = (opp.rating - 1500.0) / SCALE;
             let phi_j = opp.rd / SCALE;
             let e = expected(mu, mu_j, phi_j);
             let gj = g(phi_j);
             v_inv += gj * gj * e * (1.0 - e);
-            delta_sum += gj * (outcome.score() - e);
+            delta_sum += gj * (outcome - e);
         }
         let v = 1.0 / v_inv;
         let delta = v * delta_sum;

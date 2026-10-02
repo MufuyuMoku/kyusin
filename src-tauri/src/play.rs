@@ -347,6 +347,14 @@ fn is_house(state: &AppState, game: &str) -> bool {
         .is_some_and(|c| c.manifest.is_against_house())
 }
 
+/// Meja casino antar-pemain (lawan bot): chip meja dibeli dari saldo lewat
+/// buy-in saat duduk dan dikembalikan saat berdiri (D-063).
+fn is_table(state: &AppState, game: &str) -> bool {
+    state.registry.get(game).is_some_and(|c| {
+        c.manifest.category.is_casino() && c.manifest.opponent == kyusin_core::Opponent::Bot
+    })
+}
+
 fn ledger_for(
     state: &AppState,
     game: &str,
@@ -354,8 +362,10 @@ fn ledger_for(
     human: u8,
     escrowed: bool,
 ) -> Option<crate::casino::Ledger> {
-    is_house(state, game)
-        .then(|| crate::casino::Ledger::from_view(&m.session().view_data(human), escrowed))
+    let house = is_house(state, game);
+    (house || is_table(state, game)).then(|| {
+        crate::casino::Ledger::from_view(&m.session().view_data(human), escrowed, house)
+    })
 }
 
 fn save(state: &AppState, replay: &Replay, started_at: i64) -> Result<i64, String> {
@@ -527,23 +537,35 @@ fn restore(state: &AppState, game: &str) -> Result<Running, Localized> {
     Ok(running)
 }
 
-/// Game casino: ronde berjalan diselesaikan secara netral (insurance
-/// ditolak, semua tangan stand), lalu sesi diakhiri dengan `leave` (D-058).
+/// Game casino: ronde berjalan diselesaikan secara netral (`netral` dari
+/// view, misalnya stand, fold, atau pack: pilihan yang tidak menambah
+/// taruhan), lalu sesi diakhiri dengan `leave` (D-058, D-061). Di meja
+/// antar-pemain bot tetap bertindak di antaranya (D-063).
 fn close_house(r: &mut Running) -> Result<(), Localized> {
     let mut guard = 0;
-    while !r.m.session().is_over() && guard < 64 {
+    while !r.m.session().is_over() && guard < 10_000 {
+        guard += 1;
+        if !r.human_pending() {
+            match r.m.step_auto().map_err(|e| e.message())? {
+                Some(mv) => r.moved(mv.seat),
+                None => return Err(no_match()),
+            }
+            continue;
+        }
         let legal: Vec<String> =
             r.m.session()
                 .legal_actions(r.human)
                 .iter()
                 .map(|a| a.usage())
                 .collect();
-        let pick = ["leave", "decline", "stand"]
+        let view = r.m.session().view_data(r.human);
+        let neutral = view["netral"].as_str().map(str::to_string);
+        let pick = neutral
             .into_iter()
+            .chain(["leave", "decline", "stand"].map(str::to_string))
             .find(|c| legal.iter().any(|l| l == c))
             .ok_or_else(no_match)?;
-        r.m.act(r.human, pick).map_err(|e| e.message())?;
-        guard += 1;
+        r.m.act(r.human, &pick).map_err(|e| e.message())?;
     }
     Ok(())
 }
@@ -633,6 +655,15 @@ fn start(
         Some(c) => {
             serde_json::json!({ "jam": { "menit": c.minutes, "tambahan_detik": c.increment } })
         }
+        None if is_table(state, &id) => {
+            // Buy-in dari saldo; bot duduk dengan jumlah baku (D-063).
+            let chips = crate::casino::chips(state).unwrap_or(0);
+            let buy_in = crate::casino::buy_in(chips)?;
+            let stacks: Vec<i64> = (0..seats)
+                .map(|s| if s == seat { buy_in } else { crate::casino::BUY_IN })
+                .collect();
+            serde_json::json!({ "kursi": seats, "tumpukan": stacks, "manusia": [seat] })
+        }
         None => serde_json::Value::Null,
     };
     let m = Match::new(cartridge, config, fair, players).map_err(|e| e.message())?;
@@ -658,7 +689,9 @@ fn start(
         chips: None,
     };
     let mut running = running;
-    running.ledger = ledger_for(state, &running.game, &running.m, running.human, true);
+    // Pertandingan baru: belum ada yang dipotong, jadi titik simpan pertama
+    // memotong taruhan atau buy-in yang sudah ada di view (D-059, D-063).
+    running.ledger = ledger_for(state, &running.game, &running.m, running.human, false);
     if running.ledger.is_some() {
         running.chips = crate::casino::chips(state);
     }
@@ -686,7 +719,7 @@ pub(crate) fn match_act(
 /// setelah titik simpannya tertulis.
 fn act(state: &AppState, r: &mut Running, command: &str) -> Result<(), Localized> {
     r.unpause();
-    if r.ledger.is_some() {
+    if r.ledger.is_some_and(|l| l.house()) {
         let view = r.m.session().view_data(r.human);
         crate::casino::check(state, &view, command)?;
     }
@@ -1546,6 +1579,139 @@ mod tests {
         let st = db.open();
         let started = start(&st, "catur".into(), 1, 0, None, None);
         assert!(started.is_err());
+    }
+
+    /// Bot melangkah sampai giliran manusia atau pertandingan selesai.
+    fn bots_until_human(st: &AppState, r: &mut Running) {
+        let mut guard = 0;
+        while !r.m.session().is_over() && !r.human_pending() && guard < 10_000 {
+            let mv = r.m.step_auto().unwrap().expect("bot melangkah");
+            r.moved(mv.seat);
+            r.checkpoint(st);
+            guard += 1;
+        }
+    }
+
+    fn take_running(st: &AppState) -> Running {
+        st.play.lock().unwrap().take().expect("pertandingan berjalan")
+    }
+
+    #[test]
+    fn table_buy_in_comes_from_the_balance_and_returns_on_standing_up() {
+        let db = Db::new("meja");
+        let st = db.open();
+        start(&st, "texas-holdem".into(), 1, 0, None, None).unwrap();
+        // Duduk: 2.000 dipindahkan dari saldo ke meja.
+        assert_eq!(booked(&st), (8_000, 2_000));
+        let mut r = take_running(&st);
+        let view = r.m.session().view_data(0);
+        assert_eq!(view["kursi"][0]["awal"], 2000);
+        assert_eq!(view["kursi"][1]["awal"], 2000);
+        // Main sampai tangan selesai dengan aksi netral, lalu berdiri.
+        let mut guard = 0;
+        while r.m.session().view_data(0)["fase"] == "main" && guard < 100 {
+            bots_until_human(&st, &mut r);
+            if r.m.session().view_data(0)["fase"] != "main" {
+                break;
+            }
+            let neutral = r.m.session().view_data(0)["netral"].as_str().unwrap().to_string();
+            act(&st, &mut r, &neutral).unwrap();
+            guard += 1;
+        }
+        let stack = r.m.session().view_data(0)["kursi"][0]["tumpukan"].as_i64().unwrap();
+        // Tumpukan masih di meja sampai berdiri.
+        assert_eq!(booked(&st), (8_000, 2_000));
+        act(&st, &mut r, "leave").unwrap();
+        assert!(r.m.session().is_over());
+        assert_eq!(booked(&st), (8_000 + stack, 0));
+        // Rating lokal dihitung (meja antar-pemain kompetitif), tidak masuk
+        // ringkasan melawan bandar.
+        assert!(r.rating.is_some());
+        let s = store_of(&st).unwrap().lock().unwrap();
+        assert!(s.casino_game("texas-holdem").unwrap().is_none());
+        assert_eq!(s.history(None, 10).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn a_killed_table_resumes_the_same_hand_and_abandoning_plays_it_out() {
+        let db = Db::new("meja-mati");
+        let st = db.open();
+        start(&st, "teen-patti".into(), 2, 0, None, None).unwrap();
+        let mut r = take_running(&st);
+        bots_until_human(&st, &mut r);
+        let before = r.m.session().view_data(0);
+        assert_eq!(booked(&st), (8_000, 2_000));
+        kill(st, r);
+        let st = db.open();
+        assert_eq!(booked(&st), (8_000, 2_000), "buy-in tetap di meja");
+        let r = restore(&st, "teen-patti").unwrap();
+        assert_eq!(r.m.session().view_data(0), before, "tangan yang sama");
+        kill(st, r);
+        // Membuang sesi: tangan berjalan dimainkan netral (bot tetap
+        // bertindak), lalu berdiri; tumpukan kembali ke saldo.
+        let st = db.open();
+        let mut r = restore(&st, "teen-patti").unwrap();
+        resign(&mut r).unwrap();
+        r.checkpoint(&st);
+        finish(&st, &mut r);
+        assert!(r.m.session().is_over());
+        let net = r.m.session().view_data(0)["bersih"].as_i64().unwrap();
+        assert_eq!(booked(&st), (10_000 + net, 0));
+        assert!(r.verify.as_ref().unwrap().ok);
+        assert!(store_of(&st).unwrap().lock().unwrap().list_suspended().unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_table_needs_the_minimum_buy_in() {
+        let st = state();
+        store_of(&st)
+            .unwrap()
+            .lock()
+            .unwrap()
+            .record_casino("blackjack", 1, 9_700, -9_700, 1)
+            .unwrap();
+        // Saldo 300 < 400.
+        let Err(err) = start(&st, "omaha".into(), 1, 0, None, None) else {
+            panic!("saldo 300 tidak cukup untuk buy-in");
+        };
+        assert!(err.id.contains("Chip tidak cukup"), "{err:?}");
+        store_of(&st)
+            .unwrap()
+            .lock()
+            .unwrap()
+            .record_casino("blackjack", 1, 0, 700, 2)
+            .unwrap();
+        // Saldo 1.000: duduk dengan semuanya.
+        start(&st, "omaha".into(), 1, 0, None, None).unwrap();
+        assert_eq!(booked(&st), (0, 1_000));
+    }
+
+    #[test]
+    fn table_sessions_score_the_share_of_bots_below_you() {
+        use kyusin_core::GameResult;
+        let replay = |scores: Vec<i64>| kyusin_core::Replay {
+            format: kyusin_core::replay::REPLAY_FORMAT,
+            game: "texas-holdem".into(),
+            config: serde_json::Value::Null,
+            seats: vec![
+                SeatKind::Human,
+                SeatKind::Bot { level: 2 },
+                SeatKind::Bot { level: 2 },
+                SeatKind::Bot { level: 2 },
+            ],
+            fair: fair_record(None).unwrap(),
+            moves: Vec::new(),
+            state_hash: String::new(),
+            result: Some(GameResult {
+                winners: Vec::new(),
+                scores,
+                summary: kyusin_core::Localized::build(|_| String::new()),
+            }),
+        };
+        let score = crate::profile::table_score;
+        assert_eq!(score(&replay(vec![100, -50, 0, -50])), Some(1.0));
+        assert_eq!(score(&replay(vec![0, 100, 0, -100])), Some(0.5));
+        assert_eq!(score(&replay(vec![-300, 100, 100, 100])), Some(0.0));
     }
 
     #[test]

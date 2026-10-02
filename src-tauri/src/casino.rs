@@ -46,6 +46,9 @@ pub(crate) struct Ledger {
     net: i64,
     rounds: i64,
     stake: i64,
+    /// Melawan bandar: ronde masuk ringkasan casino dan biaya aksi diperiksa
+    /// terhadap saldo. Meja antar-pemain (buy-in, D-063): tidak keduanya.
+    house: bool,
 }
 
 impl Ledger {
@@ -54,12 +57,17 @@ impl Ledger {
     /// terakhirnya. `escrowed = false` untuk pertandingan yang ditunda oleh
     /// versi lama (sebelum D-059), yang taruhannya belum dipotong: titik
     /// simpan pertama memotongnya.
-    pub(crate) fn from_view(view: &Value, escrowed: bool) -> Self {
+    pub(crate) fn from_view(view: &Value, escrowed: bool, house: bool) -> Self {
         Ledger {
             net: view["bersih"].as_i64().unwrap_or(0),
             rounds: settled_rounds(view),
             stake: if escrowed { stake(view) } else { 0 },
+            house,
         }
+    }
+
+    pub(crate) fn house(&self) -> bool {
+        self.house
     }
 }
 
@@ -81,6 +89,22 @@ pub(crate) fn cost(view: &Value, command: &str) -> i64 {
         Some(n) => n * view["pengali"][verb].as_i64().unwrap_or(1),
         None => 0,
     }
+}
+
+/// Buy-in meja antar-pemain (D-063): paling banyak 2.000, paling sedikit 20
+/// big blind (400); bot duduk dengan 2.000.
+pub(crate) const BUY_IN: i64 = 2000;
+pub(crate) const MIN_BUY_IN: i64 = 400;
+
+/// Buy-in untuk saldo `chips`, atau galat bila tidak cukup.
+pub(crate) fn buy_in(chips: i64) -> Result<i64, Localized> {
+    if chips < MIN_BUY_IN {
+        return Err(core().localized(
+            "error.chips",
+            &[("need", &MIN_BUY_IN.to_string()), ("have", &chips.max(0).to_string())],
+        ));
+    }
+    Ok(chips.min(BUY_IN))
 }
 
 /// Menolak aksi yang biayanya melebihi saldo yang bisa dipakai (taruhan
@@ -118,7 +142,12 @@ pub(crate) fn checkpoint(
     let rounds = settled_rounds(view);
     let net = view["bersih"].as_i64().unwrap_or(0);
     let now_stake = stake(view);
-    let finished = rounds - ledger.rounds;
+    // Meja antar-pemain tidak masuk ringkasan "melawan bandar".
+    let finished = if ledger.house {
+        rounds - ledger.rounds
+    } else {
+        0
+    };
     // Yang dipertaruhkan di ronde yang baru selesai: `dipertaruhkan`, atau
     // untuk Blackjack tangan + insurance.
     let wagered = if finished > 0 && view["dipertaruhkan"].is_i64() {
@@ -155,6 +184,7 @@ pub(crate) fn checkpoint(
         net,
         rounds,
         stake: now_stake,
+        house: ledger.house,
     };
     Ok(chips)
 }
