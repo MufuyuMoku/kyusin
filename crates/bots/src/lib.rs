@@ -18,8 +18,10 @@ pub mod dragon_tiger;
 pub mod let_it_ride;
 pub mod meja;
 pub mod pai_gow;
+pub mod poker;
 pub mod red_dog;
 pub mod reversi;
+pub mod teen_patti;
 pub mod three_card_poker;
 
 /// Jumlah level bot untuk sebuah game (0 = tidak ada bot).
@@ -27,6 +29,8 @@ pub fn levels(game: &str) -> u8 {
     match game {
         kyusin_games::reversi::ID => reversi::LEVELS,
         kyusin_games::catur::ID => catur::LEVELS,
+        kyusin_games::texas_holdem::ID | kyusin_games::omaha::ID => poker::LEVELS,
+        kyusin_games::teen_patti::ID => teen_patti::LEVELS,
         _ => 0,
     }
 }
@@ -53,6 +57,23 @@ pub fn create(game: &str, level: u8, round_seed: &Seed, seat: u8) -> Option<Box<
         }
         kyusin_games::catur::ID if (1..=catur::LEVELS).contains(&level) => {
             Some(Box::new(catur::ChessBot::new(level, seed)))
+        }
+        kyusin_games::texas_holdem::ID if (1..=poker::LEVELS).contains(&level) => {
+            Some(Box::new(poker::PokerBot::new(
+                level,
+                poker::Rules::of::<kyusin_games::texas_holdem::Texas>(),
+                seed,
+            )))
+        }
+        kyusin_games::omaha::ID if (1..=poker::LEVELS).contains(&level) => {
+            Some(Box::new(poker::PokerBot::new(
+                level,
+                poker::Rules::of::<kyusin_games::omaha::OmahaRules>(),
+                seed,
+            )))
+        }
+        kyusin_games::teen_patti::ID if (1..=teen_patti::LEVELS).contains(&level) => {
+            Some(Box::new(teen_patti::TeenPattiBot::new(level, seed)))
         }
         _ => None,
     }
