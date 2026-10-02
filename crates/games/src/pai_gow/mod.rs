@@ -31,11 +31,11 @@ pub const LIMITS: Limits = Limits {
     step: 20,
 };
 
-/// RTP dengan house way untuk pemain dan bandar (D-060), dari simulasi
-/// sangat besar di workflow `rtp.yml`.
+/// RTP dengan house way untuk pemain dan bandar (D-060), dari simulasi 200
+/// juta ronde di workflow `rtp.yml` (run 36959067318, toleransi ±0,022%).
 pub const RTP: &[WagerRtp] = &[WagerRtp {
     wager: "bet",
-    percent: 97.2700,
+    percent: 97.1327,
     manifest: true,
 }];
 

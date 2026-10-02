@@ -10,8 +10,8 @@ lan = false
 agen = true
 # RTP dengan house way untuk pemain dan bandar (dek 53 kartu, joker = bug,
 # wheel tertinggi kedua, komisi 5%, seri dimenangkan bandar), dari simulasi
-# sangat besar di workflow rtp.yml. Lihat D-060.
-rtp = 97.27
+# 200 juta ronde di workflow rtp.yml: 97,1327% (±0,022%). Lihat D-060.
+rtp = 97.13
 tutorial = "tutorials/pai-gow.toml"
 
 [[perintah]]
