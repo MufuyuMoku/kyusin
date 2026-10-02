@@ -147,5 +147,6 @@ pub fn wagers() -> Vec<Wager> {
     out.extend(crate::three_card_poker::wagers());
     out.extend(crate::caribbean_stud::wagers());
     out.extend(crate::casino_holdem::wagers());
+    out.extend(crate::let_it_ride::wagers());
     out
 }

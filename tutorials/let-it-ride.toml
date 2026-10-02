@@ -1,0 +1,109 @@
+game = "let-it-ride"
+judul = { id = "Let It Ride: dasar", en = "Let It Ride: basics" }
+
+# Dek tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+kartu = [
+  # Kamu: Q Q 5 (pair Q sudah dibayar). Bersama: 8 lalu Q → three of a kind.
+  "Qh", "Qd", "5c", "8s", "Qc",
+  # Cadangan.
+  "2c", "3c", "4c", "6c", "7c",
+]
+
+[man.aturan]
+id = """
+Poker lima kartu tanpa lawan: tiga kartu untukmu dan dua kartu bersama.
+Kamu memasang taruhan yang sama di tiga tempat, lalu boleh menarik kembali
+dua di antaranya saat kartu dibuka.
+
+Aturan meja ini: satu dek dikocok setiap ronde. Taruhan 10–2.000 chip per
+tempat (kelipatan 10); bet 100 memasang 100 di tiap tempat (300 total).
+Tanpa taruhan sampingan.
+- Setelah melihat tiga kartumu: pull (tarik tempat 1) atau ride.
+- Kartu bersama pertama dibuka; lalu pull (tarik tempat 2) atau ride.
+- Kartu bersama kedua dibuka. Tempat ketiga selalu ikut.
+- Tempat yang tersisa dibayar menurut tangan lima kartu: pair 10 ke atas
+  1:1, two pair 2:1, three of a kind 3:1, straight 5:1, flush 8:1, full
+  house 11:1, four of a kind 50:1, straight flush 200:1, royal flush
+  1.000:1. Selain itu semua tempat yang tersisa kalah.
+
+Strategi yang dipakai untuk RTP (optimal): biarkan sebuah tempat bila
+rata-rata hasilnya dari semua kartu yang mungkin masih positif, dihitung
+tepat. Contohnya: selalu ride dengan tangan yang sudah dibayar, tiga atau
+empat kartu menuju royal/straight flush yang layak, dan empat kartu flush.
+
+RTP: 96,49% per tempat dengan strategi optimal (enumerasi tepat semua
+tangan di GitHub Actions), diverifikasi dengan simulasi.
+
+Provably fair per ronde: komitmen seed diumumkan sebelum kartu dibagi, dan
+seed dibuka setelah ronde selesai. Setiap ronde adalah pertandingan
+tersendiri dengan komitmen baru.
+"""
+en = """
+Five-card poker with no opponent: three cards for you and two community
+cards. You place the same bet on three spots, then may take back two of
+them as the cards are revealed.
+
+This table: one deck, shuffled every round. Bets 10–2,000 chips per spot
+(multiples of 10); bet 100 puts 100 on each spot (300 in total). No side
+bets.
+- After seeing your three cards: pull (take back spot 1) or ride.
+- The first community card is shown; then pull (take back spot 2) or ride.
+- The second community card is shown. The third spot always stays.
+- The remaining spots pay by the five-card hand: pair of 10s or better 1:1,
+  two pair 2:1, three of a kind 3:1, straight 5:1, flush 8:1, full house
+  11:1, four of a kind 50:1, straight flush 200:1, royal flush 1,000:1.
+  Otherwise every remaining spot loses.
+
+Strategy used for the RTP (optimal): let a spot ride when its average
+result over every possible card is still positive, computed exactly. For
+example: always ride with a hand that already pays, good three or four card
+royal/straight flush draws, and four to a flush.
+
+RTP: 96.49% per spot with optimal strategy (exact enumeration of every hand
+on GitHub Actions), verified by simulation.
+
+Provably fair per round: the seed commitment is announced before the deal,
+and the seed is revealed after the round. Every round is its own match with
+a new commitment.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar taruhan per tempat dengan tombol chip, lalu [ BAGI ]. Di tiap
+keputusan: [ PULL ] atau [ RIDE ]. Keyboard: panah memindahkan fokus, Enter
+atau Spasi memilih.
+"""
+en = """
+Choose the bet per spot with the chip buttons, then [ DEAL ]. At each
+decision: [ PULL ] or [ RIDE ]. Keyboard: the arrow keys move the focus,
+Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Tiga tempat taruhan dengan jumlah sama. Pasang 20 (20 di tiap tempat, 60 total)."
+teks.en = "Three spots with the same bet. Bet 20 (20 on each spot, 60 in total)."
+aksi = "bet 20"
+sorot = ["aksi:bet 20"]
+petunjuk.id = "Pasang 20 lalu bagi."
+petunjuk.en = "Bet 20, then deal."
+
+[[langkah]]
+teks.id = "Pair Q sudah dibayar (pair 10 ke atas), jadi tidak ada alasan menarik: ride."
+teks.en = "A pair of queens already pays (10s or better), so there is no reason to pull: ride."
+aksi = "ride"
+sorot = ["aksi:ride"]
+petunjuk.id = "Pilih RIDE."
+petunjuk.en = "Choose RIDE."
+
+[[langkah]]
+teks.id = "Kartu bersama pertama 8. Tanganmu tetap dibayar: ride lagi."
+teks.en = "The first community card is an 8. Your hand still pays: ride again."
+aksi = "ride"
+sorot = ["aksi:ride"]
+petunjuk.id = "Pilih RIDE."
+petunjuk.en = "Choose RIDE."
+
+[[langkah]]
+teks.id = "Kartu kedua Q: three of a kind, 3:1 di ketiga tempat (+180). Dengan tangan yang tidak menjanjikan, pull menyelamatkan dua tempat. Seed ronde dibuka dan verify memeriksanya. Tutorial selesai."
+teks.en = "The second card is a queen: three of a kind, 3:1 on all three spots (+180). With an unpromising hand, pull saves two spots. The round seed is revealed and verify checks it. Tutorial finished."

@@ -16,6 +16,7 @@ pub mod casino_war;
 pub mod catur;
 pub mod dragon_tiger;
 pub mod fixture;
+pub mod let_it_ride;
 pub mod meja;
 pub mod poker;
 pub mod red_dog;
@@ -36,6 +37,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(three_card_poker::cartridge()?)?;
     registry.register(caribbean_stud::cartridge()?)?;
     registry.register(casino_holdem::cartridge()?)?;
+    registry.register(let_it_ride::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

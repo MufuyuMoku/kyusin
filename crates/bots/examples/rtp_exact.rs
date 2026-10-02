@@ -38,6 +38,16 @@ fn main() {
         t.elapsed().as_secs_f64(),
     );
 
+    let t = std::time::Instant::now();
+    let v = kyusin_bots::let_it_ride::exact();
+    report(
+        kyusin_games::let_it_ride::ID,
+        "bet",
+        kyusin_games::let_it_ride::RTP,
+        v,
+        t.elapsed().as_secs_f64(),
+    );
+
     if check && !failed.is_empty() {
         eprintln!("GAGAL: {failed:?}");
         std::process::exit(1);

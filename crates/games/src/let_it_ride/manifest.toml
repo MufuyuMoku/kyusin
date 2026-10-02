@@ -1,0 +1,31 @@
+id = "let-it-ride"
+nama = { id = "Let It Ride", en = "Let It Ride" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP per satu tempat (satuan taruhan, konvensi baku) dengan strategi
+# optimal, dari enumerasi tepat semua tangan di workflow rtp.yml. Tabel baku
+# 1-2-3-5-8-11-50-200-1000, tanpa taruhan sampingan. Lihat D-060.
+rtp = 96.49
+tutorial = "tutorials/let-it-ride.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang jumlah itu di tiga tempat dan bagi kartu (10–2.000 per tempat)", en = "Put that amount on three spots and deal (10–2,000 per spot)" }
+
+[[perintah]]
+pola = "pull"
+ringkas = { id = "Tarik kembali tempat 1 (keputusan pertama) atau tempat 2 (kedua)", en = "Take back spot 1 (first decision) or spot 2 (second)" }
+
+[[perintah]]
+pola = "ride"
+ringkas = { id = "Biarkan taruhan tempat itu", en = "Let that spot ride" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum kartu dibagi", en = "Stop before the deal" }

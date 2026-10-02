@@ -15,6 +15,7 @@ pub mod casino_war;
 pub mod catur;
 mod catur_search;
 pub mod dragon_tiger;
+pub mod let_it_ride;
 pub mod meja;
 pub mod red_dog;
 pub mod reversi;
