@@ -1,0 +1,133 @@
+game = "texas-holdem"
+judul = { id = "Texas Hold'em: dasar", en = "Texas Hold'em: basics" }
+
+# Heads-up dengan dek tetap supaya setiap langkah selalu sama (tes tutorial
+# di CI). Dealer kursi 1 (small blind); kamu kursi 0 (big blind).
+[config]
+kursi = 2
+dealer = 1
+dek = [[
+  # Kartu dibagi mulai dari kursi setelah dealer: kamu, lawan, kamu, lawan.
+  "Ah", "Qs", "Kh", "Jd",
+  # Meja: flop A 7 2, turn K, river 9.
+  "Ad", "7c", "2s", "Kc", "9d",
+]]
+
+[man.aturan]
+id = """
+Poker antar-pemain: kamu melawan bot, tanpa bandar dan tanpa rake. Setiap
+pemain mendapat dua kartu tertutup; lima kartu meja dibuka bertahap: flop
+(3), turn (1), river (1). Tangan terbaik lima kartu dari tujuh kartu yang
+tersedia menang. Urutan tangan seperti poker biasa (royal flush tertinggi).
+
+Aturan meja ini: No-Limit, blind 10/20, sampai 6 kursi. Kamu duduk dengan
+buy-in dari saldo chip (paling banyak 2.000); sisa tumpukan kembali ke
+saldo saat kamu berdiri. Bot masing-masing duduk dengan 2.000.
+- Small blind = kursi setelah dealer, big blind sesudahnya; berdua (heads-
+  up), dealer memasang small blind dan bertindak dulu sebelum flop.
+- Tiap babak: fold, check (bila tidak ada taruhan), call, bet, atau raise.
+  Jumlah bet/raise adalah total taruhanmu di babak itu. Raise minimal
+  sebesar raise terakhir (paling sedikit big blind); No-Limit: paling
+  banyak seluruh tumpukan.
+- All-in yang kurang dari raise penuh tidak membuka lagi hak raise bagi
+  pemain yang sudah bertindak.
+- Bila semua lawan fold, kamu memenangkan pot tanpa membuka kartu. Bila
+  ada all-in, pot dibagi menjadi pot utama dan side pot; tiap pot
+  dimenangkan tangan terbaik di antara yang berhak. Seri dibagi rata.
+- Setelah tangan selesai, pilih lanjut atau berdiri. Sesi selesai saat kamu
+  berdiri, saat tumpukanmu habis, atau saat semua bot habis.
+
+Rating lokal: satu sesi dihitung sebagai satu pertandingan melawan level
+bot, dengan skor = bagian bot yang hasil bersihnya di bawahmu (seri
+setengah). Antar-pemain: tanpa house edge.
+
+Provably fair per sesi: komitmen seed diumumkan saat duduk; setiap tangan
+dikocok dari seed sesi dan nomor tangan; seed dibuka saat sesi selesai, lalu
+verify memutar ulang semua tangan.
+"""
+en = """
+Player-versus-player poker: you play against bots, with no dealer and no
+rake. Every player gets two face-down cards; five board cards are shown in
+stages: the flop (3), the turn (1), the river (1). The best five-card hand
+from the seven available cards wins. Hands rank as in ordinary poker (royal
+flush highest).
+
+This table: No-Limit, blinds 10/20, up to 6 seats. You sit with a buy-in
+from your chip balance (at most 2,000); what is left goes back to your
+balance when you stand up. Each bot sits with 2,000.
+- Small blind = the seat after the dealer, big blind the next; heads-up,
+  the dealer posts the small blind and acts first before the flop.
+- Each round: fold, check (when there is no bet), call, bet, or raise. The
+  bet/raise amount is your total bet for that round. A raise must be at
+  least the last raise (at least the big blind); No-Limit: at most your
+  whole stack.
+- An all-in that is less than a full raise does not reopen raising for
+  players who have already acted.
+- If everyone else folds, you win the pot without showing. With all-ins,
+  the pot splits into a main pot and side pots; each goes to the best hand
+  among those eligible. Ties split evenly.
+- After a hand, continue or stand up. The session ends when you stand up,
+  when your stack runs out, or when every bot is out.
+
+Local rating: one session counts as one match against the bot level, scored
+as the share of bots whose net result is below yours (ties half). Player
+versus player: no house edge.
+
+Provably fair per session: the seed commitment is announced when you sit
+down; every hand is shuffled from the session seed and the hand number; the
+seed is revealed when the session ends, then verify replays every hand.
+"""
+
+[man.kontrol]
+id = """
+Saat giliranmu: [ FOLD ], [ CHECK ] atau [ CALL ], dan [ BET ] / [ RAISE ]
+dengan jumlah yang disusun lewat tombol (minimal, ½ pot, pot, all-in, dan
++/− big blind). Di antara tangan: [ LANJUT ] atau [ BERDIRI ]. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+On your turn: [ FOLD ], [ CHECK ] or [ CALL ], and [ BET ] / [ RAISE ] with
+an amount built with the buttons (minimum, ½ pot, pot, all-in, and +/− big
+blind). Between hands: [ NEXT ] or [ STAND UP ]. Keyboard: the arrow keys
+move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Kamu big blind (20) dengan A K. Lawan, dealer dan small blind, melengkapi ke 20. Tidak ada taruhan untuk diikuti: check."
+teks.en = "You are the big blind (20) with A K. The opponent, dealer and small blind, completes to 20. Nothing to call: check."
+sebelum = ["call"]
+aksi = "check"
+sorot = ["aksi:check"]
+petunjuk.id = "Pilih CHECK."
+petunjuk.en = "Choose CHECK."
+
+[[langkah]]
+teks.id = "Flop A 7 2: kamu punya pair as. Setelah flop kamu bertindak dulu. Bet 40."
+teks.en = "Flop A 7 2: you have a pair of aces. After the flop you act first. Bet 40."
+aksi = "bet 40"
+sorot = ["aksi:bet 40"]
+petunjuk.id = "Susun 40 lalu pilih BET."
+petunjuk.en = "Set 40, then choose BET."
+
+[[langkah]]
+teks.id = "Lawan call. Turn K memberimu two pair. Check dulu untuk melihat apa yang dilakukan lawan."
+teks.en = "The opponent calls. The turn K gives you two pair. Check first to see what the opponent does."
+sebelum = ["call"]
+aksi = "check"
+sorot = ["aksi:check"]
+petunjuk.id = "Pilih CHECK."
+petunjuk.en = "Choose CHECK."
+
+[[langkah]]
+teks.id = "Lawan juga check. River 9. Bet 100 untuk nilai dari two pair-mu."
+teks.en = "The opponent checks too. River 9. Bet 100 for value with your two pair."
+sebelum = ["check"]
+aksi = "bet 100"
+sorot = ["aksi:bet 100"]
+petunjuk.id = "Susun 100 lalu pilih BET."
+petunjuk.en = "Set 100, then choose BET."
+
+[[langkah]]
+teks.id = "Lawan call dengan Q J dan kalah oleh two pair A K: pot 320 untukmu. Seed sesi dibuka saat sesi selesai. Tutorial selesai."
+teks.en = "The opponent calls with Q J and loses to your two pair, aces and kings: the 320 pot is yours. The session seed is revealed when the session ends. Tutorial finished."
+sebelum = ["call"]

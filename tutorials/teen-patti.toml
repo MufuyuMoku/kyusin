@@ -1,0 +1,136 @@
+game = "teen-patti"
+judul = { id = "Teen Patti: dasar", en = "Teen Patti: basics" }
+
+# Berdua dengan dek tetap supaya setiap langkah selalu sama (tes tutorial di
+# CI). Dealer kursi 1; kamu kursi 0 dan bertindak dulu.
+[config]
+kursi = 2
+dealer = 1
+dek = [[
+  # Kartu bergantian mulai dari kamu: kamu K K 7, lawan 9 5 2.
+  "Kh", "9c", "Kd", "5s", "7c", "2d",
+]]
+
+[man.aturan]
+id = """
+Permainan kartu antar-pemain dari India dengan tiga kartu. Setiap pemain
+memasang boot, lalu bergiliran bertaruh atau pack (menyerah) sampai tinggal
+satu pemain, atau sampai kartu dibandingkan.
+
+Urutan tangan, dari yang tertinggi: trail (tiga kartu sama), pure sequence
+(berurutan dan sejenis), sequence (berurutan), color (sejenis), pair, kartu
+tinggi. Sequence tertinggi A-K-Q, lalu A-2-3, lalu K-Q-J sampai 4-3-2.
+Tangan sama persis membagi pot.
+
+Aturan meja ini: boot 10 dari setiap pemain, sampai 6 kursi, buy-in paling
+banyak 2.000 dari saldo (bot 2.000), tanpa rake.
+- Kamu boleh bermain buta (tanpa melihat kartu) atau see (melihat kartu).
+  Taruhan pemain buta: chaal sebesar stake, raise dua kali stake. Sesudah
+  melihat: chaal dua kali stake, raise empat kali stake. Raise
+  menggandakan stake; stake paling besar 640 (64 × boot).
+- Paling banyak 4 kali chaal buta; sesudahnya harus melihat kartu.
+- Show: hanya saat tinggal dua pemain; biayanya sebesar chaal pemintanya,
+  lalu kedua tangan dibandingkan.
+- Sideshow: pemain yang sudah melihat boleh meminta pemain aktif
+  sebelumnya (yang juga sudah melihat) membandingkan kartu diam-diam, bila
+  tersisa paling sedikit tiga pemain; biayanya chaal. Yang diminta boleh
+  menerima atau menolak; bila diterima, tangan yang lebih rendah pack (seri:
+  peminta pack).
+- Pot mencapai 10.240 (1.024 × boot): semua yang tersisa dibandingkan.
+- Pemain yang chipnya tidak cukup bisa chaal all-in; pot dibagi menjadi pot
+  utama dan side pot.
+
+Rating lokal: satu sesi = satu pertandingan melawan level bot, skor =
+bagian bot yang hasil bersihnya di bawahmu. Antar-pemain: tanpa house edge.
+
+Provably fair per sesi: komitmen seed saat duduk, setiap tangan dikocok dari
+seed sesi dan nomor tangan, seed dibuka saat sesi selesai, verify memutar
+ulang semua tangan.
+"""
+en = """
+A player-versus-player three-card game from India. Every player posts the
+boot, then players take turns betting or packing (folding) until one player
+remains, or until cards are compared.
+
+Hand ranks, highest first: trail (three of a kind), pure sequence (straight
+flush), sequence (straight), color (flush), pair, high card. The highest
+sequence is A-K-Q, then A-2-3, then K-Q-J down to 4-3-2. Identical hands
+split the pot.
+
+This table: a boot of 10 from every player, up to 6 seats, a buy-in of at
+most 2,000 from your balance (bots 2,000), no rake.
+- You may play blind (without looking) or see your cards. A blind player's
+  chaal is the stake, a raise twice the stake. After seeing: chaal twice the
+  stake, raise four times the stake. A raise doubles the stake; the stake
+  is at most 640 (64 × boot).
+- At most 4 blind chaals; after that you must see your cards.
+- Show: only when two players remain; it costs the requester's chaal, then
+  both hands are compared.
+- Sideshow: a seen player may ask the previous active player (also seen) for
+  a private comparison when at least three players remain; it costs a
+  chaal. The other player may accept or deny; if accepted, the lower hand
+  packs (a tie: the requester packs).
+- When the pot reaches 10,240 (1,024 × boot), everyone left is compared.
+- A player without enough chips may chaal all-in; the pot splits into a
+  main pot and side pots.
+
+Local rating: one session = one match against the bot level, scored as the
+share of bots whose net result is below yours. Player versus player: no
+house edge.
+
+Provably fair per session: seed commitment when you sit down, every hand
+shuffled from the session seed and the hand number, the seed revealed when
+the session ends, verify replays every hand.
+"""
+
+[man.kontrol]
+id = """
+Saat giliranmu: [ LIHAT ], [ PACK ], [ CHAAL ], [ RAISE ], [ SHOW ], dan
+[ SIDESHOW ] (biaya tertera di tombol). Saat diminta sideshow: [ TERIMA ]
+atau [ TOLAK ]. Di antara tangan: [ LANJUT ] atau [ BERDIRI ]. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+On your turn: [ SEE ], [ PACK ], [ CHAAL ], [ RAISE ], [ SHOW ], and
+[ SIDESHOW ] (costs shown on the buttons). When asked for a sideshow:
+[ ACCEPT ] or [ DENY ]. Between hands: [ NEXT ] or [ STAND UP ]. Keyboard:
+the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Semua sudah memasang boot 10. Kamu belum melihat kartumu: pemain buta membayar lebih murah. Chaal buta sebesar stake (10)."
+teks.en = "Everyone has posted the boot of 10. You have not looked at your cards: blind players pay less. Chaal blind for the stake (10)."
+aksi = "chaal"
+sorot = ["aksi:chaal"]
+petunjuk.id = "Pilih CHAAL."
+petunjuk.en = "Choose CHAAL."
+
+[[langkah]]
+teks.id = "Lawan juga chaal buta. Sekarang lihat kartumu: see tidak memakai giliran."
+teks.en = "The opponent also chaals blind. Now look at your cards: seeing does not use your turn."
+sebelum = ["chaal"]
+aksi = "see"
+sorot = ["aksi:see"]
+petunjuk.id = "Pilih LIHAT."
+petunjuk.en = "Choose SEE."
+
+[[langkah]]
+teks.id = "Pair K. Sesudah melihat, chaal-mu dua kali stake (20). Chaal."
+teks.en = "A pair of kings. After seeing, your chaal is twice the stake (20). Chaal."
+aksi = "chaal"
+sorot = ["aksi:chaal"]
+petunjuk.id = "Pilih CHAAL."
+petunjuk.en = "Choose CHAAL."
+
+[[langkah]]
+teks.id = "Lawan chaal buta lagi. Tinggal dua pemain, jadi kamu boleh meminta show (biaya 20): kartu dibandingkan."
+teks.en = "The opponent chaals blind again. Two players remain, so you may ask for a show (cost 20): the cards are compared."
+sebelum = ["chaal"]
+aksi = "show"
+sorot = ["aksi:show"]
+petunjuk.id = "Pilih SHOW."
+petunjuk.en = "Choose SHOW."
+
+[[langkah]]
+teks.id = "Pair K-mu menang dari 9-5-2 lawan: pot 90 untukmu. Seed sesi dibuka saat sesi selesai. Tutorial selesai."
+teks.en = "Your pair of kings beats the opponent's 9-5-2: the 90 pot is yours. The session seed is revealed when the session ends. Tutorial finished."

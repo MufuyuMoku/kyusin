@@ -40,6 +40,8 @@
 	const paused = $derived(app.pauseMenu && !!m && !m.over);
 	/** Casino melawan bandar: tanpa kalimat menang/kalah dan tanpa lawan bot. */
 	const house = $derived(game?.lawan === 'bandar');
+	/** Meja casino antar-pemain (buy-in): menu jeda seperti meja casino. */
+	const table = $derived(game?.kategori === 'casino-meja' && game?.lawan === 'bot');
 	const usages = $derived(m?.actions.map((a) => a.usage) ?? []);
 	/** Casino satu ronde per sesi: taruhan setelah ronde memulai ronde baru. */
 	const roundOver = $derived(!!m && m.over && house && !!ui?.perRound);
@@ -73,7 +75,7 @@
 {#if m}
 	<div class="match">
 		{#if paused}
-			<PauseMenu {house} canLeave={usages.includes('leave')} />
+			<PauseMenu house={house || table} canLeave={usages.includes('leave')} />
 		{/if}
 		<div class="head" inert={paused}>
 			<span class="display big">{game ? L(game.nama) : m.game}</span>

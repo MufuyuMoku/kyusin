@@ -6,7 +6,7 @@
 //! selesai.
 
 use kyusin_core::Localized;
-use kyusin_core::rating::{Rating, TAU};
+use kyusin_core::rating::{Outcome, Rating, TAU};
 use kyusin_core::replay::Replay;
 use kyusin_store::{GameRecord, profile::human_outcome};
 use serde::Serialize;
@@ -33,6 +33,40 @@ pub(crate) struct RatingChange {
     pub(crate) rd: f64,
 }
 
+/// Skor sesi meja multipemain (lebih dari dua kursi; D-063): bagian lawan
+/// yang hasil bersihnya di bawah pemain, seri dihitung setengah. Satu sesi
+/// = satu pertandingan Glicko-2 melawan level bot dengan skor ini.
+pub(crate) fn table_score(replay: &Replay) -> Option<f64> {
+    if replay.seats.len() <= 2 {
+        return None;
+    }
+    let result = replay.result.as_ref()?;
+    let human = replay
+        .seats
+        .iter()
+        .position(|s| *s == kyusin_core::SeatKind::Human)?;
+    let me = *result.scores.get(human)?;
+    let others: Vec<i64> = result
+        .scores
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| *i != human)
+        .map(|(_, s)| *s)
+        .collect();
+    if others.is_empty() {
+        return None;
+    }
+    let points: f64 = others
+        .iter()
+        .map(|&o| match me.cmp(&o) {
+            std::cmp::Ordering::Greater => 1.0,
+            std::cmp::Ordering::Equal => 0.5,
+            std::cmp::Ordering::Less => 0.0,
+        })
+        .sum();
+    Some(points / others.len() as f64)
+}
+
 /// Mencatat hasil pertandingan yang selesai ke riwayat, dan memperbarui
 /// rating bila game-nya kompetitif dan lawannya bot yang terkalibrasi.
 pub(crate) fn record(
@@ -46,7 +80,17 @@ pub(crate) fn record(
     if manifest.is_against_house() {
         return None;
     }
-    let (outcome, level) = human_outcome(replay)?;
+    let (mut outcome, level) = human_outcome(replay)?;
+    let score = table_score(replay);
+    if let Some(s) = score {
+        outcome = if s > 0.5 {
+            Outcome::Win
+        } else if s < 0.5 {
+            Outcome::Loss
+        } else {
+            Outcome::Draw
+        };
+    }
     let competitive = manifest.competitive;
     let store = state.store.as_ref().ok()?;
     let mut s = store.lock().unwrap();
@@ -58,7 +102,8 @@ pub(crate) fn record(
                 .flatten()
                 .map(|r| r.rating)
                 .unwrap_or_else(Rating::new_player);
-            (before, before.update(&[(opp, outcome)], TAU))
+            let s = score.unwrap_or_else(|| outcome.score());
+            (before, before.update_scores(&[(opp, s)], TAU))
         }),
         _ => None,
     };

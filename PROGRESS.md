@@ -16,7 +16,8 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M3 | selesai | 2026-09-28 | Profil tunggal, Glicko-2 (rating lokal), riwayat, statistik; kalibrasi antar-bot Reversi. Sebelumnya: perbaikan Rev. 9 (menu jeda, penundaan, kursor) |
 | M4 | selesai | 2026-09-29 | Mesin kartu bersama, ekonomi chip (saldo, tunjangan harian, ringkasan bandar), Blackjack (RTP 99,64% strategi dasar, provably fair per shoe), label level deskriptif |
 | M5a | selesai | 2026-10-02 | Sepuluh meja melawan bandar (Baccarat, Dragon Tiger, Casino War, Red Dog, Andar Bahar, Three Card Poker, Caribbean Stud, Casino Hold'em, Let It Ride, Pai Gow Poker). Sebelumnya: taruhan casino tercatat saat dipasang, titik simpan setiap aksi (D-059); SPEC Rev. 11 |
-| M5b | belum mulai | | Texas Hold'em, Omaha, Capsa Susun, Domino QiuQiu, Teen Patti |
+| M5b-1 | selesai | 2026-10-02 | Texas Hold'em (No-Limit), Omaha (Pot-Limit), Teen Patti antar-pemain melawan bot; buy-in dari saldo; rating sesi multipemain; SPEC Rev. 12 |
+| M5b-2 | belum mulai | | Capsa Susun, Domino QiuQiu, mesin domino bersama |
 | M6 | belum mulai | | |
 | M7 | belum mulai | | |
 | M8 | belum mulai | | |
@@ -46,8 +47,24 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Casino Hold'em | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
 | Let It Ride | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
 | Pai Gow Poker | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Texas Hold'em | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-1); meja LAN menyusul |
+| Omaha | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-1); meja LAN menyusul |
+| Teen Patti | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-1); meja LAN menyusul |
 
 ## Log sesi
+
+### 2026-10-02 — M5b-1: Texas Hold'em, Omaha, Teen Patti (SPEC Rev. 12)
+
+- Keputusan klien: D-062 (pemecahan M5b, buy-in, rating sesi, kalibrasi antar-bot, pekerjaan nanti RTP optimal Casino Hold'em). Penerapan: D-063.
+- Tes aturan di-commit sebelum mesinnya: pot dan side pot (5 + 1), Texas/Omaha (12: blind dan urutan termasuk heads-up, ukuran raise No-Limit dan Pot-Limit, all-in tak penuh, side pot, Omaha tepat 2+3, sesi, kontrak chip, properti kekekalan chip pada 60 sesi acak), Teen Patti (11: urutan tangan, boot, buta/terlihat, batas stake dan chaal buta, show, sideshow terima/tolak/seri, all-in, batas pot, sesi, properti kekekalan chip).
+- Mesin: meja poker bersama (`poker_meja`, varian Texas No-Limit dan Omaha Pot-Limit) dan Teen Patti; satu pertandingan = satu sesi meja (provably fair per sesi); pot tanpa penyamaan taruhan untuk Teen Patti.
+- Host: buy-in dari saldo (paling banyak 2.000, paling sedikit 400) lewat titik simpan D-059; mati paksa melanjutkan tangan yang sama; membuang sesi memainkan aksi netral sambil bot bertindak; tidak masuk ringkasan bandar. Rating: satu sesi = satu pertandingan Glicko-2 dengan skor pecahan (bagian bot di bawahmu).
+- Bot: Texas/Omaha 3 level, Teen Patti 4 level; kalibrasi antar-bot di GitHub Actions (`kalibrasi-antarbot.yml`, 2.000 sesi heads-up 60 tangan per pasangan): Texas 1000/1131/1379, Teen Patti 1000/1174/1369/1411, Omaha 1000 / 1378 / 1600.
+- UI: meja antar-pemain bersama (`PokerTable`): baris kursi berslot tetap, kartu meja, penanda giliran sebagai lapisan, kontrol bet/raise (min, ½ pot, pot, maks, ±BB) dan Teen Patti (lihat, chaal, raise, show, sideshow, terima/tolak); tes jendela asli `ui/e2e/pvp.e2e.mjs`.
+- Tes: 295 tes Rust, 38 tes UI. Tes jendela asli (CI Windows): E2E_RESULT
+- Pekerjaan nanti (D-062): RTP Casino Hold'em dengan strategi optimal lewat enumerasi tepat di GitHub Actions.
+- Belum/sisa: meja LAN (M9); kalibrasi memakai sesi heads-up, kekuatan relatif di meja enam kursi bisa berbeda.
+- Langkah berikutnya: M5b-2 (Capsa Susun, Domino QiuQiu): aturan lokal yang bervariasi ditanyakan ke klien lebih dulu.
 
 ### 2026-10-02 — Taruhan tercatat saat dipasang (D-059), SPEC Rev. 11, M5a: sepuluh meja melawan bandar
 

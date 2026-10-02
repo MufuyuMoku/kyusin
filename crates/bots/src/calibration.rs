@@ -62,6 +62,11 @@ fn data(game: &str) -> Option<&'static str> {
     Some(match game {
         kyusin_games::catur::ID => include_str!("../../../data/calibration/catur.json"),
         kyusin_games::reversi::ID => include_str!("../../../data/calibration/reversi.json"),
+        kyusin_games::texas_holdem::ID => {
+            include_str!("../../../data/calibration/texas-holdem.json")
+        }
+        kyusin_games::teen_patti::ID => include_str!("../../../data/calibration/teen-patti.json"),
+        kyusin_games::omaha::ID => include_str!("../../../data/calibration/omaha.json"),
         _ => return None,
     })
 }

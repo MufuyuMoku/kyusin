@@ -18,10 +18,15 @@ pub mod dragon_tiger;
 pub mod fixture;
 pub mod let_it_ride;
 pub mod meja;
+pub mod omaha;
 pub mod pai_gow;
 pub mod poker;
+pub mod poker_meja;
+pub mod pot;
 pub mod red_dog;
 pub mod reversi;
+pub mod teen_patti;
+pub mod texas_holdem;
 pub mod three_card_poker;
 
 /// Game katalog yang dikirim bersama aplikasi.
@@ -40,6 +45,9 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(casino_holdem::cartridge()?)?;
     registry.register(let_it_ride::cartridge()?)?;
     registry.register(pai_gow::cartridge()?)?;
+    registry.register(texas_holdem::cartridge()?)?;
+    registry.register(omaha::cartridge()?)?;
+    registry.register(teen_patti::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

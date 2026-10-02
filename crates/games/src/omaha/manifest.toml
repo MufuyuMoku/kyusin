@@ -1,0 +1,40 @@
+id = "omaha"
+nama = { id = "Omaha (Pot-Limit)", en = "Omaha (Pot-Limit)" }
+kategori = "casino-meja"
+pemain_min = 2
+pemain_maks = 6
+jenis = "giliran"
+lawan = "bot"
+kompetitif = true
+# Meja LAN menyusul di M9.
+lan = false
+agen = true
+tutorial = "tutorials/omaha.toml"
+
+[[perintah]]
+pola = "fold"
+ringkas = { id = "Lepas tangan ini", en = "Give up this hand" }
+
+[[perintah]]
+pola = "check"
+ringkas = { id = "Lewat tanpa menambah taruhan (bila tidak ada taruhan untuk diikuti)", en = "Pass without betting (when there is nothing to call)" }
+
+[[perintah]]
+pola = "call"
+ringkas = { id = "Ikuti taruhan tertinggi", en = "Match the highest bet" }
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Taruhan pertama di babak ini (total; paling banyak sebesar pot)", en = "First bet of the round (total; at most the pot)" }
+
+[[perintah]]
+pola = "raise <jumlah>"
+ringkas = { id = "Naikkan taruhan menjadi total ini (paling banyak taruhan + pot setelah call)", en = "Raise to this total (at most the bet + the pot after calling)" }
+
+[[perintah]]
+pola = "next"
+ringkas = { id = "Lanjut ke tangan berikutnya", en = "Continue to the next hand" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berdiri di antara tangan; tumpukan kembali ke saldo", en = "Stand up between hands; your stack goes back to your balance" }

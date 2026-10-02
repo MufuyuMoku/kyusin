@@ -12,6 +12,8 @@ import ChessBoard from './ChessBoard.svelte';
 import ChessStatus from './ChessStatus.svelte';
 import MejaStatus from './MejaStatus.svelte';
 import MejaTable from './MejaTable.svelte';
+import PokerStatus from './PokerStatus.svelte';
+import PokerTable from './PokerTable.svelte';
 import ReversiBoard from './ReversiBoard.svelte';
 import ReversiStatus from './ReversiStatus.svelte';
 
@@ -85,5 +87,8 @@ export const GAME_UI: Record<string, GameUi> = {
 	'caribbean-stud': meja(true),
 	'casino-holdem': meja(true),
 	'let-it-ride': meja(true),
-	'pai-gow': meja(true)
+	'pai-gow': meja(true),
+	'texas-holdem': { board: PokerTable, status: PokerStatus, seats: [] },
+	omaha: { board: PokerTable, status: PokerStatus, seats: [] },
+	'teen-patti': { board: PokerTable, status: PokerStatus, seats: [] }
 };

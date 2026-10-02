@@ -112,3 +112,22 @@ fn long_series_stays_finite_and_converges() {
     assert!(close(p.rating, 1600.0, 15.0), "{p:?}");
     assert!(p.rd < 80.0, "{p:?}");
 }
+
+/// Skor pecahan (sesi meja multipemain, D-063): di antara kalah dan menang,
+/// dan 0,5 melawan lawan setara hampir tidak menggeser rating.
+#[test]
+fn fractional_scores_sit_between_loss_and_win() {
+    use kyusin_core::rating::{Outcome, Rating, TAU};
+    let me = Rating::new_player();
+    let opp = Rating::new_player();
+    let win = me.update(&[(opp, Outcome::Win)], TAU).rating;
+    let three_quarters = me.update_scores(&[(opp, 0.75)], TAU).rating;
+    let half = me.update_scores(&[(opp, 0.5)], TAU).rating;
+    let loss = me.update(&[(opp, Outcome::Loss)], TAU).rating;
+    assert!(win > three_quarters && three_quarters > half && half > loss);
+    assert!((half - 1500.0).abs() < 1e-6, "{half}");
+    assert_eq!(
+        me.update_scores(&[(opp, 1.0)], TAU),
+        me.update(&[(opp, Outcome::Win)], TAU)
+    );
+}
