@@ -61,7 +61,7 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 - Host: buy-in dari saldo (paling banyak 2.000, paling sedikit 400) lewat titik simpan D-059; mati paksa melanjutkan tangan yang sama; membuang sesi memainkan aksi netral sambil bot bertindak; tidak masuk ringkasan bandar. Rating: satu sesi = satu pertandingan Glicko-2 dengan skor pecahan (bagian bot di bawahmu).
 - Bot: Texas/Omaha 3 level, Teen Patti 4 level; kalibrasi antar-bot di GitHub Actions (`kalibrasi-antarbot.yml`, 2.000 sesi heads-up 60 tangan per pasangan): Texas 1000/1131/1379, Teen Patti 1000/1174/1369/1411, Omaha 1000 / 1378 / 1600.
 - UI: meja antar-pemain bersama (`PokerTable`): baris kursi berslot tetap, kartu meja, penanda giliran sebagai lapisan, kontrol bet/raise (min, ½ pot, pot, maks, ±BB) dan Teen Patti (lihat, chaal, raise, show, sideshow, terima/tolak); tes jendela asli `ui/e2e/pvp.e2e.mjs`.
-- Tes: 295 tes Rust, 38 tes UI. Tes jendela asli (CI Windows): E2E_RESULT
+- Tes: 295 tes Rust, 38 tes UI. Tes jendela asli (CI Windows, run 36976470929): lulus; ketiga meja duduk dengan buy-in 2.000, selaras, kontrol tanpa geser (diukur di koordinat isi halaman karena meja enam kursi digulir), satu tangan dimainkan, berdiri mengembalikan tumpukan ke saldo, verify cocok, rating tampil; tema P3/P4 selaras.
 - Pekerjaan nanti (D-062): RTP Casino Hold'em dengan strategi optimal lewat enumerasi tepat di GitHub Actions.
 - Belum/sisa: meja LAN (M9); kalibrasi memakai sesi heads-up, kekuatan relatif di meja enam kursi bisa berbeda.
 - Langkah berikutnya: M5b-2 (Capsa Susun, Domino QiuQiu): aturan lokal yang bervariasi ditanyakan ke klien lebih dulu.
