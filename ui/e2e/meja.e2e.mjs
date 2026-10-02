@@ -110,6 +110,9 @@ async function open(s, g) {
 	await s.click(await s.find('xpath', `//button[normalize-space(.)="› ${g.name}"]`));
 	await s.waitFor(() => !!document.querySelector('.game'), `layar ${g.name}`);
 	await s.click(await s.find('xpath', "//button[normalize-space(.)='[ MAIN ]']"));
+	// Shoe dari putaran sebelumnya masih tertunda: konfirmasi main baru.
+	const confirm = await s.exec(() => [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === '[ YA, MAIN BARU ]'));
+	if (confirm) await s.click(await s.find('xpath', "//button[normalize-space(.)='[ YA, MAIN BARU ]']"));
 	await s.waitFor((id) => document.querySelector(`.table[data-game="${id}"]`)?.dataset.fase === 'taruhan', `meja ${g.id}`, 10000, g.id);
 }
 
