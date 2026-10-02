@@ -22,7 +22,9 @@ use kyusin_games::teen_patti::{Config, TeenPatti, TpCategory, eval};
 use serde_json::{Value, json};
 
 fn cards(text: &str) -> Vec<Card> {
-    text.split_whitespace().map(|c| c.parse().unwrap()).collect()
+    text.split_whitespace()
+        .map(|c| c.parse().unwrap())
+        .collect()
 }
 
 fn tp(seats: u8, dealer: u8, deck: &[&str]) -> TeenPatti {
@@ -113,8 +115,14 @@ fn boot_order_and_blind_cards() {
     for a in ["see", "pack", "chaal", "raise"] {
         assert!(l.contains(&a.to_string()), "{a}: {l:?}");
     }
-    assert!(!l.contains(&"show".to_string()), "tiga pemain: tidak ada show");
-    assert!(!l.contains(&"sideshow".to_string()), "buta: tidak ada sideshow");
+    assert!(
+        !l.contains(&"show".to_string()),
+        "tiga pemain: tidak ada show"
+    );
+    assert!(
+        !l.contains(&"sideshow".to_string()),
+        "buta: tidak ada sideshow"
+    );
     assert_eq!(v["biaya"]["chaal"], 10);
     assert_eq!(v["biaya"]["raise"], 20);
 }
@@ -130,7 +138,10 @@ fn blind_and_seen_amounts_and_raises() {
     let v = view(&g, 2);
     assert_eq!(v["kursi"][2]["kartu"], json!(["2c", "5d", "9h"]));
     assert_eq!(v["giliran"], 2, "melihat kartu tidak memakai giliran");
-    assert_eq!(v["biaya"]["chaal"], 20, "yang sudah melihat membayar dua kali stake");
+    assert_eq!(
+        v["biaya"]["chaal"], 20,
+        "yang sudah melihat membayar dua kali stake"
+    );
     assert_eq!(v["biaya"]["raise"], 40);
     act(&mut g, 2, "raise");
     let v = view(&g, 0);
@@ -168,7 +179,10 @@ fn stake_cap_and_blind_limit() {
         act(&mut g, 1, "chaal");
     }
     let l = legal(&g, 0);
-    assert!(!l.contains(&"chaal".to_string()), "setelah 4 chaal buta harus see: {l:?}");
+    assert!(
+        !l.contains(&"chaal".to_string()),
+        "setelah 4 chaal buta harus see: {l:?}"
+    );
     assert!(l.contains(&"see".to_string()));
     act(&mut g, 0, "see");
     assert!(legal(&g, 0).contains(&"chaal".to_string()));
@@ -199,13 +213,17 @@ fn sideshow_accept_deny_and_tie() {
     let deck = [
         "2h", "Kh", "Qc", "7c", //
         "3d", "Kd", "Qd", "8c", //
-        "9s", "4c", "4d", "Jc", // kursi 1: 2 3 9; kursi 2: K K 4; kursi 3: Q Q 4; kursi 0: 7 8 J
+        "9s", "4c", "4d",
+        "Jc", // kursi 1: 2 3 9; kursi 2: K K 4; kursi 3: Q Q 4; kursi 0: 7 8 J
     ];
     let mut g = tp(4, 0, &deck);
     act(&mut g, 1, "chaal");
     act(&mut g, 2, "see");
     act(&mut g, 2, "chaal");
-    assert!(!legal(&g, 3).contains(&"sideshow".to_string()), "kursi 3 buta");
+    assert!(
+        !legal(&g, 3).contains(&"sideshow".to_string()),
+        "kursi 3 buta"
+    );
     act(&mut g, 3, "see");
     // Pemain aktif sebelumnya (kursi 2) sudah melihat: sideshow boleh.
     assert!(legal(&g, 3).contains(&"sideshow".to_string()));
@@ -295,7 +313,12 @@ fn pot_limit_forces_a_show() {
     let mut c = Config {
         kursi: Some(2),
         dealer: Some(1),
-        dek: Some(vec![["Ah", "2c", "As", "5d", "Ad", "9h"].iter().map(|c| c.to_string()).collect()]),
+        dek: Some(vec![
+            ["Ah", "2c", "As", "5d", "Ad", "9h"]
+                .iter()
+                .map(|c| c.to_string())
+                .collect(),
+        ]),
         tumpukan: Some(vec![20000, 20000]),
         ..Config::default()
     };
@@ -309,7 +332,11 @@ fn pot_limit_forces_a_show() {
         if view(&g, seat)["kursi"][seat as usize]["terlihat"] == false {
             act(&mut g, seat, "see");
         }
-        let cmd = if legal(&g, seat).contains(&"raise".to_string()) { "raise" } else { "chaal" };
+        let cmd = if legal(&g, seat).contains(&"raise".to_string()) {
+            "raise"
+        } else {
+            "chaal"
+        };
         act(&mut g, seat, cmd);
         seat = 1 - seat;
     }
@@ -324,7 +351,11 @@ fn session_and_contract() {
     let mut g = tp(3, 0, DECK3);
     let v = view(&g, 0);
     assert_eq!(v["taruhan_meja"], 2000);
-    assert_eq!(v["netral"], serde_json::Value::Null, "bukan giliran kursi 0");
+    assert_eq!(
+        v["netral"],
+        serde_json::Value::Null,
+        "bukan giliran kursi 0"
+    );
     act(&mut g, 1, "pack");
     act(&mut g, 2, "pack");
     let mut p = TurnGame::pending_players(&g);
@@ -337,7 +368,9 @@ fn session_and_contract() {
     assert_eq!(v["bersih"], 20);
     let r = TurnGame::result(&g).unwrap();
     assert_eq!(r.scores.iter().sum::<i64>(), 0);
-    for cmd in ["see", "pack", "chaal", "raise", "show", "sideshow", "accept", "deny", "next", "leave"] {
+    for cmd in [
+        "see", "pack", "chaal", "raise", "show", "sideshow", "accept", "deny", "next", "leave",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }

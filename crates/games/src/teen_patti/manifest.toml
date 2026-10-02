@@ -1,0 +1,52 @@
+id = "teen-patti"
+nama = { id = "Teen Patti", en = "Teen Patti" }
+kategori = "casino-meja"
+pemain_min = 2
+pemain_maks = 6
+jenis = "giliran"
+lawan = "bot"
+kompetitif = true
+# Meja LAN menyusul di M9.
+lan = false
+agen = true
+tutorial = "tutorials/teen-patti.toml"
+
+[[perintah]]
+pola = "see"
+ringkas = { id = "Lihat kartumu (sesudahnya taruhanmu dua kali lipat)", en = "Look at your cards (your bets double afterwards)" }
+
+[[perintah]]
+pola = "pack"
+ringkas = { id = "Lepas tangan ini", en = "Fold this hand" }
+
+[[perintah]]
+pola = "chaal"
+ringkas = { id = "Ikut: stake bila buta, dua kali stake bila sudah melihat", en = "Stay in: the stake when blind, twice the stake when seen" }
+
+[[perintah]]
+pola = "raise"
+ringkas = { id = "Gandakan stake (bayar dua kali chaal)", en = "Double the stake (pay twice the chaal)" }
+
+[[perintah]]
+pola = "show"
+ringkas = { id = "Bandingkan kartu saat tinggal dua pemain", en = "Compare cards when two players remain" }
+
+[[perintah]]
+pola = "sideshow"
+ringkas = { id = "Minta bandingkan diam-diam dengan pemain sebelumnya (keduanya sudah melihat)", en = "Ask the previous player for a private comparison (both seen)" }
+
+[[perintah]]
+pola = "accept"
+ringkas = { id = "Terima permintaan sideshow", en = "Accept a sideshow request" }
+
+[[perintah]]
+pola = "deny"
+ringkas = { id = "Tolak permintaan sideshow", en = "Deny a sideshow request" }
+
+[[perintah]]
+pola = "next"
+ringkas = { id = "Lanjut ke tangan berikutnya", en = "Continue to the next hand" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berdiri di antara tangan; tumpukan kembali ke saldo", en = "Stand up between hands; your stack goes back to your balance" }

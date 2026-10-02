@@ -91,3 +91,36 @@ fn odd_chip_order_wraps_around_the_table() {
     // Dealer di kursi 1: kursi 0 duluan.
     assert_eq!(award(&p, |_| 1, 2, 1), vec![3, 2]);
 }
+
+/// Teen Patti: chaal tidak "disamakan" seperti taruhan poker, jadi semua chip
+/// masuk satu pot; hanya pemain all-in yang dibatasi ke lapisan
+/// kontribusinya.
+#[test]
+fn all_in_layers_only_for_unmatched_games() {
+    use kyusin_games::pot::pots_all_in;
+    // Tanpa all-in: satu pot untuk semua yang belum pack, walau kontribusi
+    // berbeda.
+    let p = pots_all_in(&[30, 20, 10], &[false, false, true], &[false, false, false]);
+    assert_eq!(
+        p,
+        vec![Pot {
+            amount: 60,
+            eligible: vec![0, 1]
+        }]
+    );
+    // Kursi 2 all-in 25: berhak atas lapisan sampai 25 dari setiap kursi.
+    let p = pots_all_in(&[10, 50, 25], &[true, false, false], &[false, false, true]);
+    assert_eq!(
+        p,
+        vec![
+            Pot {
+                amount: 60,
+                eligible: vec![1, 2]
+            },
+            Pot {
+                amount: 25,
+                eligible: vec![1]
+            },
+        ]
+    );
+}

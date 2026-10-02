@@ -77,3 +77,35 @@ pub fn award<K: Ord>(pots: &[Pot], strength: impl Fn(u8) -> K, seats: u8, dealer
     }
     won
 }
+
+/// Pot untuk game yang taruhannya tidak disamakan (Teen Patti): semua chip
+/// masuk ke pot yang sama, dan lapisan hanya dibuat di kontribusi pemain
+/// all-in yang belum pack, karena merekalah yang tidak bisa memenangkan
+/// lebih dari lapisannya.
+pub fn pots_all_in(contrib: &[i64], folded: &[bool], allin: &[bool]) -> Vec<Pot> {
+    let mut caps: Vec<i64> = (0..contrib.len())
+        .filter(|&s| allin[s] && !folded[s])
+        .map(|s| contrib[s])
+        .collect();
+    caps.sort_unstable();
+    caps.dedup();
+    caps.push(i64::MAX);
+    let mut out: Vec<Pot> = Vec::new();
+    let mut below = 0;
+    for cap in caps {
+        let amount: i64 = contrib.iter().map(|&c| c.min(cap) - c.min(below)).sum();
+        let eligible: Vec<u8> = (0..contrib.len())
+            .filter(|&s| !folded[s] && (!allin[s] || contrib[s] >= cap))
+            .map(|s| s as u8)
+            .collect();
+        below = cap;
+        if amount == 0 {
+            continue;
+        }
+        match out.last_mut() {
+            Some(last) if eligible.is_empty() || last.eligible == eligible => last.amount += amount,
+            _ => out.push(Pot { amount, eligible }),
+        }
+    }
+    out
+}
