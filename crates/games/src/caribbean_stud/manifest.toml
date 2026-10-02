@@ -8,10 +8,10 @@ lawan = "bandar"
 kompetitif = false
 lan = false
 agen = true
-# RTP ante (per ante) dengan strategi sederhana Wizard of Odds, dari
-# simulasi sangat besar di workflow rtp.yml. Tabel raise baku AS
+# RTP ante (per ante) dengan strategi sederhana yang diadaptasi dari Wizard
+# of Odds: 94,6948% dari 1 miliar ronde di workflow rtp.yml. Tabel raise baku AS
 # 1-2-3-4-5-7-20-50-100, tanpa jackpot progresif. Lihat D-060.
-rtp = 94.78
+rtp = 94.69
 tutorial = "tutorials/caribbean-stud.toml"
 
 [[perintah]]

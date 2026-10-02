@@ -8,10 +8,10 @@ lawan = "bandar"
 kompetitif = false
 lan = false
 agen = true
-# RTP ante (per ante) dengan strategi sederhana KyuSin, dari simulasi sangat
-# besar di workflow rtp.yml. Tabel AnteWin 100-20-10-3-2-1, tanpa AA bonus.
+# RTP ante (per ante) dengan strategi sederhana KyuSin: 97,0750% dari 1
+# miliar ronde di workflow rtp.yml. Tabel AnteWin 100-20-10-3-2-1, tanpa AA bonus.
 # Lihat D-060.
-rtp = 97.1
+rtp = 97.08
 tutorial = "tutorials/casino-holdem.toml"
 
 [[perintah]]

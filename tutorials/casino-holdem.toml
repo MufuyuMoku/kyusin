@@ -36,8 +36,8 @@ draw (empat dari lima peringkat berurutan); kartu tangan J atau lebih; atau
 kedua kartu tangan 5 atau lebih dengan yang tertinggi 9 atau lebih. Selain
 itu fold. Strategi optimal memberi RTP sekitar 0,7 poin lebih tinggi.
 
-RTP: 97,10% per ante dengan strategi itu (simulasi sangat besar di GitHub
-Actions), diverifikasi dengan simulasi terpisah.
+RTP: 97,08% per ante dengan strategi itu (simulasi 1 miliar ronde di
+GitHub Actions), diverifikasi dengan simulasi terpisah.
 
 Provably fair per ronde: komitmen seed diumumkan sebelum kartu dibagi, dan
 seed dibuka setelah ronde selesai. Setiap ronde adalah pertandingan
@@ -68,8 +68,8 @@ five consecutive ranks); a jack or higher in hand; or both hole cards 5 or
 higher with the higher one 9 or higher. Fold otherwise. The optimal
 strategy gives an RTP about 0.7 points higher.
 
-RTP: 97.10% per ante with that strategy (a very large simulation on GitHub
-Actions), verified by a separate simulation.
+RTP: 97.08% per ante with that strategy (a 1-billion-round simulation on
+GitHub Actions), verified by a separate simulation.
 
 Provably fair per round: the seed commitment is announced before the deal,
 and the seed is revealed after the round. Every round is its own match with

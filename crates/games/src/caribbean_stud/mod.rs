@@ -21,11 +21,12 @@ pub const ID: &str = "caribbean-stud";
 
 pub type Config = RoundConfig;
 
-/// RTP ante dengan strategi sederhana Wizard of Odds (D-060), dari simulasi
-/// sangat besar di workflow `rtp.yml`.
+/// RTP ante dengan strategi sederhana (diadaptasi dari strategi sederhana
+/// Wizard of Odds; D-060), dari simulasi 1 miliar ronde di workflow
+/// `rtp.yml` (run 36945985808).
 pub const RTP: &[WagerRtp] = &[WagerRtp {
     wager: "ante",
-    percent: 94.7760,
+    percent: 94.6948,
     manifest: true,
 }];
 

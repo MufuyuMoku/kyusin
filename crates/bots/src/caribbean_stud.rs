@@ -1,4 +1,4 @@
-//! Strategi sederhana Caribbean Stud dari Wizard of Odds (D-060): raise
+//! Strategi sederhana Caribbean Stud, diadaptasi dari Wizard of Odds (D-060): raise
 //! dengan pair atau lebih; fold di bawah A-K; dengan A-K raise bila
 //! (1) kartu terbuka bandar 2–Q dan sama dengan salah satu kartu pemain,
 //! (2) kartu terbuka bandar as atau king dan pemain punya Q atau J, atau

@@ -21,11 +21,11 @@ pub const ID: &str = "casino-holdem";
 
 pub type Config = RoundConfig;
 
-/// RTP ante dengan strategi sederhana KyuSin (D-060), dari simulasi sangat
-/// besar di workflow `rtp.yml`.
+/// RTP ante dengan strategi sederhana KyuSin (D-060), dari simulasi 1 miliar
+/// ronde di workflow `rtp.yml` (run 36945993998).
 pub const RTP: &[WagerRtp] = &[WagerRtp {
     wager: "ante",
-    percent: 97.1000,
+    percent: 97.0750,
     manifest: true,
 }];
 
