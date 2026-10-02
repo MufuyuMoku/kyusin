@@ -3,7 +3,8 @@
 //  1. duduk: buy-in 2.000 dipindahkan dari saldo (D-059);
 //  2. keselarasan: semua kotak kartu kursi berawal di x yang sama, kartu
 //     44×60, geser kartu tetap (18 px; kartu meja poker 48 px);
-//  3. hover dan kursor keyboard ke setiap kontrol tidak menggeser apa pun;
+//  3. hover dan kursor keyboard ke setiap kontrol tidak menggeser apa pun
+//     (diukur di koordinat isi halaman; gulir `main` bukan geseran);
 //  4. satu tangan dimainkan sampai selesai lewat kontrol visual; kartu baru
 //     tidak menggeser kotak kursi;
 //  5. berdiri: tumpukan kembali ke saldo, verify cocok, rating lokal tampil;
@@ -20,10 +21,16 @@ const GAMES = [
 	{ id: 'teen-patti', name: 'Teen Patti', passive: ['[ SHOW · ', '[ CHAAL · '] }
 ];
 
+// Posisi dalam koordinat isi halaman: meja enam kursi lebih tinggi dari
+// jendela, jadi fokus keyboard boleh menggulir `main` ke kontrol yang dipilih;
+// itu bukan geseran tata letak.
 const layout = () => {
+	const main = document.querySelector('main');
+	const sx = main?.scrollLeft ?? 0;
+	const sy = main?.scrollTop ?? 0;
 	const r = (el) => {
 		const b = el.getBoundingClientRect();
-		return [Math.round(b.x * 10) / 10, Math.round(b.y * 10) / 10, Math.round(b.width * 10) / 10, Math.round(b.height * 10) / 10];
+		return [Math.round((b.x + sx) * 10) / 10, Math.round((b.y + sy) * 10) / 10, Math.round(b.width * 10) / 10, Math.round(b.height * 10) / 10];
 	};
 	const out = {};
 	document.querySelectorAll('.table [data-row]').forEach((h) => (out[`row:${h.dataset.row}`] = r(h)));
