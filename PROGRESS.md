@@ -15,7 +15,8 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M2b | selesai | 2026-09-29 | Catur level 5–6 (mesin kedua; ≈1826, ≈2093 vs Stockfish), tangga Reversi 4 level, aturan tangga ≤ 400 di CI (SPEC Rev. 10) |
 | M3 | selesai | 2026-09-28 | Profil tunggal, Glicko-2 (rating lokal), riwayat, statistik; kalibrasi antar-bot Reversi. Sebelumnya: perbaikan Rev. 9 (menu jeda, penundaan, kursor) |
 | M4 | selesai | 2026-09-29 | Mesin kartu bersama, ekonomi chip (saldo, tunjangan harian, ringkasan bandar), Blackjack (RTP 99,64% strategi dasar, provably fair per shoe), label level deskriptif |
-| M5 | belum mulai | | |
+| M5a | selesai | 2026-10-02 | Sepuluh meja melawan bandar (Baccarat, Dragon Tiger, Casino War, Red Dog, Andar Bahar, Three Card Poker, Caribbean Stud, Casino Hold'em, Let It Ride, Pai Gow Poker). Sebelumnya: taruhan casino tercatat saat dipasang, titik simpan setiap aksi (D-059); SPEC Rev. 11 |
+| M5b | belum mulai | | Texas Hold'em, Omaha, Capsa Susun, Domino QiuQiu, Teen Patti |
 | M6 | belum mulai | | |
 | M7 | belum mulai | | |
 | M8 | belum mulai | | |
@@ -35,8 +36,31 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Reversi | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M1); rating lokal di M3 |
 | Catur | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M2); rating lokal di M3 |
 | Blackjack | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M4); meja LAN menyusul |
+| Baccarat | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Dragon Tiger | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Casino War | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Red Dog | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Andar Bahar | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Three Card Poker | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Caribbean Stud | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Casino Hold'em | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Let It Ride | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
+| Pai Gow Poker | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5a) |
 
 ## Log sesi
+
+### 2026-10-02 — Taruhan tercatat saat dipasang (D-059), SPEC Rev. 11, M5a: sepuluh meja melawan bandar
+
+- Permintaan klien sebelum M5: taruhan casino harus tercatat permanen saat dipasang, mati paksa tidak boleh membuat pemain lolos dari kekalahan. Temuan: belum aman (keadaan hanya disimpan saat tunda/tutup normal). Perbaikan D-059: titik simpan setelah setiap aksi untuk semua game; casino menulis saldo + pertandingan dalam satu transaksi SQLite, taruhan dipotong saat dipasang (`profile.staked`, skema 5), titik simpan baru dihapus setelah hasil tersimpan, tunjangan harian menghitung chip di meja. Bukti: tes backend dengan berkas SQLite sungguhan yang "dimatikan paksa" (ronde berjalan dilanjutkan dengan kartu dan taruhan yang sama; membuang pertandingan memainkan ronde sampai selesai; saldo = awal + bersih − di meja di setiap langkah walau dimatikan berkali-kali; partai catur tidak hilang) + tes jendela asli Blackjack (saldo turun saat taruhan dipasang).
+- SPEC Revisi 11: M5 dipecah menjadi M5a (melawan bandar) dan M5b (antar-pemain).
+- M5a (D-060 varian dan sumber, D-061 penerapan):
+  - Evaluator poker bersama (5 kartu, terbaik dari 7, 3 kartu), dites terhadap frekuensi baku seluruh tangan satu dek. Bagian meja bersama (`kyusin_games::meja`): batas taruhan, tempat taruhan, shoe/dek, kontrak chip, `netral`.
+  - Tiap game: tes aturan dan pembayaran di-commit sebelum mesinnya, manifest, tutorial dua bahasa + `man` (aturan, strategi, RTP tiap taruhan, provably fair), strategi untuk RTP, model meja di UI.
+  - RTP: analitis/enumerasi tepat di tes setiap push untuk Dragon Tiger (96,27 / tie 67,23), Casino War (97,12 / tie 81,35), Andar Bahar (Andar 97,85 / Bahar 97,00), Baccarat (player 98,76 / banker 98,94 / tie 85,64), Red Dog (97,25), Pair Plus (92,72). Enumerasi tepat di GitHub Actions: Three Card Poker Ante/Play 96,6270 (run 36567987097), Let It Ride 96,4943 (run 36946263357). Simulasi 1 miliar ronde di GitHub Actions: Caribbean Stud CS_RTP, Casino Hold'em CH_RTP, Pai Gow PG_RTP. Semua taruhan diverifikasi 100.000 ronde di CI setiap push dan 10.000.000 ronde di `rtp.yml` (run 36567987097: semua cocok).
+  - UI: satu komponen meja bersama (`MejaTable`), sprite joker, ronde berikutnya mulus untuk meja satu ronde per sesi; tes jendela asli memainkan satu ronde di tiap meja (`ui/e2e/meja.e2e.mjs`).
+- Tes: RUST_TESTS tes Rust, 38 tes UI. Tes jendela asli (CI Windows): E2E_RESULT
+- Belum/sisa: meja LAN (M9). Strategi Casino Hold'em sengaja sederhana (sekitar 0,7 poin di bawah optimal, dinyatakan di `man`).
+- Langkah berikutnya: M5b.
 
 ### 2026-09-29 — M4: mesin kartu, ekonomi chip, Blackjack
 - Hasil uji M2b: sesuai, dengan perubahan label level (D-055): tanpa gelar resmi; 1 Pemula, 2 Menengah, 3 Mahir, 4 Kuat, 5 Ahli, 6 Sangat kuat (EN: Beginner … Very strong), perkiraan rating tetap tampil.
