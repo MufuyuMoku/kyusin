@@ -20,7 +20,9 @@ use kyusin_games::pai_gow::{Config, PaiGow, Tile, eval_back, eval_front, house_w
 use serde_json::Value;
 
 fn tiles(text: &str) -> Vec<Tile> {
-    text.split_whitespace().map(|c| c.parse().unwrap()).collect()
+    text.split_whitespace()
+        .map(|c| c.parse().unwrap())
+        .collect()
 }
 
 fn pg(cards: &[&str]) -> PaiGow {
@@ -82,7 +84,10 @@ fn front_hand_and_fouls() {
     assert!(valid(&tiles("9h 9c 5d 4s 2h"), &tiles("Kh Qc")));
     assert!(!valid(&tiles("Kh 9c 5d 4s 2h"), &tiles("Ah Qc")));
     assert!(!valid(&tiles("9h 9c 5d 4s 2h"), &tiles("Th Tc")));
-    assert!(valid(&tiles("Ah Qc 5d 4s 2h"), &tiles("Ac Qd")), "A-Q-… lawan A-Q");
+    assert!(
+        valid(&tiles("Ah Qc 5d 4s 2h"), &tiles("Ac Qd")),
+        "A-Q-… lawan A-Q"
+    );
     assert!(!valid(&tiles("Ah Tc 5d 4s 2h"), &tiles("Ac Qd")));
 }
 
@@ -173,7 +178,9 @@ fn payouts_commission_and_copies() {
 
 #[test]
 fn bets_and_commands() {
-    let mut g = pg(&["Ah", "Kd", "9c", "7s", "5h", "3d", "2c", "Qh", "Jd", "8c", "6s", "4h", "3c", "2d"]);
+    let mut g = pg(&[
+        "Ah", "Kd", "9c", "7s", "5h", "3d", "2c", "Qh", "Jd", "8c", "6s", "4h", "3c", "2d",
+    ]);
     for bad in ["bet 10", "bet 30", "bet 2020", "houseway", "set Ah Kd"] {
         assert!(Session::act(&mut g, 0, bad).is_err(), "{bad}");
     }

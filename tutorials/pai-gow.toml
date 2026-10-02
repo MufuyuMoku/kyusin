@@ -1,0 +1,114 @@
+game = "pai-gow"
+judul = { id = "Pai Gow Poker: dasar", en = "Pai Gow Poker: basics" }
+
+# Dek tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+kartu = [
+  # Kamu: K K Q J 9 5 2. Bandar: T 8 7 6 4 3 2 (tanpa pair).
+  "Kh", "Kd", "Qc", "Js", "9h", "5d", "2c",
+  "Th", "8d", "7c", "6s", "4h", "3c", "2d",
+  # Cadangan.
+  "Ah", "Ac", "JK",
+]
+
+[man.aturan]
+id = """
+Kamu mendapat tujuh kartu dan menyusunnya menjadi dua tangan: belakang lima
+kartu dan depan dua kartu. Tangan belakang harus lebih tinggi dari tangan
+depan. Kedua tanganmu dibandingkan dengan tangan bandar yang sama posisinya.
+
+Aturan meja ini: dek 53 kartu (52 + joker), dikocok setiap ronde. Taruhan
+20–2.000 chip (kelipatan 20, supaya komisi 5% selalu utuh).
+- Joker adalah "bug": di tangan belakang ia hanya boleh menjadi as atau
+  melengkapi straight, flush, atau straight flush; di tangan depan ia as.
+- Lima as (empat as + joker) adalah tangan tertinggi. A-2-3-4-5 adalah
+  straight tertinggi kedua (di bawah A-K-Q-J-10).
+- Tangan depan dua kartu: pair, atau kartu tinggi.
+- Kedua tanganmu lebih tinggi: menang 0,95:1 (komisi 5%). Satu menang satu
+  kalah: seri. Kedua kalah: kalah. Tangan yang sama persis (copy)
+  dimenangkan bandar.
+- Bandar menyusun kartunya dengan house way (gaya Las Vegas): tanpa pair,
+  kartu tertinggi di belakang dan dua berikutnya di depan; satu pair di
+  belakang dengan dua kartu tertinggi di depan (straight atau flush dipakai
+  bila depan bisa mendapat pair atau as); two pair dipisah (pair rendah di
+  depan) kecuali pair tingginya 10 ke bawah dan ada as tunggal; tiga pair:
+  pair tertinggi di depan; three of a kind as dipecah (as + kartu tertinggi
+  di depan); three of a kind lain di belakang; full house dipecah (pair di
+  depan); four of a kind 2–6 utuh, 7–10 utuh bila ada as tunggal, selain
+  itu dipecah; lima as: pair lain di depan bila ada, selain itu pair as.
+
+RTP: 97,27% bila kamu juga memakai house way (simulasi sangat besar di
+GitHub Actions), diverifikasi dengan simulasi terpisah.
+
+Provably fair per ronde: komitmen seed diumumkan sebelum kartu dibagi, dan
+seed dibuka setelah ronde selesai. Setiap ronde adalah pertandingan
+tersendiri dengan komitmen baru.
+"""
+en = """
+You get seven cards and set them into two hands: a five-card back hand and
+a two-card front hand. The back hand must be higher than the front hand.
+Each of your hands is compared with the dealer's hand in the same position.
+
+This table: a 53-card deck (52 + joker), shuffled every round. Bets
+20–2,000 chips (multiples of 20, so the 5% commission is always whole).
+- The joker is a "bug": in the back hand it may only be an ace or complete
+  a straight, flush, or straight flush; in the front hand it is an ace.
+- Five aces (four aces + joker) is the highest hand. A-2-3-4-5 is the
+  second-highest straight (below A-K-Q-J-10).
+- The two-card front hand: a pair, or high cards.
+- Both your hands higher: a 0.95:1 win (5% commission). One wins, one
+  loses: a push. Both lower: a loss. Identical hands (copies) go to the
+  dealer.
+- The dealer sets cards by the house way (Las Vegas style): no pair, the
+  highest card in back and the next two in front; one pair in back with the
+  two highest cards in front (a straight or flush is played when the front
+  can still get a pair or an ace); two pair split (low pair in front)
+  unless the high pair is 10 or lower and there is a single ace; three
+  pair: the highest pair in front; three aces split (an ace plus the highest
+  card in front); other three of a kind in back; a full house split (pair
+  in front); four of a kind 2–6 kept together, 7–10 kept together with a
+  single ace, otherwise split; five aces: another pair in front if there is
+  one, otherwise a pair of aces.
+
+RTP: 97.27% if you also use the house way (a very large simulation on
+GitHub Actions), verified by a separate simulation.
+
+Provably fair per round: the seed commitment is announced before the deal,
+and the seed is revealed after the round. Every round is its own match with
+a new commitment.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar taruhan dengan tombol chip, lalu [ BAGI ]. Pilih dua kartu
+untuk tangan depan (pilih lagi untuk membatalkan), lalu [ SUSUN ]; atau
+[ HOUSE WAY ] untuk menyusun otomatis. Susunan yang membuat depan lebih
+tinggi dari belakang ditolak dengan alasannya. Keyboard: panah memindahkan
+fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose your bet with the chip buttons, then [ DEAL ]. Pick two cards for
+the front hand (pick again to undo), then [ SET ]; or [ HOUSE WAY ] to set
+automatically. A setting whose front beats the back is refused with the
+reason. Keyboard: the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Tujuh kartu untukmu, tujuh untuk bandar. Pasang 100 chip."
+teks.en = "Seven cards for you, seven for the dealer. Bet 100 chips."
+aksi = "bet 100"
+sorot = ["aksi:bet 100"]
+petunjuk.id = "Pasang 100 lalu bagi."
+petunjuk.en = "Bet 100, then deal."
+
+[[langkah]]
+teks.id = "Pair K tetap di belakang; dua kartu tertinggi berikutnya, Q dan J, ke depan."
+teks.en = "Keep the pair of kings in back; the next two highest cards, Q and J, go in front."
+aksi = "set Qc Js"
+sorot = ["aksi:set Qc Js"]
+petunjuk.id = "Pilih Q dan J untuk tangan depan, lalu SUSUN."
+petunjuk.en = "Pick Q and J for the front hand, then SET."
+
+[[langkah]]
+teks.id = "Bandar tanpa pair: belakang T-high, depan 8-7. Kedua tanganmu menang: dibayar 0,95:1 (+95). Seed ronde dibuka dan verify memeriksanya. Tutorial selesai."
+teks.en = "The dealer has no pair: back 10-high, front 8-7. Both your hands win: paid 0.95:1 (+95). The round seed is revealed and verify checks it. Tutorial finished."

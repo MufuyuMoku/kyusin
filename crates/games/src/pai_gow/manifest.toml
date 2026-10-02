@@ -1,0 +1,31 @@
+id = "pai-gow"
+nama = { id = "Pai Gow Poker", en = "Pai Gow Poker" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP dengan house way untuk pemain dan bandar (dek 53 kartu, joker = bug,
+# wheel tertinggi kedua, komisi 5%, seri dimenangkan bandar), dari simulasi
+# sangat besar di workflow rtp.yml. Lihat D-060.
+rtp = 97.27
+tutorial = "tutorials/pai-gow.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang taruhan dan bagi tujuh kartu (20–2.000, kelipatan 20)", en = "Place a bet and deal seven cards (20–2,000, multiples of 20)" }
+
+[[perintah]]
+pola = "set <kartu> <kartu>"
+ringkas = { id = "Pilih dua kartu untuk tangan depan; lima sisanya tangan belakang", en = "Pick two cards for the front hand; the other five are the back hand" }
+
+[[perintah]]
+pola = "houseway"
+ringkas = { id = "Biarkan kartu disusun dengan house way bandar", en = "Let the dealer's house way set your cards" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum kartu dibagi", en = "Stop before the deal" }

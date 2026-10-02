@@ -17,6 +17,7 @@ mod catur_search;
 pub mod dragon_tiger;
 pub mod let_it_ride;
 pub mod meja;
+pub mod pai_gow;
 pub mod red_dog;
 pub mod reversi;
 pub mod three_card_poker;
