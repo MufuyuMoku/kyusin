@@ -363,9 +363,8 @@ fn ledger_for(
     escrowed: bool,
 ) -> Option<crate::casino::Ledger> {
     let house = is_house(state, game);
-    (house || is_table(state, game)).then(|| {
-        crate::casino::Ledger::from_view(&m.session().view_data(human), escrowed, house)
-    })
+    (house || is_table(state, game))
+        .then(|| crate::casino::Ledger::from_view(&m.session().view_data(human), escrowed, house))
 }
 
 fn save(state: &AppState, replay: &Replay, started_at: i64) -> Result<i64, String> {
@@ -660,7 +659,13 @@ fn start(
             let chips = crate::casino::chips(state).unwrap_or(0);
             let buy_in = crate::casino::buy_in(chips)?;
             let stacks: Vec<i64> = (0..seats)
-                .map(|s| if s == seat { buy_in } else { crate::casino::BUY_IN })
+                .map(|s| {
+                    if s == seat {
+                        buy_in
+                    } else {
+                        crate::casino::BUY_IN
+                    }
+                })
                 .collect();
             serde_json::json!({ "kursi": seats, "tumpukan": stacks, "manusia": [seat] })
         }
@@ -1593,7 +1598,11 @@ mod tests {
     }
 
     fn take_running(st: &AppState) -> Running {
-        st.play.lock().unwrap().take().expect("pertandingan berjalan")
+        st.play
+            .lock()
+            .unwrap()
+            .take()
+            .expect("pertandingan berjalan")
     }
 
     #[test]
@@ -1614,11 +1623,16 @@ mod tests {
             if r.m.session().view_data(0)["fase"] != "main" {
                 break;
             }
-            let neutral = r.m.session().view_data(0)["netral"].as_str().unwrap().to_string();
+            let neutral = r.m.session().view_data(0)["netral"]
+                .as_str()
+                .unwrap()
+                .to_string();
             act(&st, &mut r, &neutral).unwrap();
             guard += 1;
         }
-        let stack = r.m.session().view_data(0)["kursi"][0]["tumpukan"].as_i64().unwrap();
+        let stack = r.m.session().view_data(0)["kursi"][0]["tumpukan"]
+            .as_i64()
+            .unwrap();
         // Tumpukan masih di meja sampai berdiri.
         assert_eq!(booked(&st), (8_000, 2_000));
         act(&st, &mut r, "leave").unwrap();
@@ -1658,7 +1672,15 @@ mod tests {
         let net = r.m.session().view_data(0)["bersih"].as_i64().unwrap();
         assert_eq!(booked(&st), (10_000 + net, 0));
         assert!(r.verify.as_ref().unwrap().ok);
-        assert!(store_of(&st).unwrap().lock().unwrap().list_suspended().unwrap().is_empty());
+        assert!(
+            store_of(&st)
+                .unwrap()
+                .lock()
+                .unwrap()
+                .list_suspended()
+                .unwrap()
+                .is_empty()
+        );
     }
 
     #[test]

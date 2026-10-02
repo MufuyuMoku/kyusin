@@ -145,6 +145,9 @@
 
 	{#if playable}
 		<Frame title={t('play.frame')}>
+			{#if game?.kategori === 'casino-meja' && game?.lawan === 'bot'}
+				<p>{t('play.table', { chips: chips ?? '-' })}</p>
+			{/if}
 			{#if house}
 				<p>{t(GAME_UI[id]?.perRound ? 'play.house_round' : 'play.house', { chips: chips ?? '-' })}</p>
 			{/if}

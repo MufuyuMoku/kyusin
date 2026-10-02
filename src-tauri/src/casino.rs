@@ -101,7 +101,10 @@ pub(crate) fn buy_in(chips: i64) -> Result<i64, Localized> {
     if chips < MIN_BUY_IN {
         return Err(core().localized(
             "error.chips",
-            &[("need", &MIN_BUY_IN.to_string()), ("have", &chips.max(0).to_string())],
+            &[
+                ("need", &MIN_BUY_IN.to_string()),
+                ("have", &chips.max(0).to_string()),
+            ],
         ));
     }
     Ok(chips.min(BUY_IN))
