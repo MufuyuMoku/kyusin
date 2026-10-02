@@ -43,7 +43,8 @@ fn th(seats: u8, dealer: u8, decks: &[&[&str]]) -> TexasHoldem {
 }
 
 fn act<G: Session>(g: &mut G, seat: u8, cmd: &str) {
-    g.act(seat, cmd).unwrap_or_else(|e| panic!("kursi {seat} `{cmd}`: {e:?}"));
+    g.act(seat, cmd)
+        .unwrap_or_else(|e| panic!("kursi {seat} `{cmd}`: {e:?}"));
 }
 
 fn view<G: Session>(g: &G, seat: u8) -> Value {
@@ -94,7 +95,11 @@ fn blinds_and_preflop_order() {
 
 #[test]
 fn heads_up_dealer_posts_small_blind_and_acts_first_preflop() {
-    let mut g = th(2, 1, &[&["Ah", "2c", "As", "7d", "Qh", "8c", "3d", "4s", "9h"]]);
+    let mut g = th(
+        2,
+        1,
+        &[&["Ah", "2c", "As", "7d", "Qh", "8c", "3d", "4s", "9h"]],
+    );
     let v = view(&g, 0);
     assert_eq!(v["kursi"][1]["taruhan"], 10, "dealer = small blind");
     assert_eq!(v["kursi"][0]["taruhan"], 20);
@@ -103,7 +108,10 @@ fn heads_up_dealer_posts_small_blind_and_acts_first_preflop() {
     act(&mut g, 0, "check");
     let v = view(&g, 0);
     assert_eq!(v["meja_kartu"].as_array().unwrap().len(), 3);
-    assert_eq!(v["giliran"], 0, "big blind bertindak lebih dulu setelah flop");
+    assert_eq!(
+        v["giliran"], 0,
+        "big blind bertindak lebih dulu setelah flop"
+    );
 }
 
 #[test]
@@ -128,7 +136,11 @@ fn raise_sizes_no_limit() {
     // Kursi 2 memenangkan pot tanpa showdown: 60 + 100 + 2000.
     assert_eq!(stacks(&v), vec![1940, 1900, 2160]);
     assert_eq!(v["hasil"][2]["menang"], 2160);
-    assert_eq!(v["kursi"][2]["kartu"], json!(["??", "??"]), "tanpa showdown kartu tetap tertutup");
+    assert_eq!(
+        v["kursi"][2]["kartu"],
+        json!(["??", "??"]),
+        "tanpa showdown kartu tetap tertutup"
+    );
 }
 
 #[test]
@@ -139,8 +151,14 @@ fn betting_round_flow_and_showdown() {
     act(&mut g, 2, "check");
     let v = view(&g, 0);
     assert_eq!(v["meja_kartu"], json!(["Qh", "8c", "3d"]));
-    assert_eq!(v["giliran"], 1, "setelah flop: kursi aktif pertama setelah dealer");
-    assert!(Session::act(&mut g, 1, "bet 10").is_err(), "bet minimal big blind");
+    assert_eq!(
+        v["giliran"], 1,
+        "setelah flop: kursi aktif pertama setelah dealer"
+    );
+    assert!(
+        Session::act(&mut g, 1, "bet 10").is_err(),
+        "bet minimal big blind"
+    );
     act(&mut g, 1, "bet 40");
     act(&mut g, 2, "fold");
     act(&mut g, 0, "call");
@@ -226,7 +244,11 @@ fn hand_end_next_and_session_end() {
     assert_eq!(v["fase"], "selesai");
     assert!(TurnGame::is_over(&g));
     let r = TurnGame::result(&g).unwrap();
-    assert_eq!(r.scores.iter().sum::<i64>(), 0, "chip tidak bertambah atau hilang");
+    assert_eq!(
+        r.scores.iter().sum::<i64>(),
+        0,
+        "chip tidak bertambah atau hilang"
+    );
     assert_eq!(v["bersih"], r.scores[0]);
     assert_eq!(v["taruhan_meja"], 0);
 }
@@ -253,7 +275,11 @@ fn chip_contract_for_the_host() {
 #[test]
 fn busted_human_ends_the_session_and_hand_limit_ends_it_too() {
     // Heads-up dealer 0: kartu ke kursi 1, 0, 1, 0 (kursi 0 mendapat as).
-    let mut c = cfg(2, 0, &[&["2c", "Ah", "7d", "As", "Qh", "8c", "3d", "4s", "9h"]]);
+    let mut c = cfg(
+        2,
+        0,
+        &[&["2c", "Ah", "7d", "As", "Qh", "8c", "3d", "4s", "9h"]],
+    );
     c.tumpukan = Some(vec![500, 500]);
     c.manusia = Some(vec![1]);
     let mut g = TexasHoldem::new(c, [0; 32]).unwrap();
@@ -305,13 +331,24 @@ fn omaha_uses_exactly_two_hole_cards_and_pot_limit() {
 #[test]
 fn view_and_commands() {
     let g = th(3, 0, &[DECK3]);
-    for cmd in ["fold", "check", "call", "bet 40", "raise 100", "next", "leave"] {
+    for cmd in [
+        "fold",
+        "check",
+        "call",
+        "bet 40",
+        "raise 100",
+        "next",
+        "leave",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }
     assert!(g.parse_command("raise").is_err());
     assert!(Session::view_text(&g, 0, Lang::Id).contains("Kd"));
-    assert!(!Session::view_text(&g, 0, Lang::En).contains("Ah"), "kartu lawan tersembunyi");
+    assert!(
+        !Session::view_text(&g, 0, Lang::En).contains("Ah"),
+        "kartu lawan tersembunyi"
+    );
 }
 
 /// Properti: total chip meja tidak pernah berubah, untuk aksi sah acak
@@ -325,7 +362,11 @@ fn chips_are_conserved_under_random_play() {
             tangan_maks: Some(15),
             ..Config::default()
         };
-        c.tumpukan = Some((0..c.kursi.unwrap()).map(|s| 200 + 300 * i64::from(s)).collect());
+        c.tumpukan = Some(
+            (0..c.kursi.unwrap())
+                .map(|s| 200 + 300 * i64::from(s))
+                .collect(),
+        );
         let total: i64 = c.tumpukan.as_ref().unwrap().iter().sum();
         let mut g: Box<dyn Session> = if variant == 0 {
             Box::new(TexasHoldem::new(c, [seed; 32]).unwrap())

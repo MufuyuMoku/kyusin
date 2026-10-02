@@ -29,9 +29,18 @@ fn side_pots_by_contribution_layers() {
     assert_eq!(
         p,
         vec![
-            Pot { amount: 200, eligible: vec![0, 1, 2] },
-            Pot { amount: 210, eligible: vec![1, 2] },
-            Pot { amount: 160, eligible: vec![2] },
+            Pot {
+                amount: 200,
+                eligible: vec![0, 1, 2]
+            },
+            Pot {
+                amount: 210,
+                eligible: vec![1, 2]
+            },
+            Pot {
+                amount: 160,
+                eligible: vec![2]
+            },
         ]
     );
     assert_eq!(p.iter().map(|x| x.amount).sum::<i64>(), 570);
@@ -42,7 +51,13 @@ fn folded_chips_above_everyone_still_go_to_the_last_pot() {
     // Kursi 2 fold setelah memasang 300; kursi 0 dan 1 hanya 100. Lapisan
     // tanpa kursi yang berhak digabung ke pot sebelumnya.
     let p = pots(&[100, 100, 300], &[false, false, true]);
-    assert_eq!(p, vec![Pot { amount: 500, eligible: vec![0, 1] }]);
+    assert_eq!(
+        p,
+        vec![Pot {
+            amount: 500,
+            eligible: vec![0, 1]
+        }]
+    );
 }
 
 #[test]
@@ -50,8 +65,14 @@ fn award_best_hand_per_pot_with_splits_and_odd_chips() {
     // Nilai tangan: lebih besar lebih baik.
     let strength = [5, 9, 9, 1];
     let p = vec![
-        Pot { amount: 301, eligible: vec![0, 1, 2] },
-        Pot { amount: 100, eligible: vec![0, 3] },
+        Pot {
+            amount: 301,
+            eligible: vec![0, 1, 2],
+        },
+        Pot {
+            amount: 100,
+            eligible: vec![0, 3],
+        },
     ];
     // Dealer di kursi 1: sisa ganjil mulai dari kursi 2.
     let won = award(&p, |s| strength[s as usize], 4, 1);
@@ -61,7 +82,10 @@ fn award_best_hand_per_pot_with_splits_and_odd_chips() {
 
 #[test]
 fn odd_chip_order_wraps_around_the_table() {
-    let p = vec![Pot { amount: 5, eligible: vec![0, 1] }];
+    let p = vec![Pot {
+        amount: 5,
+        eligible: vec![0, 1],
+    }];
     // Dealer di kursi 0: kursi 1 duluan.
     assert_eq!(award(&p, |_| 1, 2, 0), vec![2, 3]);
     // Dealer di kursi 1: kursi 0 duluan.

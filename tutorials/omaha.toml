@@ -1,0 +1,107 @@
+game = "omaha"
+judul = { id = "Omaha Pot-Limit: dasar", en = "Pot-Limit Omaha: basics" }
+
+# Heads-up dengan dek tetap supaya setiap langkah selalu sama (tes tutorial
+# di CI). Dealer kursi 1 (small blind); kamu kursi 0 (big blind).
+[config]
+kursi = 2
+dealer = 1
+dek = [[
+  # Empat kartu masing-masing, bergantian mulai dari kamu.
+  "Ah", "9c", "Kh", "8c", "Qd", "4s", "Jd", "4d",
+  # Meja: flop K 5 2, turn 6, river T.
+  "Kc", "5h", "2h", "6d", "Ts",
+]]
+
+[man.aturan]
+id = """
+Seperti Texas Hold'em, tetapi setiap pemain mendapat empat kartu tertutup,
+dan tangan terbaik harus memakai TEPAT dua kartu tangan dan TEPAT tiga
+kartu meja. Empat kartu hati di meja dengan satu hati di tangan bukan flush.
+
+Aturan meja ini: Pot-Limit, blind 10/20, sampai 6 kursi, buy-in paling
+banyak 2.000 dari saldo (bot 2.000), tanpa rake.
+- Bet paling banyak sebesar pot. Raise paling banyak: taruhan tertinggi +
+  pot setelah kamu call (sebelum flop dengan blind 10/20: sampai 70).
+- Urutan tindakan, blind, raise minimal, all-in, side pot, dan akhir sesi
+  sama dengan Texas Hold'em di KyuSin.
+
+Rating lokal: satu sesi = satu pertandingan melawan level bot, skor =
+bagian bot yang hasil bersihnya di bawahmu. Antar-pemain: tanpa house edge.
+
+Provably fair per sesi: komitmen seed saat duduk, seed dibuka saat sesi
+selesai, verify memutar ulang semua tangan.
+"""
+en = """
+Like Texas Hold'em, but every player gets four face-down cards, and the best
+hand must use EXACTLY two hole cards and EXACTLY three board cards. Four
+hearts on the board with one heart in hand is not a flush.
+
+This table: Pot-Limit, blinds 10/20, up to 6 seats, a buy-in of at most
+2,000 from your balance (bots 2,000), no rake.
+- A bet is at most the pot. A raise is at most the highest bet + the pot
+  after you call (before the flop with 10/20 blinds: up to 70).
+- Order of action, blinds, minimum raise, all-ins, side pots, and the end of
+  the session are the same as KyuSin Texas Hold'em.
+
+Local rating: one session = one match against the bot level, scored as the
+share of bots whose net result is below yours. Player versus player: no
+house edge.
+
+Provably fair per session: seed commitment when you sit down, the seed is
+revealed when the session ends, verify replays every hand.
+"""
+
+[man.kontrol]
+id = """
+Saat giliranmu: [ FOLD ], [ CHECK ] atau [ CALL ], dan [ BET ] / [ RAISE ]
+dengan jumlah yang disusun lewat tombol (minimal, ½ pot, pot, dan +/− big
+blind; batas pot-limit sudah dihitung). Di antara tangan: [ LANJUT ] atau
+[ BERDIRI ]. Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+On your turn: [ FOLD ], [ CHECK ] or [ CALL ], and [ BET ] / [ RAISE ] with
+an amount built with the buttons (minimum, ½ pot, pot, and +/− big blind;
+the pot limit is already applied). Between hands: [ NEXT ] or [ STAND UP ].
+Keyboard: the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Empat kartu: A K Q J. Lawan (dealer, small blind) melengkapi ke 20. Check."
+teks.en = "Four cards: A K Q J. The opponent (dealer, small blind) completes to 20. Check."
+sebelum = ["call"]
+aksi = "check"
+sorot = ["aksi:check"]
+petunjuk.id = "Pilih CHECK."
+petunjuk.en = "Choose CHECK."
+
+[[langkah]]
+teks.id = "Flop K 5 2: dengan K dari tanganmu kamu punya pair K. Pot 40; di Pot-Limit bet paling banyak sebesar pot. Bet 40."
+teks.en = "Flop K 5 2: with the K from your hand you have a pair of kings. The pot is 40; in Pot-Limit a bet is at most the pot. Bet 40."
+aksi = "bet 40"
+sorot = ["aksi:bet 40"]
+petunjuk.id = "Susun 40 (POT) lalu pilih BET."
+petunjuk.en = "Set 40 (POT), then choose BET."
+
+[[langkah]]
+teks.id = "Lawan call. Turn 6. Check."
+teks.en = "The opponent calls. Turn 6. Check."
+sebelum = ["call"]
+aksi = "check"
+sorot = ["aksi:check"]
+petunjuk.id = "Pilih CHECK."
+petunjuk.en = "Choose CHECK."
+
+[[langkah]]
+teks.id = "River T. Ingat: tepat dua kartu tangan + tepat tiga kartu meja. Tanganmu: K A dari tangan + K T 6 dari meja. Check."
+teks.en = "River 10. Remember: exactly two hole cards + exactly three board cards. Your hand: K A from your hand + K 10 6 from the board. Check."
+sebelum = ["check"]
+aksi = "check"
+sorot = ["aksi:check"]
+petunjuk.id = "Pilih CHECK."
+petunjuk.en = "Choose CHECK."
+
+[[langkah]]
+teks.id = "Lawan (9 8 4 4) hanya punya pair 4: pair K-mu menang pot 120. Seed sesi dibuka saat sesi selesai. Tutorial selesai."
+teks.en = "The opponent (9 8 4 4) has only a pair of 4s: your pair of kings wins the 120 pot. The session seed is revealed when the session ends. Tutorial finished."
+sebelum = ["check"]

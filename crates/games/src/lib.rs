@@ -18,10 +18,14 @@ pub mod dragon_tiger;
 pub mod fixture;
 pub mod let_it_ride;
 pub mod meja;
+pub mod omaha;
 pub mod pai_gow;
 pub mod poker;
+pub mod poker_meja;
+pub mod pot;
 pub mod red_dog;
 pub mod reversi;
+pub mod texas_holdem;
 pub mod three_card_poker;
 
 /// Game katalog yang dikirim bersama aplikasi.
