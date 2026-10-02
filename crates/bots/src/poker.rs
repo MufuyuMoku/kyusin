@@ -5,17 +5,22 @@
 //! 1. Pemula: longgar dan pasif; call murah, jarang bet.
 //! 2. Menengah: aturan dari kategori tangan (sebelum flop: pair dan kartu
 //!    tinggi), tanpa menghitung peluang.
-//! 3. Mahir: peluang menang (equity) Monte Carlo 150 kali (Omaha 50)
-//!    melawan tangan acak, dibandingkan dengan pot odds.
-//! 4. Kuat: equity 400 kali (Omaha 133), besar taruhan menurut equity, sesekali
+//! 3. Kuat: peluang menang (equity) Monte Carlo 400 kali (Omaha 133)
+//!    dengan model lawan (lawan yang bet/raise dianggap memegang tangan
+//!    layak), dibandingkan dengan pot odds; raise sebelum flop dengan
+//!    tangan di atas rata-rata, besar taruhan menurut equity, sesekali
 //!    menggertak saat lawan check, dan lebih hati-hati melawan all-in.
+//!
+//! Level keempat (varian level 3 dengan fitur di atas) diukur hanya sekitar
+//! 30 poin di atas level 3 tanpa fitur itu dalam sesi heads-up, jadi tidak
+//! dijadikan level tersendiri (D-063).
 
 use kyusin_core::{GameRng, Player, PlayerId, SeatKind, Seed, Session};
 use kyusin_games::cards::Card;
 use kyusin_games::poker::{Category, Value, rank_value};
 use kyusin_games::poker_meja::{BIG_BLIND, Variant, View};
 
-pub const LEVELS: u8 = 4;
+pub const LEVELS: u8 = 3;
 
 /// Aturan varian yang dibutuhkan bot.
 #[derive(Debug, Clone, Copy)]
@@ -67,6 +72,21 @@ pub fn equity(
     rules: Rules,
     rng: &mut GameRng,
 ) -> f64 {
+    equity_ranged(hole, board, opponents, 0, sims, rules, rng)
+}
+
+/// Seperti [`equity`], tetapi `strong` lawan pertama dianggap memegang
+/// tangan yang layak dimainkan: tangan acak yang kekuatan awalnya lemah
+/// diundi ulang (paling banyak empat kali).
+pub fn equity_ranged(
+    hole: &[Card],
+    board: &[Card],
+    opponents: usize,
+    strong: usize,
+    sims: u32,
+    rules: Rules,
+    rng: &mut GameRng,
+) -> f64 {
     let known: Vec<Card> = hole.iter().chain(board.iter()).copied().collect();
     let mut deck: Vec<Card> = Card::deck()
         .into_iter()
@@ -78,6 +98,19 @@ pub fn equity(
         for i in 0..need.min(deck.len()) {
             let j = i + rng.below((deck.len() - i) as u32) as usize;
             deck.swap(i, j);
+        }
+        // Lawan yang agresif: tangan lemah ditukar dengan kartu sisa dek.
+        for o in 0..strong.min(opponents) {
+            for _ in 0..4 {
+                let h = &deck[o * rules.hole..(o + 1) * rules.hole];
+                if rough_strength(h, &[], rules) >= 0.45 || deck.len() <= need {
+                    break;
+                }
+                for k in 0..rules.hole {
+                    let j = need + rng.below((deck.len() - need) as u32) as usize;
+                    deck.swap(o * rules.hole + k, j);
+                }
+            }
         }
         let mut full = board.to_vec();
         full.extend_from_slice(&deck[opponents * rules.hole..need]);
@@ -208,31 +241,58 @@ impl PokerBot {
                     passive.into()
                 }
             }
-            level => {
+            _ => {
                 // Omaha menilai 60 kombinasi per tangan: simulasi lebih sedikit.
-                let base = if level == 3 { 150 } else { 400 };
-                let sims = if self.rules.hole > 2 { base / 3 } else { base };
-                let eq = equity(&hole, &board, opponents, sims, self.rules, &mut self.rng);
+                let sims = if self.rules.hole > 2 { 133 } else { 400 };
+                // Lawan yang bet/raise di tangan ini dianggap kuat.
+                let strong = {
+                    let mut aggressors: Vec<u8> = v
+                        .log
+                        .iter()
+                        .filter(|(seat, cmd)| {
+                            *seat != v.kamu && (cmd.starts_with("bet") || cmd.starts_with("raise"))
+                        })
+                        .map(|(seat, _)| *seat)
+                        .collect();
+                    aggressors.sort_unstable();
+                    aggressors.dedup();
+                    aggressors.len()
+                };
+                let eq = equity_ranged(
+                    &hole,
+                    &board,
+                    opponents,
+                    strong,
+                    sims,
+                    self.rules,
+                    &mut self.rng,
+                );
                 let odds = call as f64 / (pot + call).max(1) as f64;
                 let r = self.chance();
+                // Agresif sebelum flop: tangan di atas rata-rata dinaikkan.
+                if board.is_empty() {
+                    let avg = 1.0 / (opponents + 1) as f64;
+                    if eq > avg + 0.08 && call <= 3 * BIG_BLIND {
+                        let target = current.max(BIG_BLIND) * 3;
+                        if let (Some(min), Some(max)) = (v.naik_min, v.naik_maks) {
+                            return format!("{verb} {}", target.clamp(min, max));
+                        }
+                    }
+                }
                 if call == 0 {
                     if eq > 0.62 {
-                        let frac = if level == 3 { 0.6 } else { 0.4 + eq / 2.0 };
+                        let frac = 0.4 + eq / 2.0;
                         return size(frac).unwrap_or_else(|| "check".into());
                     }
-                    let bluff = level >= 4 && !board.is_empty() && r < 0.1;
+                    let bluff = !board.is_empty() && r < 0.1;
                     if bluff || (eq > 0.5 && r < 0.3) {
                         return size(0.5).unwrap_or_else(|| "check".into());
                     }
                     return "check".into();
                 }
-                let margin = if level >= 4 && call >= stack / 2 {
-                    0.08
-                } else {
-                    0.0
-                };
+                let margin = if call >= stack / 2 { 0.08 } else { 0.0 };
                 if eq > 0.72 {
-                    let frac = if level == 3 { 0.75 } else { eq };
+                    let frac = eq;
                     size(frac).unwrap_or_else(|| "call".into())
                 } else if eq >= odds + margin || (call <= BIG_BLIND && eq > 0.25) {
                     "call".into()
