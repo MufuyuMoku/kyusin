@@ -100,13 +100,13 @@ fn ante_win_table() {
     // Bandar pair 5 memenuhi; pemain menang dengan berbagai tangan.
     let dealer = "5c 2d";
     let cases = [
-        ("Ah Ad", "5h 9s Kc 7d 3h", 1),  // pair as
-        ("7h 8d", "5h 9s Tc Jd 3h", 1),  // straight
-        ("Ah 2h", "5h 9h Kc 7h 3d", 2),  // flush
-        ("9d 9c", "5h 9s Kc Kd 3h", 3),  // full house
-        ("9d 9c", "5h 9s 9h Kd 3h", 10), // four of a kind
-        ("6h 7h", "5h 8h 9h Kd 3c", 20), // straight flush
-        ("Ah Kh", "5h Th Jh Qh 3c", 100),// royal flush
+        ("Ah Ad", "5h 9s Kc 7d 3h", 1),   // pair as
+        ("7h 8d", "5h 9s Tc Jd 3h", 1),   // straight
+        ("Ah 2h", "5h 9h Kc 7h 3d", 2),   // flush
+        ("9d 9c", "5h 9s Kc Kd 3h", 3),   // full house
+        ("9d 9c", "5h 9s 9h Kd 3h", 10),  // four of a kind
+        ("6h 7h", "5h 8h 9h Kd 3c", 20),  // straight flush
+        ("Ah Kh", "5h Th Jh Qh 3c", 100), // royal flush
     ];
     for (player, board, k) in cases {
         let v = called(player, dealer, board);

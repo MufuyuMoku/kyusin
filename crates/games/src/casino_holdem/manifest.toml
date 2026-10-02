@@ -1,0 +1,31 @@
+id = "casino-holdem"
+nama = { id = "Casino Hold'em", en = "Casino Hold'em" }
+kategori = "casino-meja"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP ante (per ante) dengan strategi sederhana KyuSin, dari simulasi sangat
+# besar di workflow rtp.yml. Tabel AnteWin 100-20-10-3-2-1, tanpa AA bonus.
+# Lihat D-060.
+rtp = 97.1
+tutorial = "tutorials/casino-holdem.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang ante dan bagi kartu sampai flop (10–2.000, kelipatan 10)", en = "Place an ante and deal to the flop (10–2,000, multiples of 10)" }
+
+[[perintah]]
+pola = "call"
+ringkas = { id = "Lanjut dengan call sebesar dua kali ante", en = "Continue with a call of twice the ante" }
+
+[[perintah]]
+pola = "fold"
+ringkas = { id = "Menyerah; ante kalah", en = "Fold; the ante loses" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum kartu dibagi", en = "Stop before the deal" }

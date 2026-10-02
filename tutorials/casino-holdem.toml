@@ -1,0 +1,108 @@
+game = "casino-holdem"
+judul = { id = "Casino Hold'em: dasar", en = "Casino Hold'em: basics" }
+
+# Dek tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+kartu = [
+  # Kamu: A K. Bandar: 6 6. Flop: K 9 2 → kamu pair K.
+  "Ah", "Kd", "6c", "6s", "Kh", "9c", "2d",
+  # Turn 7, river 3: bandar pair 6 (memenuhi), kamu pair K menang.
+  "7s", "3h",
+  # Cadangan.
+  "4c", "5c", "8c", "Tc", "Jc",
+]
+
+[man.aturan]
+id = """
+Hold'em melawan bandar. Kamu dan bandar masing-masing mendapat dua kartu,
+lalu lima kartu bersama dibuka: tiga (flop), satu (turn), satu (river).
+Tangan terbaik lima kartu dari tujuh kartu yang tersedia yang dibandingkan.
+
+Aturan meja ini: satu dek dikocok setiap ronde. Ante 10–2.000 chip
+(kelipatan 10). Tanpa taruhan sampingan AA bonus.
+- Setelah flop, pilih call (taruhan dua kali ante) atau fold (ante kalah).
+- Setelah call, turn dan river dibuka dan bandar membuka kartunya. Bandar
+  memenuhi syarat dengan pair 4 atau lebih.
+- Bandar tidak memenuhi: ante dibayar menurut tabel AnteWin, call kembali.
+- Bandar memenuhi: kamu menang = ante menurut tabel dan call 1:1; kalah =
+  ante dan call kalah; sama = seri.
+- Tabel AnteWin: royal flush 100:1, straight flush 20:1, four of a kind
+  10:1, full house 3:1, flush 2:1, straight atau kurang 1:1.
+
+Strategi yang dipakai untuk RTP (strategi sederhana KyuSin): call bila
+punya pair atau lebih yang memakai kartu tanganmu (pair yang hanya ada di
+flop tidak dihitung) atau straight ke atas; empat kartu flush; straight
+draw (empat dari lima peringkat berurutan); kartu tangan J atau lebih; atau
+kedua kartu tangan 5 atau lebih dengan yang tertinggi 9 atau lebih. Selain
+itu fold. Strategi optimal memberi RTP sekitar 0,7 poin lebih tinggi.
+
+RTP: 97,10% per ante dengan strategi itu (simulasi sangat besar di GitHub
+Actions), diverifikasi dengan simulasi terpisah.
+
+Provably fair per ronde: komitmen seed diumumkan sebelum kartu dibagi, dan
+seed dibuka setelah ronde selesai. Setiap ronde adalah pertandingan
+tersendiri dengan komitmen baru.
+"""
+en = """
+Hold'em against the dealer. You and the dealer get two cards each, then
+five community cards are shown: three (the flop), one (the turn), one (the
+river). The best five-card hand from the seven available cards is compared.
+
+This table: one deck, shuffled every round. Ante 10–2,000 chips (multiples
+of 10). No AA bonus side bet.
+- After the flop, choose call (a bet of twice the ante) or fold (the ante
+  loses).
+- After a call, the turn and river are shown and the dealer reveals. The
+  dealer qualifies with a pair of 4s or better.
+- Dealer does not qualify: the ante pays by the AnteWin table, the call is
+  returned.
+- Dealer qualifies: you win = ante by the table and call 1:1; you lose =
+  ante and call lose; equal = push.
+- AnteWin table: royal flush 100:1, straight flush 20:1, four of a kind
+  10:1, full house 3:1, flush 2:1, straight or less 1:1.
+
+Strategy used for the RTP (the KyuSin simple strategy): call with a pair
+or better that uses one of your cards (a pair only on the flop does not
+count) or a straight or better; four to a flush; a straight draw (four of
+five consecutive ranks); a jack or higher in hand; or both hole cards 5 or
+higher with the higher one 9 or higher. Fold otherwise. The optimal
+strategy gives an RTP about 0.7 points higher.
+
+RTP: 97.10% per ante with that strategy (a very large simulation on GitHub
+Actions), verified by a separate simulation.
+
+Provably fair per round: the seed commitment is announced before the deal,
+and the seed is revealed after the round. Every round is its own match with
+a new commitment.
+"""
+
+[man.kontrol]
+id = """
+Pilih besar ante dengan tombol chip, lalu [ BAGI ]. Setelah flop: [ CALL ]
+atau [ FOLD ]. Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose your ante with the chip buttons, then [ DEAL ]. After the flop:
+[ CALL ] or [ FOLD ]. Keyboard: the arrow keys move the focus, Enter or
+Space selects.
+"""
+
+[[langkah]]
+teks.id = "Dua kartu untukmu, dua tertutup untuk bandar, lalu flop tiga kartu. Pasang ante 50."
+teks.en = "Two cards for you, two face down for the dealer, then a three-card flop. Put 50 on the ante."
+aksi = "bet 50"
+sorot = ["aksi:bet 50"]
+petunjuk.id = "Pasang 50 lalu bagi."
+petunjuk.en = "Bet 50, then deal."
+
+[[langkah]]
+teks.id = "A K dengan flop K 9 2: kamu punya pair K. Call: taruhan dua kali ante (100)."
+teks.en = "A K with a K 9 2 flop: you have a pair of kings. Call: a bet of twice the ante (100)."
+aksi = "call"
+sorot = ["aksi:call"]
+petunjuk.id = "Pilih CALL."
+petunjuk.en = "Choose CALL."
+
+[[langkah]]
+teks.id = "Turn 7, river 3. Bandar 6 6 memenuhi syarat (pair 4 atau lebih), tapi pair K lebih tinggi: ante 1:1 (+50) dan call 1:1 (+100). Seed ronde dibuka dan verify memeriksanya. Tutorial selesai."
+teks.en = "Turn 7, river 3. The dealer's 6 6 qualifies (a pair of 4s or better), but the pair of kings is higher: ante 1:1 (+50) and call 1:1 (+100). The round seed is revealed and verify checks it. Tutorial finished."

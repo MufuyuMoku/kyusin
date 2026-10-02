@@ -10,6 +10,7 @@ pub mod baccarat;
 pub mod blackjack;
 pub mod calibration;
 pub mod caribbean_stud;
+pub mod casino_holdem;
 pub mod casino_war;
 pub mod catur;
 mod catur_search;
