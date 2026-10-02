@@ -249,7 +249,8 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M3 | Profil, Glicko-2, riwayat, halaman statistik |
 | M4 | Mesin kartu bersama + ekonomi chip + **Blackjack** |
 | M5a | Casino meja kartu melawan bandar (§6.3): Baccarat, Three Card Poker, Caribbean Stud, Casino Hold'em, Pai Gow Poker, Let It Ride, Casino War, Red Dog, Dragon Tiger, Andar Bahar |
-| M5b | Casino meja kartu antar-pemain (§6.3): Texas Hold'em, Omaha, Capsa Susun, Domino QiuQiu, Teen Patti |
+| M5b-1 | Casino meja kartu antar-pemain (§6.3), bagian 1: Texas Hold'em, Omaha, Teen Patti |
+| M5b-2 | Casino meja kartu antar-pemain (§6.3), bagian 2: Capsa Susun, Domino QiuQiu, termasuk mesin domino bersama (dipakai juga oleh Gaple di M8) |
 | M6 | Casino dadu/roda/ubin + lotere/instan (§6.4, §6.5) |
 | M7 | Kontrak `TickGame` + arcade dopamin (§6.6) |
 | M8 | Papan & kartu non-casino sisanya (§6.1, §6.2). **→ Poin akhir 1** |
@@ -306,3 +307,4 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 - **Revisi 9 (28 Sep 2026):** hasil uji klien atas M2 — menu jeda dan penundaan pertandingan, aturan kursor keyboard mengikuti interaksi terakhir (§4); milestone M2b untuk level catur yang lebih kuat (§9).
 - **Revisi 10 (29 Sep 2026):** hasil uji klien atas perbaikan M2 dan M3 — aturan tangga level merata: selisih rating dua level bot berurutan paling besar 400, diperiksa CI (§8); M2b diperluas dengan perapian tangga level Reversi (§9).
 - **Revisi 11 (29 Sep 2026):** hasil uji klien atas M4 — M5 dipecah menjadi M5a (casino meja kartu melawan bandar) dan M5b (casino meja kartu antar-pemain) (§9).
+- **Revisi 12 (2 Okt 2026):** hasil uji klien atas M5a — M5b dipecah menjadi M5b-1 (Texas Hold'em, Omaha, Teen Patti) dan M5b-2 (Capsa Susun, Domino QiuQiu, mesin domino bersama) (§9).

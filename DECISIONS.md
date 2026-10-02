@@ -549,6 +549,19 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - **UI:** satu komponen meja (`MejaTable`) dengan model per game; baris kartu bertumpuk 18 px atau terpisah 48 px (Pai Gow, supaya kartu bisa dipilih); tombol tempat taruhan berlabel tetap dan jumlahnya di baris tetap, jadi tidak ada yang bergeser. Sprite joker baru. Tes jendela asli memainkan satu ronde di tiap meja.
 - Rujukan: SPEC §4, §5.4, §7, §11; D-056, D-058, D-059, D-060.
 
+### D-062 — Keputusan klien untuk M5b; SPEC Revisi 12
+- Tanggal / milestone: 2026-10-02 / M5b-1
+- Diputuskan oleh: klien
+- Keputusan:
+  - Hasil uji M5a sesuai.
+  - **Pekerjaan nanti (dicatat, belum dikerjakan):** RTP Casino Hold'em dihitung ulang dengan strategi optimal lewat enumerasi tepat di GitHub Actions, supaya angka yang tampil tidak lebih buruk dari casino sungguhan (sekarang 97,08% untuk strategi sederhana KyuSin, D-060).
+  - SPEC Revisi 12: M5b dipecah menjadi M5b-1 (Texas Hold'em, Omaha, Teen Patti) dan M5b-2 (Capsa Susun, Domino QiuQiu, termasuk mesin domino bersama yang nanti dipakai Gaple) (§9, §12).
+  - Meja singleplayer melawan bot memakai chip profil lewat buy-in: chip meja dibeli dari saldo saat duduk, sisanya dikembalikan saat berdiri; semua tercatat permanen sesuai D-059.
+  - Bot minimal 3 level, tangga paling lebar 400 poin (§8), dikalibrasi antar-bot. Cara menghitung rating Glicko-2 untuk game multipemain berbasis sesi ditentukan developer dan dijelaskan di DECISIONS.
+  - Capsa Susun dan Domino QiuQiu: setiap aturan lokal yang variannya berbeda-beda ditanyakan ke klien. Poker dan Teen Patti: varian paling umum seperti di M5a.
+  - Simulasi dan kalibrasi berat lewat GitHub Actions.
+- Rujukan: SPEC §6.3, §6.7, §7, §8, §9; D-059, D-060.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
