@@ -9,7 +9,7 @@ kompetitif = false
 lan = false
 agen = true
 # RTP per satu tempat (satuan taruhan, konvensi baku) dengan strategi
-# optimal, dari enumerasi tepat semua tangan di workflow rtp.yml. Tabel baku
+# optimal, dari enumerasi tepat semua tangan di workflow rtp.yml: 96,4943%. Tabel baku
 # 1-2-3-5-8-11-50-200-1000, tanpa taruhan sampingan. Lihat D-060.
 rtp = 96.49
 tutorial = "tutorials/let-it-ride.toml"

@@ -26,7 +26,7 @@ pub type Config = RoundConfig;
 /// enumerasi tepat di workflow `rtp.yml` (D-060).
 pub const RTP: &[WagerRtp] = &[WagerRtp {
     wager: "bet",
-    percent: 96.4880,
+    percent: 96.4943,
     manifest: true,
 }];
 
