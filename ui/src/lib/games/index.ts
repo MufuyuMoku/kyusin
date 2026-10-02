@@ -10,11 +10,17 @@ import BlackjackStatus from './BlackjackStatus.svelte';
 import BlackjackTable from './BlackjackTable.svelte';
 import ChessBoard from './ChessBoard.svelte';
 import ChessStatus from './ChessStatus.svelte';
+import MejaStatus from './MejaStatus.svelte';
+import MejaTable from './MejaTable.svelte';
 import ReversiBoard from './ReversiBoard.svelte';
 import ReversiStatus from './ReversiStatus.svelte';
 
 export interface BoardProps {
 	view: unknown;
+	/** Id game (meja casino bersama memilih modelnya dari sini). */
+	game?: string;
+	/** Meja satu ronde per sesi: ronde selesai, taruhan memulai ronde baru. */
+	nextRound?: boolean;
 	interactive?: boolean;
 	highlight?: Set<string>;
 	onplay?: (command: string) => void;
@@ -46,7 +52,11 @@ export interface GameUi {
 	clocks?: (ClockOption | null)[];
 	/** Game ini punya PGN (ekspor dari replay, impor ke penampil). */
 	pgn?: boolean;
+	/** Casino satu ronde per sesi (commit-reveal per ronde, M5a). */
+	perRound?: boolean;
 }
+
+const meja = (perRound: boolean): GameUi => ({ board: MejaTable, status: MejaStatus, seats: [], perRound });
 
 export const GAME_UI: Record<string, GameUi> = {
 	catur: {
@@ -65,5 +75,15 @@ export const GAME_UI: Record<string, GameUi> = {
 		board: BlackjackTable,
 		status: BlackjackStatus,
 		seats: []
-	}
+	},
+	baccarat: meja(false),
+	'dragon-tiger': meja(false),
+	'casino-war': meja(false),
+	'red-dog': meja(false),
+	'andar-bahar': meja(true),
+	'three-card-poker': meja(true),
+	'caribbean-stud': meja(true),
+	'casino-holdem': meja(true),
+	'let-it-ride': meja(true),
+	'pai-gow': meja(true)
 };

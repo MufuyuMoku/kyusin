@@ -11,6 +11,7 @@
 		findGame,
 		matchAct,
 		matchFlag,
+		nextRound,
 		openReplay,
 		requestBack,
 		startMatch
@@ -40,6 +41,8 @@
 	/** Casino melawan bandar: tanpa kalimat menang/kalah dan tanpa lawan bot. */
 	const house = $derived(game?.lawan === 'bandar');
 	const usages = $derived(m?.actions.map((a) => a.usage) ?? []);
+	/** Casino satu ronde per sesi: taruhan setelah ronde memulai ronde baru. */
+	const roundOver = $derived(!!m && m.over && house && !!ui?.perRound);
 	const canResign = $derived(!!m && !m.over && m.your_turn && buttons.includes(RESIGN));
 	let confirmResign = $state(false);
 
@@ -85,8 +88,10 @@
 					{#key m.started_at}
 						<ui.board
 							view={m.view_data}
-							interactive={m.your_turn && !paused}
-							onplay={matchAct}
+							game={m.game}
+							interactive={(m.your_turn || roundOver) && !paused}
+							onplay={roundOver ? (cmd: string) => nextRound(m.game, cmd) : matchAct}
+							nextRound={roundOver}
 							actions={usages}
 							chips={m.chips}
 						/>
@@ -128,7 +133,7 @@
 					{/if}
 					<div class="controls">
 						<NavButton onclick={() => startMatch(m.game, level, m.seat, app.lastClock)}
-							>[ {house ? t('action.new_shoe') : t('action.again')} ]</NavButton
+							>[ {house ? t(ui?.perRound ? 'action.new_round' : 'action.new_shoe') : t('action.again')} ]</NavButton
 						>
 						{#if m.replay_id !== null}
 							<NavButton onclick={() => m.replay_id !== null && openReplay(m.replay_id)}

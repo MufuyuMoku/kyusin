@@ -114,8 +114,29 @@ export function backPixels(): string[] {
 	return g.map((r) => r.join(''));
 }
 
-/** Peta piksel sebuah kartu (`Ah`, `Td`, …) atau `??` untuk tertutup. */
+/** Bintang joker 9×9 (Pai Gow Poker). */
+export const JOKER_BIG: readonly string[] = [
+	'....X....',
+	'....X....',
+	'...XXX...',
+	'XXXXXXXXX',
+	'.XXXXXXX.',
+	'..XXXXX..',
+	'.XXX.XXX.',
+	'.XX...XX.',
+	'X.......X'
+];
+
+/** Peta piksel sebuah kartu (`Ah`, `Td`, …), joker `JK`, atau `??` untuk tertutup. */
 export function cardPixels(card: string): string[] {
+	if (card === 'JK') {
+		const g = blank();
+		frame(g);
+		stamp(g, RANKS.J, 2, 2);
+		stamp(g, RANKS.K, 8, 2);
+		stamp(g, JOKER_BIG, 11, 18);
+		return g.map((r) => r.join(''));
+	}
 	const rank = RANKS[card[0]];
 	const small = SUITS_SMALL[card[1]];
 	const big = SUITS_BIG[card[1]];

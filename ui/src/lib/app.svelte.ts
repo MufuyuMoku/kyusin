@@ -260,6 +260,16 @@ export async function startMatch(id: string, level: number, seat: number, clock:
 	runBots();
 }
 
+/**
+ * Casino satu ronde per sesi (M5a): taruhan di meja yang rondenya sudah
+ * selesai memulai pertandingan baru (komitmen seed baru), lalu menjalankan
+ * perintah itu di sana.
+ */
+export async function nextRound(id: string, command: string) {
+	await startMatch(id, 1, 0, null);
+	await matchAct(command);
+}
+
 export async function matchAct(command: string) {
 	const a = await api();
 	app.match = await a.match_act(command);

@@ -38,6 +38,7 @@
 			<div>
 				<ui.board
 					view={tut.view_data}
+					game={tut.game}
 					interactive={!!tut.step?.aksi}
 					highlight={highlighted}
 					onplay={tutorialAct}

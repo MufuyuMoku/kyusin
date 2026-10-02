@@ -55,3 +55,10 @@ test('52 kartu berbeda dan berbeda dari kartu tertutup', () => {
 	assert.deepEqual(cardPixels('??'), backPixels());
 	assert.deepEqual(cardPixels('Zz'), backPixels());
 });
+
+test('joker Pai Gow punya sprite sendiri', () => {
+	const joker = cardPixels('JK').join('\n');
+	assert.notEqual(joker, backPixels().join('\n'));
+	for (const r of RANK_KEYS) for (const s of SUIT_KEYS) assert.notEqual(joker, cardPixels(r + s).join('\n'));
+	assert.equal(cardPixels('JK').length, CARD_H);
+});

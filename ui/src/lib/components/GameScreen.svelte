@@ -146,7 +146,7 @@
 	{#if playable}
 		<Frame title={t('play.frame')}>
 			{#if house}
-				<p>{t('play.house', { chips: chips ?? '-', min: 10, max: 2000 })}</p>
+				<p>{t(GAME_UI[id]?.perRound ? 'play.house_round' : 'play.house', { chips: chips ?? '-' })}</p>
 			{/if}
 			<div class="choices">
 				{#if levels > 0}<div>
