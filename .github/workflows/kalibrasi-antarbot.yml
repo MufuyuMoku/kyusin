@@ -1,0 +1,71 @@
+name: Kalibrasi antar-bot
+
+# Kalibrasi level bot antar-bot (SPEC §8, D-052, D-063) untuk game tanpa
+# kalibrasi eksternal: level 1 dipatok 1000, level berikutnya ditaksir dari
+# hasilnya melawan semua level di bawahnya. Hanya manual; kalibrasi berat
+# dijalankan di sini, bukan di laptop. Hasilnya
+# (data/calibration/<game>.json) diunggah sebagai artefak lalu disimpan ke
+# repo lewat commit biasa. Mode `pair` hanya mengadu dua level (alat bantu
+# menyetel level) tanpa menulis berkas.
+
+on:
+  workflow_dispatch:
+    inputs:
+      game:
+        description: "Id game (texas-holdem, omaha, teen-patti, reversi, …)"
+        required: true
+      games:
+        description: "Partai/sesi per pasangan level"
+        default: "2000"
+      config:
+        description: "Konfigurasi game (JSON); meja poker/Teen Patti: dua kursi dan batas tangan"
+        default: '{"kursi":2,"tangan_maks":60}'
+      random_plies:
+        description: "Langkah pembuka acak (game papan); 0 untuk game kartu"
+        default: "0"
+      pairs:
+        description: "Kosong = kalibrasi penuh; atau pasangan dipisah spasi, misalnya \"2,1 3,2\""
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: calibrate-internal
+
+      - name: Kalibrasi
+        env:
+          GAME: ${{ inputs.game }}
+          GAMES: ${{ inputs.games }}
+          CONFIG: ${{ inputs.config }}
+          PLIES: ${{ inputs.random_plies }}
+          PAIRS: ${{ inputs.pairs }}
+        run: |
+          cargo build --release -p kyusin-bots --example calibrate_internal
+          BIN=target/release/examples/calibrate_internal
+          if [ -n "$PAIRS" ]; then
+            for p in $PAIRS; do
+              "$BIN" --game "$GAME" --pair "$p" --games "$GAMES" --random-plies "$PLIES" \
+                --config "$CONFIG" --threads "$(nproc)"
+            done
+          else
+            "$BIN" --game "$GAME" --games "$GAMES" --random-plies "$PLIES" --config "$CONFIG" \
+              --threads "$(nproc)" --date "$(date -u +%Y-%m-%d)" --out "data/calibration/$GAME.json"
+            cat "data/calibration/$GAME.json"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.pairs == ''
+        with:
+          name: kalibrasi-${{ inputs.game }}
+          path: data/calibration/${{ inputs.game }}.json
