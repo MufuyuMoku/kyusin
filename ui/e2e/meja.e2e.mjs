@@ -1,7 +1,8 @@
 // Tes jendela asli sepuluh meja casino M5a (SPEC §4, §7, §11). Untuk
 // setiap game:
 //  1. keselarasan: semua kotak kartu berawal di x yang sama, kartu 44×60,
-//     geser kartu tetap (18 px bertumpuk, 48 px terpisah);
+//     geser kartu tetap (18 px bertumpuk, 48 px terpisah, +16 px di antara
+//     tangan depan dan belakang Pai Gow);
 //  2. hover dan kursor keyboard ke setiap kontrol tidak menggeser apa pun;
 //  3. taruhan lewat kontrol visual (tombol tempat atau BAGI) langsung
 //     dipotong dari saldo (D-059);
@@ -84,7 +85,7 @@ async function checkAlignment(s, id) {
 	});
 	if (new Set(a.hands).size > 1) fail(`${id}: kotak kartu tidak sejajar: ${a.hands}`);
 	if (a.sizes.some((z) => z !== '44x60')) fail(`${id}: ukuran kartu ${a.sizes}`);
-	if (a.offsets.some((o) => o !== 18 && o !== 48)) fail(`${id}: geser kartu ${a.offsets}`);
+	if (a.offsets.some((o) => o !== 18 && o !== 48 && o !== 64)) fail(`${id}: geser kartu ${a.offsets}`);
 	return a;
 }
 

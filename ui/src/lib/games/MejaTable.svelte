@@ -17,7 +17,7 @@
 	import { t } from '$lib/i18n.svelte';
 	import PixelSprite from './PixelSprite.svelte';
 	import { cardPixels } from './cards';
-	import { OFFSET_SPREAD, OFFSET_STACK, chipSteps, isMejaView, tableModel } from './meja';
+	import { cardLeft, chipSteps, isMejaView, rowSpan, tableModel } from './meja';
 
 	let {
 		view,
@@ -101,14 +101,13 @@
 {#if v && model}
 	<div class="table" data-fase={v.fase} data-game={game}>
 		{#each model.rows as row (row.id)}
-			{@const offset = row.spread ? OFFSET_SPREAD : OFFSET_STACK}
 			<div class="row">
 				<span class="label dim">{row.label}</span>
-				<div class="hand" data-row={row.id} style:width={`calc(${(row.slots - 1) * offset}px + var(--card-w) + 1ch)`}>
+				<div class="hand" data-row={row.id} style:width={`calc(${rowSpan(row)}px + var(--card-w) + 1ch)`}>
 					<div class="cards">
 						{#each row.cards as c, i (i)}
 							{#if row.selectable && interactive}
-								<span class="card pick" data-card={c} style:left={`${i * offset}px`}>
+								<span class="card pick" data-card={c} style:left={`${cardLeft(row, i)}px`}>
 									<NavButton
 										pressed={selected.includes(c)}
 										sorot={litCards.has(c)}
@@ -120,7 +119,7 @@
 									{#if selected.includes(c)}<span class="layer chosen" aria-hidden="true"></span>{/if}
 								</span>
 							{:else}
-								<span class="card" data-card={c} style:left={`${i * offset}px`}>
+								<span class="card" data-card={c} style:left={`${cardLeft(row, i)}px`}>
 									<PixelSprite pixels={cardPixels(c)} size={2} />
 								</span>
 							{/if}
@@ -267,6 +266,9 @@
 	.line {
 		margin: 0;
 		height: var(--cell-h);
+		/* Lebar tetap: teks panjang meluber ke kanan (tidak ada apa pun di
+		   sana), bukan terpotong, dan tidak menggeser apa pun. */
+		width: 60ch;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

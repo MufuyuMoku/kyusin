@@ -47,6 +47,8 @@ export interface CardRow {
 	line?: string;
 	/** Kartu bisa dipilih (Pai Gow: tangan depan). */
 	selectable?: boolean;
+	/** Jarak ekstra setelah kartu ke-n (Pai Gow: depan | belakang). */
+	gapAfter?: number;
 }
 
 export interface Spot {
@@ -290,6 +292,7 @@ const MODELS: Record<string, (v: V) => TableModel> = {
 					cards: over ? [...v.bandar_depan, ...v.bandar_belakang] : v.bandar,
 					slots: 7,
 					spread: true,
+					gapAfter: over ? 2 : undefined,
 					line: over ? t('mj.pg.split', { front: v.bandar_depan.length, back: hand(v.tangan_bandar_belakang) }) : ''
 				},
 				{
@@ -299,6 +302,7 @@ const MODELS: Record<string, (v: V) => TableModel> = {
 					slots: 7,
 					spread: true,
 					selectable: v.fase === 'susun',
+					gapAfter: over ? 2 : undefined,
 					line: over
 						? t('mj.pg.result', { front: res(v.hasil_depan), back: `${hand(v.tangan_belakang)} ${res(v.hasil_belakang)}` })
 						: ''
@@ -325,3 +329,17 @@ export function chipSteps(step: number): number[] {
 /** Lebar kartu bertumpuk / terpisah (px). */
 export const OFFSET_STACK = 18;
 export const OFFSET_SPREAD = 48;
+/** Jarak antara tangan depan dan belakang Pai Gow (px); selalu disediakan. */
+export const SPLIT_GAP = 16;
+
+/** Posisi kiri kartu ke-`i` di sebuah baris. */
+export function cardLeft(row: CardRow, i: number): number {
+	const offset = row.spread ? OFFSET_SPREAD : OFFSET_STACK;
+	return i * offset + (row.gapAfter !== undefined && i >= row.gapAfter ? SPLIT_GAP : 0);
+}
+
+/** Lebar kotak kartu sebuah baris (px, tanpa lebar kartu terakhir). */
+export function rowSpan(row: CardRow): number {
+	const offset = row.spread ? OFFSET_SPREAD : OFFSET_STACK;
+	return (row.slots - 1) * offset + (row.spread && row.slots > 2 ? SPLIT_GAP : 0);
+}
