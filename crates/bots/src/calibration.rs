@@ -13,6 +13,10 @@ pub const ANCHOR: f64 = 1000.0;
 /// Selisih rating terbesar antara dua level berurutan (SPEC §8, Rev. 10).
 pub const MAX_STEP: f64 = 400.0;
 
+/// Selisih rating terkecil antara dua level berurutan (SPEC §8, Rev. 13):
+/// setiap level harus terasa berbeda.
+pub const MIN_STEP: f64 = 100.0;
+
 /// RD minimum untuk lawan bot: level dengan selang sangat sempit (atau
 /// jangkar) tetap dianggap punya sedikit ketidakpastian.
 pub const MIN_BOT_RD: f64 = 30.0;
@@ -111,24 +115,31 @@ pub fn bot_rating(game: &str, lvl: u8) -> Option<Rating> {
 }
 
 /// Pelanggaran aturan tangga level merata (SPEC §8): selisih dua level
-/// berurutan lebih dari [`MAX_STEP`]. Level terbawah yang taksirannya
-/// ekstrapolasi (hanya punya batas atas) dikecualikan.
+/// berurutan lebih dari [`MAX_STEP`] atau kurang dari [`MIN_STEP`]. Level
+/// terbawah yang taksirannya ekstrapolasi (hanya punya batas atas)
+/// dikecualikan dari kedua batas.
 pub fn ladder_violations(levels: &[LevelRating]) -> Vec<String> {
     let skip = usize::from(levels.first().is_some_and(|l| l.extrapolated));
     levels
         .windows(2)
         .enumerate()
         .skip(skip)
-        .filter(|(_, w)| w[1].elo - w[0].elo > MAX_STEP)
-        .map(|(i, w)| {
-            format!(
-                "level {} → {}: {:.0} → {:.0} (selisih {:.0} > {MAX_STEP})",
+        .filter_map(|(i, w)| {
+            let step = w[1].elo - w[0].elo;
+            let rule = if step > MAX_STEP {
+                format!("> {MAX_STEP}")
+            } else if step < MIN_STEP {
+                format!("< {MIN_STEP}")
+            } else {
+                return None;
+            };
+            Some(format!(
+                "level {} → {}: {:.0} → {:.0} (selisih {step:.0} {rule})",
                 i + 1,
                 i + 2,
                 w[0].elo,
-                w[1].elo,
-                w[1].elo - w[0].elo
-            )
+                w[1].elo
+            ))
         })
         .collect()
 }
@@ -198,9 +209,26 @@ mod tests {
             ladder_violations(&[lr(1000.0, false), lr(1500.0, true)]).len(),
             1
         );
+        // Rev. 13: level yang terlalu dekat (misalnya selisih 42) juga dilanggar.
+        let v = ladder_violations(&[
+            lr(1000.0, false),
+            lr(1174.0, false),
+            lr(1369.0, false),
+            lr(1411.0, false),
+        ]);
+        assert_eq!(v.len(), 1, "{v:?}");
+        assert!(
+            v[0].starts_with("level 3 → 4") && v[0].ends_with("< 100)"),
+            "{v:?}"
+        );
+        assert!(ladder_violations(&[lr(1000.0, false), lr(1100.0, false)]).is_empty());
+        // Level terbawah ekstrapolasi juga dikecualikan dari batas bawah.
+        assert!(
+            ladder_violations(&[lr(950.0, true), lr(1000.0, false), lr(1200.0, false)]).is_empty()
+        );
     }
 
-    /// SPEC §8 Rev. 10: data kalibrasi setiap game kompetitif memenuhi
+    /// SPEC §8 Rev. 10 dan 13: data kalibrasi setiap game kompetitif memenuhi
     /// aturan tangga level merata.
     #[test]
     fn every_competitive_game_has_an_even_level_ladder() {

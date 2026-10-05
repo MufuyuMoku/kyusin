@@ -3,7 +3,7 @@
     "kursi": 2,
     "tangan_maks": 60
   },
-  "date": "2026-10-02",
+  "date": "2026-10-04",
   "game": "teen-patti",
   "games_per_pairing": 2000,
   "levels": [
@@ -36,48 +36,22 @@
     },
     {
       "ci95": [
-        1355.0,
-        1384.0
+        1367.0,
+        1396.0
       ],
-      "elo": 1369.0,
+      "elo": 1382.0,
       "extrapolated": false,
       "level": 3,
       "results": [
         {
           "games": 2000,
           "opponent_level": 1,
-          "points": 1648.5
+          "points": 1746.5
         },
         {
           "games": 2000,
           "opponent_level": 2,
-          "points": 1647.5
-        }
-      ]
-    },
-    {
-      "ci95": [
-        1400.0,
-        1422.0
-      ],
-      "elo": 1411.0,
-      "extrapolated": false,
-      "level": 4,
-      "results": [
-        {
-          "games": 2000,
-          "opponent_level": 1,
-          "points": 1760.0
-        },
-        {
-          "games": 2000,
-          "opponent_level": 2,
-          "points": 1583.5
-        },
-        {
-          "games": 2000,
-          "opponent_level": 3,
-          "points": 1200.0
+          "points": 1588.5
         }
       ]
     }

@@ -10,7 +10,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { checkAlignment, fail, readCells, resetToMenu, sameCells, sweepHover, sweepKeyboard, theme } from './helpers.mjs';
+import { checkAlignment, inView, fail, readCells, resetToMenu, sameCells, sweepHover, sweepKeyboard, theme } from './helpers.mjs';
 import { ELEMENT } from './webdriver.mjs';
 
 const yourTurn = () =>
@@ -84,6 +84,7 @@ export async function run(s, artifacts, log) {
 	const base = await s.exec(readCells);
 	const shape = checkAlignment(base);
 	log(`selaras: sel ${shape.cell}, jarak ${shape.pitch}px`);
+	log(`muat tanpa gulir: papan dan kontrol, sisa ${await inView(s, ['[role="grid"]', '.left .controls button'], 'papan')} px`);
 	const wrap = await s.find('css selector', '.left');
 	writeFileSync(join(artifacts, 'chess-p1-start.png'), await s.elementScreenshot(wrap));
 	log(`kursor keyboard: ${await sweepKeyboard(s, base)} sel, tidak ada sel yang bergeser`);

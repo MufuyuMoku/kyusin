@@ -7,10 +7,13 @@
 //!    acak.
 //! 2. Menengah: ambang tetap untuk pack, chaal, raise, dan show.
 //! 3. Mahir: nilai harapan show/pack/lanjut dari peluang menang (persentil
-//!    tangan melawan tangan acak); sideshow untuk tangan sedang.
-//! 4. Kuat: seperti mahir, ditambah model lawan: setiap taruhan lawan yang
-//!    sudah melihat kartu menaikkan batas bawah kekuatan tangannya; bermain
-//!    buta lebih lama saat stake kecil.
+//!    tangan melawan tangan acak); sideshow untuk tangan sedang; model
+//!    lawan: setiap taruhan lawan yang sudah melihat kartu menaikkan batas
+//!    bawah kekuatan tangannya; bermain buta lebih lama saat stake kecil.
+//!
+//! Dulu ada empat level; level 3 (tanpa model lawan) hanya 42 poin di bawah
+//! level 4, jadi keduanya digabung menjadi level 3 (SPEC §8 Rev. 13,
+//! selisih paling kecil 100).
 
 use std::sync::OnceLock;
 
@@ -18,7 +21,7 @@ use kyusin_core::{GameRng, Player, PlayerId, SeatKind, Seed, Session};
 use kyusin_games::cards::Card;
 use kyusin_games::teen_patti::{BOOT, TpValue, View, eval};
 
-pub const LEVELS: u8 = 4;
+pub const LEVELS: u8 = 3;
 
 /// Persentil tangan (0–1) di antara semua tangan tiga kartu.
 pub fn percentile(cards: &[Card]) -> f64 {
@@ -146,9 +149,9 @@ impl TeenPattiBot {
     }
 
     /// Batas bawah persentil tangan lawan yang terus bertaruh setelah
-    /// melihat kartu (level 4): setiap taruhan terlihat menaikkan batasnya.
+    /// melihat kartu (level 3): setiap taruhan terlihat menaikkan batasnya.
     fn floor_of(&self, v: &View, seat: u8) -> f64 {
-        if self.level < 4 || !v.kursi[seat as usize].terlihat {
+        if self.level < 3 || !v.kursi[seat as usize].terlihat {
             return 0.0;
         }
         let mut seen = false;
@@ -195,7 +198,7 @@ impl TeenPattiBot {
             return if w > 0.5 { "accept" } else { "deny" }.into();
         }
         if !me.terlihat {
-            let blind_turns = if self.level >= 4 { 3 } else { 2 };
+            let blind_turns = if self.level >= 3 { 3 } else { 2 };
             let cheap = v.stake <= 4 * BOOT;
             if me.buta_ke >= blind_turns || !cheap || !has("chaal") {
                 return "see".into();

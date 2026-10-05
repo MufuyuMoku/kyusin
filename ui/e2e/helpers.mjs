@@ -9,6 +9,30 @@ export function fail(msg) {
 	throw new Error(msg);
 }
 
+/**
+ * SPEC §4 Rev. 13: meja/papan dan kontrol aksi muat di jendela bawaan tanpa
+ * gulir. Setiap elemen yang cocok dengan `selectors` harus seluruhnya berada
+ * di area tampilan `main` yang belum digulir. Mengembalikan sisa ruang di
+ * bawah elemen terbawah (px).
+ */
+export async function inView(s, selectors, when) {
+	const r = await s.exec((sels) => {
+		const main = document.querySelector('main');
+		const m = main.getBoundingClientRect();
+		const els = sels.flatMap((q) => [...document.querySelectorAll(q)].map((el) => [q, el]));
+		const out = els
+			.map(([q, el]) => [q, el.textContent.trim().slice(0, 24), el.getBoundingClientRect()])
+			.filter(([, , b]) => b.top < m.top - 0.5 || b.bottom > m.bottom + 0.5 || b.left < m.left - 0.5 || b.right > m.right + 0.5)
+			.map(([q, t, b]) => `${q} "${t}" [${Math.round(b.left)},${Math.round(b.top)}–${Math.round(b.right)},${Math.round(b.bottom)}]`);
+		const bottom = Math.max(...els.map(([, el]) => el.getBoundingClientRect().bottom));
+		return { count: els.length, out, scroll: main.scrollTop, room: Math.round(m.bottom - bottom), area: `${Math.round(m.width)}×${Math.round(m.height)}` };
+	}, selectors);
+	if (r.count === 0) fail(`${when}: tidak ada elemen ${selectors.join(', ')}`);
+	if (r.scroll !== 0) fail(`${when}: halaman tergulir ${r.scroll} px`);
+	if (r.out.length) fail(`${when}: di luar area tampilan ${r.area} tanpa gulir: ${r.out.join('; ')}`);
+	return r.room;
+}
+
 /** Posisi dan ukuran semua sel papan, per nama petak (dijalankan di halaman). */
 export const readCells = () => {
 	const out = {};
