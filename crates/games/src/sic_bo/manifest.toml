@@ -1,0 +1,29 @@
+id = "sic-bo"
+nama = { id = "Sic Bo", en = "Sic Bo" }
+kategori = "casino-dadu"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP Kecil/besar 105/216 × 2 = 97,222% (tepat); taruhan lain antara 66,67% dan 97,22%. Tabel Macau/Hong Kong, D-069.
+rtp = 97.22
+tutorial = "tutorials/sic-bo.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di satu tempat (small, big, total-9, combo-1-2, double-3, triple-6, single-4, …; 10–2.000 per tempat, kelipatan 10)", en = "Add a bet on one spot (small, big, total-9, combo-1-2, double-3, triple-6, single-4, …; 10–2,000 per spot, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan", en = "Take back every bet" }
+
+[[perintah]]
+pola = "roll"
+ringkas = { id = "Lempar tiga dadu", en = "Roll the three dice" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti tanpa memasang taruhan", en = "Stop without betting" }

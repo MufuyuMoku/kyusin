@@ -1,0 +1,29 @@
+id = "roulette-eropa"
+nama = { id = "Roulette Eropa", en = "European Roulette" }
+kategori = "casino-dadu"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP satu nol, tanpa La Partage: setiap taruhan 36/37 = 97,297% (tepat). D-069.
+rtp = 97.3
+tutorial = "tutorials/roulette-eropa.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di satu tempat (straight-17, split-17-18, red, dozen-2, …; 10–2.000 per tempat, kelipatan 10)", en = "Add a bet on one spot (straight-17, split-17-18, red, dozen-2, …; 10–2,000 per spot, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan yang belum diputar", en = "Take back every bet not yet spun" }
+
+[[perintah]]
+pola = "spin"
+ringkas = { id = "Putar roda", en = "Spin the wheel" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti tanpa memutar", en = "Stop without spinning" }

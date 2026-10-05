@@ -1,0 +1,29 @@
+id = "big-six"
+nama = { id = "Big Six", en = "Big Six" }
+kategori = "casino-dadu"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP Simbol 1: 24/54 × 2 = 88,889% (tepat), taruhan terbaik; Joker/logo 40:1 = 75,926%. D-069.
+rtp = 88.89
+tutorial = "tutorials/big-six.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan pada simbol 1, 2, 5, 10, 20, joker, atau logo (10–2.000, kelipatan 10)", en = "Add a bet on symbol 1, 2, 5, 10, 20, joker, or logo (10–2,000, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan", en = "Take back every bet" }
+
+[[perintah]]
+pola = "spin"
+ringkas = { id = "Putar roda", en = "Spin the wheel" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti tanpa memasang taruhan", en = "Stop without betting" }

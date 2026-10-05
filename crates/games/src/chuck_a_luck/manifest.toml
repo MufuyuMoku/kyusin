@@ -1,0 +1,29 @@
+id = "chuck-a-luck"
+nama = { id = "Chuck-a-luck", en = "Chuck-a-luck" }
+kategori = "casino-dadu"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP Taruhan angka 1:1, 2:1, 10:1: 206/216 = 95,370% (tepat). D-069.
+rtp = 95.37
+tutorial = "tutorials/chuck-a-luck.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di satu tempat (single-1 … single-6, any-triple, small, big; 10–2.000 per tempat, kelipatan 10)", en = "Add a bet on one spot (single-1 … single-6, any-triple, small, big; 10–2,000 per spot, multiples of 10)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan", en = "Take back every bet" }
+
+[[perintah]]
+pola = "roll"
+ringkas = { id = "Putar sangkar dadu", en = "Spin the dice cage" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti tanpa memasang taruhan", en = "Stop without betting" }

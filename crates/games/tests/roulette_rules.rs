@@ -14,11 +14,19 @@ use kyusin_games::roulette::{Amerika, Eropa, RouletteAmerika, RouletteEropa, poc
 use serde_json::{Value, json};
 
 fn eu(result: &str) -> RouletteEropa {
-    RouletteEropa::new(serde_json::from_value(json!({ "hasil": result })).unwrap(), [0; 32]).unwrap()
+    RouletteEropa::new(
+        serde_json::from_value(json!({ "hasil": result })).unwrap(),
+        [0; 32],
+    )
+    .unwrap()
 }
 
 fn us(result: &str) -> RouletteAmerika {
-    RouletteAmerika::new(serde_json::from_value(json!({ "hasil": result })).unwrap(), [0; 32]).unwrap()
+    RouletteAmerika::new(
+        serde_json::from_value(json!({ "hasil": result })).unwrap(),
+        [0; 32],
+    )
+    .unwrap()
 }
 
 fn net<G: TurnGame>(mut g: G, bets: &[(&str, i64)]) -> (Value, i64)
@@ -26,7 +34,8 @@ where
     G: Session,
 {
     for (spot, n) in bets {
-        Session::act(&mut g, 0, &format!("bet {spot} {n}")).unwrap_or_else(|e| panic!("bet {spot}: {e:?}"));
+        Session::act(&mut g, 0, &format!("bet {spot} {n}"))
+            .unwrap_or_else(|e| panic!("bet {spot}: {e:?}"));
     }
     Session::act(&mut g, 0, "spin").unwrap();
     let v = Session::view_data(&g, 0);
@@ -40,7 +49,9 @@ fn pockets_and_colours() {
     assert_eq!(pocket("00"), Some(37));
     assert_eq!(pocket("36"), Some(36));
     assert_eq!(pocket("37"), None);
-    let reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    let reds = [
+        1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36,
+    ];
     for n in 1..=36u8 {
         let v = net(eu(&n.to_string()), &[("red", 10)]).1;
         assert_eq!(v == 10, reds.contains(&n), "{n}");
@@ -68,20 +79,35 @@ fn inside_bets_pay_by_type() {
 
 #[test]
 fn outside_bets_lose_on_zero() {
-    let outside = [("red", 1), ("black", 1), ("odd", 1), ("even", 1), ("low", 1), ("high", 1)];
+    let outside = [
+        ("red", 1),
+        ("black", 1),
+        ("odd", 1),
+        ("even", 1),
+        ("low", 1),
+        ("high", 1),
+    ];
     for (spot, _) in outside {
         assert_eq!(net(eu("0"), &[(spot, 10)]).1, -10, "{spot} pada 0");
         assert_eq!(net(us("00"), &[(spot, 10)]).1, -10, "{spot} pada 00");
     }
     assert_eq!(net(eu("13"), &[("dozen-2", 10)]).1, 20);
-    assert_eq!(net(eu("13"), &[("column-1", 10)]).1, 20, "13 di kolom 1 (1, 4, …, 34)");
+    assert_eq!(
+        net(eu("13"), &[("column-1", 10)]).1,
+        20,
+        "13 di kolom 1 (1, 4, …, 34)"
+    );
     assert_eq!(net(eu("0"), &[("dozen-1", 10), ("column-1", 10)]).1, -20);
-    assert_eq!(net(eu("19"), &[("high", 10), ("low", 10), ("odd", 10)]).1, 10);
+    assert_eq!(
+        net(eu("19"), &[("high", 10), ("low", 10), ("odd", 10)]).1,
+        10
+    );
 }
 
 #[test]
 fn spot_lists_are_complete() {
-    let count = |spots: &[&str], prefix: &str| spots.iter().filter(|s| s.starts_with(prefix)).count();
+    let count =
+        |spots: &[&str], prefix: &str| spots.iter().filter(|s| s.starts_with(prefix)).count();
     let e = Eropa::spots();
     assert_eq!(count(e, "straight-"), 37);
     assert_eq!(count(e, "split-"), 57 + 3);
@@ -95,7 +121,9 @@ fn spot_lists_are_complete() {
     assert_eq!(count(a, "split-"), 57 + 5);
     assert_eq!(count(a, "trio-"), 3);
     assert_eq!(count(a, "topline"), 1);
-    for s in ["dozen-1", "dozen-3", "column-2", "red", "black", "odd", "even", "low", "high"] {
+    for s in [
+        "dozen-1", "dozen-3", "column-2", "red", "black", "odd", "even", "low", "high",
+    ] {
         assert!(e.contains(&s) && a.contains(&s), "{s}");
     }
 }
@@ -108,7 +136,11 @@ fn exact_rtp_of_every_bet() {
     }
     for s in Amerika::spots() {
         let r = exact_rtp::<Amerika>(s);
-        let want = if *s == "topline" { 100.0 * 35.0 / 38.0 } else { 100.0 * 36.0 / 38.0 };
+        let want = if *s == "topline" {
+            100.0 * 35.0 / 38.0
+        } else {
+            100.0 * 36.0 / 38.0
+        };
         assert!((r - want).abs() < 1e-9, "Amerika {s}: {r}");
     }
 }
@@ -119,10 +151,16 @@ fn one_spin_per_match_and_the_chip_contract() {
     let v = Session::view_data(&g, 0);
     assert_eq!(v["fase"], "taruhan");
     assert_eq!(v["hasil"], Value::Null);
-    let mut legal: Vec<String> = TurnGame::legal_actions(&g, 0).iter().map(|a| a.usage()).collect();
+    let mut legal: Vec<String> = TurnGame::legal_actions(&g, 0)
+        .iter()
+        .map(|a| a.usage())
+        .collect();
     legal.sort();
     assert!(legal.contains(&"leave".to_string()));
-    assert!(!legal.contains(&"spin".to_string()), "spin hanya setelah ada taruhan");
+    assert!(
+        !legal.contains(&"spin".to_string()),
+        "spin hanya setelah ada taruhan"
+    );
     // Batas meja 10–2.000 kelipatan 10 per tempat.
     assert!(Session::act(&mut g, 0, "bet red 5").is_err());
     assert!(Session::act(&mut g, 0, "bet red 2010").is_err());
@@ -161,6 +199,7 @@ fn results_come_from_the_round_seed() {
         Session::view_data(&g, 0)["hasil"].clone()
     };
     assert_eq!(spin(5), spin(5));
-    let distinct: std::collections::BTreeSet<String> = (0..40).map(|s| spin(s).to_string()).collect();
+    let distinct: std::collections::BTreeSet<String> =
+        (0..40).map(|s| spin(s).to_string()).collect();
     assert!(distinct.len() > 10, "{distinct:?}");
 }

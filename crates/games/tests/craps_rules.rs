@@ -13,7 +13,11 @@ use kyusin_games::craps::{Craps, RTP};
 use serde_json::{Value, json};
 
 fn craps(rolls: &[[u8; 2]]) -> Craps {
-    Craps::new(serde_json::from_value(json!({ "lemparan": rolls })).unwrap(), [0; 32]).unwrap()
+    Craps::new(
+        serde_json::from_value(json!({ "lemparan": rolls })).unwrap(),
+        [0; 32],
+    )
+    .unwrap()
 }
 
 fn act(g: &mut Craps, cmd: &str) {
@@ -30,7 +34,13 @@ fn net(g: &Craps) -> i64 {
 
 #[test]
 fn come_out_naturals_craps_and_bar_twelve() {
-    for (roll, pass, dont) in [([3, 4], 10, -10), ([5, 6], 10, -10), ([1, 1], -10, 10), ([1, 2], -10, 10), ([6, 6], -10, 0)] {
+    for (roll, pass, dont) in [
+        ([3, 4], 10, -10),
+        ([5, 6], 10, -10),
+        ([1, 1], -10, 10),
+        ([1, 2], -10, 10),
+        ([6, 6], -10, 0),
+    ] {
         let mut g = craps(&[roll]);
         act(&mut g, "bet pass 10");
         act(&mut g, "bet dont-pass 10");
@@ -47,10 +57,16 @@ fn come_out_naturals_craps_and_bar_twelve() {
 fn point_odds_and_making_the_point() {
     let mut g = craps(&[[4, 2], [5, 1]]);
     act(&mut g, "bet pass 10");
-    assert!(Session::act(&mut g, 0, "bet odds-pass 10").is_err(), "odds hanya setelah ada titik");
+    assert!(
+        Session::act(&mut g, 0, "bet odds-pass 10").is_err(),
+        "odds hanya setelah ada titik"
+    );
     act(&mut g, "roll");
     assert_eq!(view(&g)["titik"], 6);
-    assert!(Session::act(&mut g, 0, "take pass").is_err(), "pass dengan titik adalah kontrak");
+    assert!(
+        Session::act(&mut g, 0, "take pass").is_err(),
+        "pass dengan titik adalah kontrak"
+    );
     // 5x pada 6: paling banyak 50 di belakang pass 10.
     assert!(Session::act(&mut g, 0, "bet odds-pass 60").is_err());
     act(&mut g, "bet odds-pass 50");
@@ -117,7 +133,10 @@ fn place_field_and_hardways() {
     act(&mut g, "roll");
     let v = view(&g);
     assert_eq!(v["bayar"].get("place-6"), None, "place off di come-out");
-    assert!(Session::act(&mut g, 0, "bet place-6 20").is_err(), "place 6 kelipatan 30");
+    assert!(
+        Session::act(&mut g, 0, "bet place-6 20").is_err(),
+        "place 6 kelipatan 30"
+    );
     act(&mut g, "bet place-5 10");
     act(&mut g, "bet place-4 10");
     act(&mut g, "bet field 10");
@@ -164,13 +183,23 @@ fn place_field_and_hardways() {
 #[test]
 fn leaving_and_the_neutral_action() {
     let mut g = craps(&[[2, 2]]);
-    assert_eq!(view(&g)["netral"], Value::Null, "tanpa taruhan: boleh berhenti");
+    assert_eq!(
+        view(&g)["netral"],
+        Value::Null,
+        "tanpa taruhan: boleh berhenti"
+    );
     act(&mut g, "bet pass 10");
     act(&mut g, "bet field 10");
     assert_eq!(view(&g)["netral"], "roll");
     act(&mut g, "roll");
-    let legal: Vec<String> = TurnGame::legal_actions(&g, 0).iter().map(|a| a.usage()).collect();
-    assert!(!legal.contains(&"leave".to_string()), "pass dengan titik: tidak boleh berhenti");
+    let legal: Vec<String> = TurnGame::legal_actions(&g, 0)
+        .iter()
+        .map(|a| a.usage())
+        .collect();
+    assert!(
+        !legal.contains(&"leave".to_string()),
+        "pass dengan titik: tidak boleh berhenti"
+    );
     assert_eq!(view(&g)["netral"], "roll");
     assert_eq!(view(&g)["taruhan_meja"], 10);
     let mut q = craps(&[[3, 3]]);
@@ -226,8 +255,17 @@ fn random_shooters_settle_consistently() {
             let _ = Session::act(&mut g, 0, "bet odds-pass 10");
             act(&mut g, "roll");
             let v = view(&g);
-            paid += v["bayar"].as_object().unwrap().values().map(|x| x.as_i64().unwrap()).sum::<i64>();
-            assert_eq!(v["bersih"].as_i64().unwrap(), paid, "sesi {seed} langkah {steps}");
+            paid += v["bayar"]
+                .as_object()
+                .unwrap()
+                .values()
+                .map(|x| x.as_i64().unwrap())
+                .sum::<i64>();
+            assert_eq!(
+                v["bersih"].as_i64().unwrap(),
+                paid,
+                "sesi {seed} langkah {steps}"
+            );
             assert!(v["taruhan_meja"].as_i64().unwrap() >= 0);
             steps += 1;
         }

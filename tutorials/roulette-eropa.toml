@@ -1,0 +1,85 @@
+game = "roulette-eropa"
+judul = { id = "Roulette Eropa: dasar", en = "European Roulette: basics" }
+
+# Hasil tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+hasil = "17"
+
+[man.aturan]
+id = """
+Roda Eropa punya 37 kantong: 0 (hijau) dan 1–36 (merah atau hitam). Pasang
+taruhan di papan, lalu putar roda; bola berhenti di satu kantong.
+
+Taruhan dalam (bayaran x:1): angka tunggal 35:1; split (dua angka
+berdampingan, termasuk dengan 0) 17:1; street (tiga angka sebaris) dan trio
+(0-1-2, 0-2-3) 11:1; corner (empat angka) 8:1; line (enam angka, dua baris)
+5:1.
+Taruhan luar: lusin (1–12, 13–24, 25–36) dan kolom 2:1; merah/hitam,
+ganjil/genap, kecil (1–18)/besar (19–36) 1:1. Taruhan luar kalah bila keluar
+0. Aturan meja ini tanpa La Partage dan tanpa taruhan racetrack.
+
+Setiap taruhan punya RTP 36/37 = 97,30% (house edge 2,70%). Batas 10–2.000
+per tempat, kelipatan 10.
+
+Provably fair per putaran: komitmen seed sebelum taruhan, hasil dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+The European wheel has 37 pockets: 0 (green) and 1–36 (red or black). Place
+your bets on the layout, then spin; the ball stops in one pocket.
+
+Inside bets (pays x to 1): straight number 35:1; split (two adjacent numbers,
+including with 0) 17:1; street (three numbers in a row) and trio (0-1-2,
+0-2-3) 11:1; corner (four numbers) 8:1; line (six numbers, two rows) 5:1.
+Outside bets: dozens (1–12, 13–24, 25–36) and columns 2:1; red/black,
+odd/even, low (1–18)/high (19–36) 1:1. Outside bets lose on 0. This table has
+no La Partage and no racetrack bets.
+
+Every bet returns 36/37 = 97.30% (house edge 2.70%). Limits 10–2,000 per
+spot, multiples of 10.
+
+Provably fair per spin: seed commitment before betting, the result comes
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan. Untuk
+split, street, corner, dan line, pilih jenis taruhannya lalu klik angka
+pojok kiri atasnya. [ ULANG ] menarik taruhan, [ PUTAR ] memutar roda.
+Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then click a spot on the layout to add a bet. For
+split, street, corner, and line, choose the bet type and click its top-left
+number. [ CLEAR ] takes the bets back, [ SPIN ] spins the wheel. Keyboard:
+the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 di hitam: menang 1:1 bila bola berhenti di angka hitam."
+teks.en = "Bet 10 on black: it pays 1:1 if the ball lands on a black number."
+aksi = "bet black 10"
+sorot = ["aksi:bet black 10"]
+petunjuk.id = "Pilih tempat HITAM."
+petunjuk.en = "Choose BLACK."
+
+[[langkah]]
+teks.id = "Tambah 10 di angka 17: angka tunggal dibayar 35:1."
+teks.en = "Add 10 on number 17: a straight number pays 35:1."
+aksi = "bet straight-17 10"
+sorot = ["aksi:bet straight-17 10"]
+petunjuk.id = "Pilih angka 17."
+petunjuk.en = "Choose number 17."
+
+[[langkah]]
+teks.id = "Putar roda."
+teks.en = "Spin the wheel."
+aksi = "spin"
+sorot = ["aksi:spin"]
+petunjuk.id = "Pilih PUTAR."
+petunjuk.en = "Choose SPIN."
+
+[[langkah]]
+teks.id = "17 hitam: hitam +10 dan angka 17 +350, bersih +360. Seed ronde dibuka. Tutorial selesai."
+teks.en = "17 black: black +10 and number 17 +350, net +360. The round seed is revealed. Tutorial finished."

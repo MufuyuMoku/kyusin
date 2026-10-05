@@ -1,0 +1,70 @@
+game = "fan-tan"
+judul = { id = "Fan-Tan: dasar", en = "Fan-Tan: basics" }
+
+# Hasil tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+hasil = 42
+
+[man.aturan]
+id = """
+Bandar menutup segenggam kancing, lalu menghitungnya empat-empat; sisanya
+(1, 2, 3, atau 4; sisa 0 dihitung 4) adalah hasilnya. Taruhan, dengan
+komisi 5% dari kemenangan:
+- Fan: satu angka, 3:1.
+- Nim: satu angka menang 2:1, satu angka lain seri.
+- Kwok: dua angka berdampingan (1-2, 2-3, 3-4, 1-4), 1:1.
+- Tan: dua angka menang 1:2, satu angka lain seri.
+- Ssh: tiga angka, 1:3.
+RTP Fan 96,25%, Nim dan Kwok 97,5%, Tan dan Ssh 98,75%. Taruhan 120–1.920
+per tempat, kelipatan 120 (supaya komisi selalu utuh).
+
+Provably fair per ronde: komitmen seed sebelum taruhan, hasil dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+The dealer covers a handful of buttons, then counts them off in fours; the
+remainder (1, 2, 3, or 4; a remainder of 0 counts as 4) is the result. Bets,
+with a 5% commission on winnings:
+- Fan: one number, 3:1.
+- Nim: one number wins 2:1, another number is a push.
+- Kwok: two adjacent numbers (1-2, 2-3, 3-4, 1-4), 1:1.
+- Tan: two numbers win 1:2, another number is a push.
+- Ssh: three numbers, 1:3.
+Fan returns 96.25%, Nim and Kwok 97.5%, Tan and Ssh 98.75%. Bets 120–1,920
+per spot, multiples of 120 (so the commission is always whole).
+
+Provably fair per round: seed commitment before betting, the result comes
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan. [ ULANG ]
+menarik taruhan, [ BUKA ] menjalankan ronde. Keyboard: panah memindahkan
+fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then click a spot on the layout to add a bet. [ CLEAR ]
+takes the bets back, [ OPEN ] plays the round. Keyboard: the arrow keys move
+the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 120 di Fan 2: dibayar 3:1 dipotong komisi 5%."
+teks.en = "Bet 120 on Fan 2: it pays 3:1 less the 5% commission."
+aksi = "bet fan-2 120"
+sorot = ["aksi:bet fan-2 120"]
+petunjuk.id = "Pilih FAN 2."
+petunjuk.en = "Choose FAN 2."
+
+[[langkah]]
+teks.id = "Buka dan hitung kancingnya."
+teks.en = "Uncover and count the buttons."
+aksi = "open"
+sorot = ["aksi:open"]
+petunjuk.id = "Pilih BUKA."
+petunjuk.en = "Choose OPEN."
+
+[[langkah]]
+teks.id = "42 kancing: sisa 2. Fan 2 menang 360 dikurangi komisi 18, bersih +342. Seed ronde dibuka. Tutorial selesai."
+teks.en = "42 buttons: remainder 2. Fan 2 wins 360 less an 18 commission, net +342. The round seed is revealed. Tutorial finished."

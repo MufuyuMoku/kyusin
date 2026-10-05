@@ -30,10 +30,14 @@ fn the_chinese_set_has_32_tiles() {
     assert_eq!(tiles.len(), 32);
     assert!(tiles.iter().all(|x| x.lo >= 1), "tanpa sisi kosong");
     let count = |s: &str| tiles.iter().filter(|x| **x == t(s)).count();
-    for civil in ["6-6", "1-1", "4-4", "3-1", "5-5", "3-3", "2-2", "6-5", "6-4", "6-1", "5-1"] {
+    for civil in [
+        "6-6", "1-1", "4-4", "3-1", "5-5", "3-3", "2-2", "6-5", "6-4", "6-1", "5-1",
+    ] {
         assert_eq!(count(civil), 2, "{civil}");
     }
-    for military in ["6-3", "5-4", "6-2", "5-3", "5-2", "4-3", "4-1", "3-2", "2-1", "4-2"] {
+    for military in [
+        "6-3", "5-4", "6-2", "5-3", "5-2", "4-3", "4-1", "3-2", "2-1", "4-2",
+    ] {
         assert_eq!(count(military), 1, "{military}");
     }
 }
@@ -66,12 +70,22 @@ fn hand_ranking() {
     ];
     for w in order.windows(2) {
         assert_eq!(w[0].0.kind(), w[0].1, "{:?}", w[0].0);
-        assert_eq!(compare(&w[1].0, &w[0].0), Ordering::Greater, "{:?} > {:?}", w[1].0, w[0].0);
+        assert_eq!(
+            compare(&w[1].0, &w[0].0),
+            Ordering::Greater,
+            "{:?} > {:?}",
+            w[1].0,
+            w[0].0
+        );
     }
     assert_eq!(h("6-5", "4-1").points(), 6);
     // High nine (Teen + 7) adalah 9 dengan ubin tertinggi Teen.
     assert_eq!(h("6-6", "4-3").points(), 9);
-    assert_eq!(compare(&h("6-6", "4-3"), &h("6-1", "1-1")), Ordering::Greater, "Teen > Day");
+    assert_eq!(
+        compare(&h("6-6", "4-3"), &h("6-1", "1-1")),
+        Ordering::Greater,
+        "Teen > Day"
+    );
     // Gee Joon dihitung 3 atau 6, mana yang lebih baik.
     assert_eq!(h("2-1", "6-6").points(), 8);
     assert_eq!(h("4-2", "6-5").points(), 7);
@@ -86,7 +100,11 @@ fn copies_and_zero_go_to_the_dealer() {
     assert_eq!(h("6-3", "6-5").points(), 0);
     assert_eq!(compare(&h("6-4", "5-5"), &h("6-3", "6-5")), Ordering::Equal);
     // Nilai sama, ubin tertinggi beda: yang lebih tinggi menang.
-    assert_eq!(compare(&h("6-6", "6-5"), &h("1-1", "6-5")), Ordering::Greater, "3 dengan Teen > 3 dengan Day");
+    assert_eq!(
+        compare(&h("6-6", "6-5"), &h("1-1", "6-5")),
+        Ordering::Greater,
+        "3 dengan Teen > 3 dengan Day"
+    );
 }
 
 fn hw(tiles: [&str; 4]) -> (Vec<String>, Vec<String>) {
@@ -101,24 +119,58 @@ fn hw(tiles: [&str; 4]) -> (Vec<String>, Vec<String>) {
 #[test]
 fn house_way() {
     // Pasangan Teen dipertahankan bila memecahnya membuat dua tangan lebih rendah.
-    assert_eq!(hw(["6-6", "6-6", "2-1", "4-1"]), (vec!["6-6".into(), "6-6".into()], vec!["2-1".into(), "4-1".into()]));
+    assert_eq!(
+        hw(["6-6", "6-6", "2-1", "4-1"]),
+        (
+            vec!["6-6".into(), "6-6".into()],
+            vec!["2-1".into(), "4-1".into()]
+        )
+    );
     // Teen dipecah bila hasilnya dua Wong (lebih baik dari pasangan + 8).
     assert_eq!(hw(["6-6", "6-6", "5-4", "6-3"]).1.len(), 2);
     let (a, b) = hw(["6-6", "6-6", "5-4", "6-3"]);
-    assert!(a.contains(&"6-6".to_string()) && b.contains(&"6-6".to_string()), "{a:?} {b:?}");
+    assert!(
+        a.contains(&"6-6".to_string()) && b.contains(&"6-6".to_string()),
+        "{a:?} {b:?}"
+    );
     // Pasangan 9 campuran hanya dipecah bila hasilnya 9-9.
-    assert_eq!(hw(["6-3", "5-4", "6-6", "2-2"]), (vec!["5-4".into(), "6-3".into()], vec!["2-2".into(), "6-6".into()]));
+    assert_eq!(
+        hw(["6-3", "5-4", "6-6", "2-2"]),
+        (
+            vec!["5-4".into(), "6-3".into()],
+            vec!["2-2".into(), "6-6".into()]
+        )
+    );
     // Pasangan 10 (Ping) tidak pernah dipecah.
-    assert_eq!(hw(["6-4", "6-4", "6-6", "1-1"]).0, vec!["6-4".to_string(), "6-4".to_string()]);
+    assert_eq!(
+        hw(["6-4", "6-4", "6-6", "1-1"]).0,
+        vec!["6-4".to_string(), "6-4".to_string()]
+    );
     // Tanpa pasangan: Gong lebih dulu bila tangan rendahnya paling sedikit 4.
-    assert_eq!(hw(["6-6", "5-3", "6-5", "4-1"]), (vec!["5-3".into(), "6-6".into()], vec!["4-1".into(), "6-5".into()]));
+    assert_eq!(
+        hw(["6-6", "5-3", "6-5", "4-1"]),
+        (
+            vec!["5-3".into(), "6-6".into()],
+            vec!["4-1".into(), "6-5".into()]
+        )
+    );
     // Selain itu tangan rendah sebesar mungkin: 6/6; tangan tinggi = yang
     // ubin tertingginya lebih tinggi (Foo > Ping).
-    assert_eq!(hw(["6-5", "6-4", "5-1", "3-2"]), (vec!["3-2".into(), "6-5".into()], vec!["5-1".into(), "6-4".into()]));
+    assert_eq!(
+        hw(["6-5", "6-4", "5-1", "3-2"]),
+        (
+            vec!["3-2".into(), "6-5".into()],
+            vec!["5-1".into(), "6-4".into()]
+        )
+    );
 }
 
 fn game(tiles: &[&str]) -> PaiGowUbin {
-    PaiGowUbin::new(serde_json::from_value(json!({ "ubin": tiles })).unwrap(), [0; 32]).unwrap()
+    PaiGowUbin::new(
+        serde_json::from_value(json!({ "ubin": tiles })).unwrap(),
+        [0; 32],
+    )
+    .unwrap()
 }
 
 fn act(g: &mut PaiGowUbin, cmd: &str) {
@@ -137,7 +189,10 @@ fn a_round_with_commission_push_and_copy() {
     assert_eq!(v["pemain"].as_array().unwrap().len(), 4);
     assert_eq!(v["bandar"], json!(["??", "??", "??", "??"]));
     assert_eq!(v["netral"], "houseway");
-    assert!(Session::act(&mut g, 0, "set 1-1 2-2").is_err(), "bukan ubinmu");
+    assert!(
+        Session::act(&mut g, 0, "set 1-1 2-2").is_err(),
+        "bukan ubinmu"
+    );
     act(&mut g, "set 5-4 6-2");
     let v = Session::view_data(&g, 0);
     assert_eq!(v["fase"], "selesai");
@@ -161,7 +216,11 @@ fn a_round_with_commission_push_and_copy() {
     act(&mut g, "bet 100");
     act(&mut g, "set 5-4 6-2");
     let v = Session::view_data(&g, 0);
-    assert_eq!(v["hasil"], json!(["kalah", "kalah"]), "Tit < Mooy; 7 lawan 7: copy");
+    assert_eq!(
+        v["hasil"],
+        json!(["kalah", "kalah"]),
+        "Tit < Mooy; 7 lawan 7: copy"
+    );
     assert_eq!(v["bersih"], -100);
 }
 
@@ -169,7 +228,12 @@ fn a_round_with_commission_push_and_copy() {
 fn announced_rtp_is_below_100() {
     assert_eq!(RTP.iter().filter(|r| r.manifest).count(), 1);
     for r in RTP {
-        assert!(r.percent < 100.0 && r.percent > 95.0, "{}: {}", r.wager, r.percent);
+        assert!(
+            r.percent < 100.0 && r.percent > 95.0,
+            "{}: {}",
+            r.wager,
+            r.percent
+        );
     }
 }
 

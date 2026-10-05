@@ -1,0 +1,82 @@
+game = "roulette-amerika"
+judul = { id = "Roulette Amerika: dasar", en = "American Roulette: basics" }
+
+# Hasil tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+hasil = "00"
+
+[man.aturan]
+id = """
+Roda Amerika punya 38 kantong: 0 dan 00 (hijau) serta 1–36 (merah atau
+hitam). Pasang taruhan di papan, lalu putar roda.
+
+Taruhan dalam: angka tunggal (termasuk 0 dan 00) 35:1; split 17:1 (termasuk
+0-00, 0-1, 0-2, 00-2, 00-3); street dan trio (0-1-2, 0-00-2, 00-2-3) 11:1;
+corner 8:1; line 5:1; Top Line 0-00-1-2-3 6:1.
+Taruhan luar: lusin dan kolom 2:1; merah/hitam, ganjil/genap, kecil/besar
+1:1; kalah bila keluar 0 atau 00.
+
+RTP setiap taruhan 36/38 = 94,74% (house edge 5,26%), kecuali Top Line 35/38
+= 92,11% (7,89%). Batas 10–2.000 per tempat, kelipatan 10.
+
+Provably fair per putaran: komitmen seed sebelum taruhan, hasil dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+The American wheel has 38 pockets: 0 and 00 (green) and 1–36 (red or black).
+Place your bets on the layout, then spin.
+
+Inside bets: straight number (including 0 and 00) 35:1; split 17:1
+(including 0-00, 0-1, 0-2, 00-2, 00-3); street and trio (0-1-2, 0-00-2,
+00-2-3) 11:1; corner 8:1; line 5:1; Top Line 0-00-1-2-3 6:1.
+Outside bets: dozens and columns 2:1; red/black, odd/even, low/high 1:1; they
+lose on 0 or 00.
+
+Every bet returns 36/38 = 94.74% (house edge 5.26%), except Top Line 35/38 =
+92.11% (7.89%). Limits 10–2,000 per spot, multiples of 10.
+
+Provably fair per spin: seed commitment before betting, the result comes
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan. Untuk
+split, street, corner, dan line, pilih jenis taruhannya lalu klik angka
+pojok kiri atasnya. [ ULANG ] menarik taruhan, [ PUTAR ] memutar roda.
+Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then click a spot on the layout to add a bet. For
+split, street, corner, and line, choose the bet type and click its top-left
+number. [ CLEAR ] takes the bets back, [ SPIN ] spins the wheel. Keyboard:
+the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 di merah: taruhan luar 1:1, tetapi kalah bila keluar 0 atau 00."
+teks.en = "Bet 10 on red: an outside bet at 1:1, but it loses on 0 or 00."
+aksi = "bet red 10"
+sorot = ["aksi:bet red 10"]
+petunjuk.id = "Pilih tempat MERAH."
+petunjuk.en = "Choose RED."
+
+[[langkah]]
+teks.id = "Tambah 10 di Top Line (0, 00, 1, 2, 3): dibayar 6:1."
+teks.en = "Add 10 on the Top Line (0, 00, 1, 2, 3): it pays 6:1."
+aksi = "bet topline 10"
+sorot = ["aksi:bet topline 10"]
+petunjuk.id = "Pilih TOP LINE."
+petunjuk.en = "Choose TOP LINE."
+
+[[langkah]]
+teks.id = "Putar roda."
+teks.en = "Spin the wheel."
+aksi = "spin"
+sorot = ["aksi:spin"]
+petunjuk.id = "Pilih PUTAR."
+petunjuk.en = "Choose SPIN."
+
+[[langkah]]
+teks.id = "00: merah kalah −10, Top Line +60, bersih +50. Seed ronde dibuka. Tutorial selesai."
+teks.en = "00: red loses −10, Top Line +60, net +50. The round seed is revealed. Tutorial finished."

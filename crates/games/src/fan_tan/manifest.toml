@@ -1,0 +1,29 @@
+id = "fan-tan"
+nama = { id = "Fan-Tan", en = "Fan-Tan" }
+kategori = "casino-dadu"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP Fan 3:1 dikurangi komisi 5%: (1 + 2,85)/4 = 96,25% (tepat); Nim/Kwok 97,5%, Tan/Ssh 98,75%. D-069.
+rtp = 96.25
+tutorial = "tutorials/fan-tan.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Tambah taruhan di satu tempat (fan-1, nim-1-2, kwok-1-2, tan-1-2-3, ssh-1-2-3, …; 120–1.920 per tempat, kelipatan 120)", en = "Add a bet on one spot (fan-1, nim-1-2, kwok-1-2, tan-1-2-3, ssh-1-2-3, …; 120–1,920 per spot, multiples of 120)" }
+
+[[perintah]]
+pola = "clear"
+ringkas = { id = "Tarik semua taruhan", en = "Take back every bet" }
+
+[[perintah]]
+pola = "open"
+ringkas = { id = "Buka dan hitung kancing", en = "Uncover and count the buttons" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti tanpa memasang taruhan", en = "Stop without betting" }

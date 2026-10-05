@@ -8,6 +8,7 @@ use kyusin_core::{Registry, RegistryError};
 
 pub mod andar_bahar;
 pub mod baccarat;
+pub mod big_six;
 pub mod blackjack;
 pub mod capsa_susun;
 pub mod cards;
@@ -15,19 +16,25 @@ pub mod caribbean_stud;
 pub mod casino_holdem;
 pub mod casino_war;
 pub mod catur;
+pub mod chuck_a_luck;
+pub mod dadu;
 pub mod domino;
 pub mod domino_qiuqiu;
 pub mod dragon_tiger;
+pub mod fan_tan;
 pub mod fixture;
 pub mod let_it_ride;
 pub mod meja;
 pub mod omaha;
 pub mod pai_gow;
+pub mod papan_taruhan;
 pub mod poker;
 pub mod poker_meja;
 pub mod pot;
 pub mod red_dog;
 pub mod reversi;
+pub mod roulette;
+pub mod sic_bo;
 pub mod teen_patti;
 pub mod texas_holdem;
 pub mod three_card_poker;
@@ -53,6 +60,12 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(teen_patti::cartridge()?)?;
     registry.register(capsa_susun::cartridge()?)?;
     registry.register(domino_qiuqiu::cartridge()?)?;
+    registry.register(roulette::cartridge_eropa()?)?;
+    registry.register(roulette::cartridge_amerika()?)?;
+    registry.register(sic_bo::cartridge()?)?;
+    registry.register(big_six::cartridge()?)?;
+    registry.register(fan_tan::cartridge()?)?;
+    registry.register(chuck_a_luck::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)
