@@ -59,7 +59,7 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 - CI: `ladder_violations` memeriksa batas 100 dan 400. Teen Patti level 3 dan 4 digabung dan dikalibrasi ulang di Actions: 1000 / 1174 / 1382.
 - Meja antar-pemain dipadatkan (kursi lawan dua kolom, bilah aksi menempel di bawah). Tes jendela asli tanpa kompensasi gulir + pemeriksaan `inView` untuk semua meja dan papan.
 - Pekerjaan nanti: bot poker yang lebih kuat (D-064).
-- Tes jendela asli (CI Windows): REV13_E2E
+- Tes jendela asli (CI Windows, run 37252520108): lulus; semua meja (Blackjack, sepuluh meja M5a, tiga meja M5b-1) dan papan catur/Reversi muat tanpa gulir dengan kontrol aksi terlihat; meja enam kursi tanpa kompensasi gulir. Sekali gagal sebelumnya: klik CHECK tidak mengubah meja dalam 15 detik (tidak terulang; diagnosis ditambahkan ke tes). Satu kegagalan lain dari tes catur lama (langkah klik berupa promosi) diperbaiki.
 
 ### 2026-10-02 — M5b-1: Texas Hold'em, Omaha, Teen Patti (SPEC Rev. 12)
 
