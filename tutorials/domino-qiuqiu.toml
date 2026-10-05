@@ -1,0 +1,117 @@
+game = "domino-qiuqiu"
+judul = { id = "Domino QiuQiu: dasar", en = "Domino QiuQiu: basics" }
+
+# Berdua dengan kartu tetap supaya setiap langkah selalu sama (tes tutorial
+# di CI). Dealer kursi 1; kamu kursi 0 dan bertindak dulu.
+[config]
+kursi = 2
+dealer = 1
+dek = [[
+  # Kartu bergantian mulai dari kamu: kamu 6-3 0-0 5-4, lawan 6-6 6-1 5-3;
+  # kartu ke-4: kamu 5-5, lawan 2-0.
+  "6-3", "6-6", "0-0", "6-1", "5-4", "5-3", "5-5", "2-0",
+]]
+
+[man.aturan]
+id = """
+Permainan kartu domino antar-pemain dengan 28 kartu (0-0 sampai 6-6).
+Setiap pemain akhirnya memegang empat kartu yang dibagi menjadi dua
+pasangan. Nilai satu pasangan = jumlah bulatan kedua kartunya, diambil
+angka satuannya (6-3 dan 0-0 = 9; 5-4 dan 5-5 = 19, jadi 9). Pasangan
+tertinggi dibandingkan dulu, lalu pasangan kedua; 9-9 disebut QiuQiu.
+KyuSin memilih pembagian terbaik untukmu secara otomatis.
+
+Kartu spesial mengalahkan semua pasangan, dari yang tertinggi:
+- Enam Dewa: empat kartu yang masing-masing berjumlah 6 (6-0, 5-1, 4-2,
+  3-3).
+- Balak: empat kartu balak (dua sisi sama).
+- Murni Kecil: total bulatan paling banyak 9 (yang lebih kecil menang).
+- Murni Besar: total bulatan paling sedikit 39 (yang lebih besar menang).
+Nilai sama: kartu tunggal tertinggi menang (balak lebih tinggi dari
+non-balak, lalu jumlah bulatan, lalu angka terbesar); masih sama, pot
+dibagi.
+
+Aturan meja ini: ante 10 dari setiap pemain, sampai 6 kursi, buy-in paling
+banyak 2.000 dari saldo (bot 2.000), tanpa rake.
+- Tiga kartu dibagi, lalu putaran taruhan; kartu ke-4 dibagi, lalu putaran
+  taruhan kedua; lalu buka kartu.
+- Pot-Limit: bet paling sedikit 20; raise paling sedikit sebesar raise
+  terakhir; bet atau raise paling besar sebesar pot (setelah call).
+- Pemain yang chipnya tidak cukup bisa all-in; pot dibagi menjadi pot
+  utama dan side pot.
+
+Rating lokal: satu sesi = satu pertandingan melawan level bot, skor =
+bagian bot yang hasil bersihnya di bawahmu. Antar-pemain: tanpa house edge.
+
+Provably fair per sesi: komitmen seed saat duduk, setiap tangan dikocok dari
+seed sesi dan nomor tangan, seed dibuka saat sesi selesai, verify memutar
+ulang semua tangan.
+"""
+en = """
+A player-versus-player domino game with 28 tiles (0-0 to 6-6). Each player
+ends up with four tiles split into two pairs. A pair is worth the total
+pips of its two tiles, keeping only the last digit (6-3 and 0-0 = 9; 5-4
+and 5-5 = 19, so 9). The higher pair is compared first, then the second;
+9-9 is called QiuQiu. KyuSin picks the best split for you automatically.
+
+Special hands beat every pair hand, highest first:
+- Six Gods: four tiles that each total 6 (6-0, 5-1, 4-2, 3-3).
+- Four Doubles: four double tiles.
+- Pure Small: at most 9 pips in total (the smaller total wins).
+- Pure Big: at least 39 pips in total (the bigger total wins).
+Equal values: the highest single tile wins (a double beats a non-double,
+then more pips, then the bigger number); still equal, the pot is split.
+
+This table: an ante of 10 from every player, up to 6 seats, a buy-in of at
+most 2,000 from your balance (bots 2,000), no rake.
+- Three tiles are dealt, then a betting round; the fourth tile is dealt,
+  then a second betting round; then the tiles are shown.
+- Pot-Limit: a bet is at least 20; a raise is at least the last raise; a
+  bet or raise is at most the pot (after calling).
+- A player without enough chips may go all-in; the pot splits into a main
+  pot and side pots.
+
+Local rating: one session = one match against the bot level, scored as the
+share of bots whose net result is below yours. Player versus player: no
+house edge.
+
+Provably fair per session: seed commitment when you sit down, every hand
+shuffled from the session seed and the hand number, the seed revealed when
+the session ends, verify replays every hand.
+"""
+
+[man.kontrol]
+id = """
+Saat giliranmu: [ FOLD ], [ CHECK ] atau [ CALL ], dan [ BET ] atau
+[ RAISE ] dengan jumlah yang disusun lewat [ MIN ], [ ½ POT ], [ POT ],
+[ MAKS ], dan [ −20 ] / [ +20 ]. Di antara tangan: [ LANJUT ] atau
+[ BERDIRI ]. Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+On your turn: [ FOLD ], [ CHECK ] or [ CALL ], and [ BET ] or [ RAISE ]
+with an amount set by [ MIN ], [ ½ POT ], [ POT ], [ MAX ], and
+[ −20 ] / [ +20 ]. Between hands: [ NEXT ] or [ STAND UP ]. Keyboard: the
+arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Semua sudah memasang ante 10. Tiga kartumu: 6-3, 0-0, 5-4. 6-3 dan 0-0 sudah bernilai 9. Bet 20."
+teks.en = "Everyone has posted the ante of 10. Your three tiles: 6-3, 0-0, 5-4. 6-3 and 0-0 already make 9. Bet 20."
+aksi = "bet 20"
+sorot = ["aksi:bet 20"]
+petunjuk.id = "Susun jumlah 20 lalu pilih BET."
+petunjuk.en = "Set the amount to 20, then choose BET."
+
+[[langkah]]
+teks.id = "Lawan call. Kartu ke-4-mu 5-5: 5-4 dan 5-5 = 19, jadi 9. Dua pasangan 9-9: QiuQiu! Bet 40."
+teks.en = "The opponent calls. Your fourth tile is 5-5: 5-4 and 5-5 = 19, so 9. Two nines: QiuQiu! Bet 40."
+sebelum = ["call"]
+aksi = "bet 40"
+sorot = ["aksi:bet 40"]
+petunjuk.id = "Susun jumlah 40 lalu pilih BET."
+petunjuk.en = "Set the amount to 40, then choose BET."
+
+[[langkah]]
+teks.id = "Lawan call. Kartu dibuka: QiuQiu-mu mengalahkan 9-0 lawan, pot 140 untukmu. Seed sesi dibuka saat sesi selesai. Tutorial selesai."
+teks.en = "The opponent calls. The tiles are shown: your QiuQiu beats the opponent's 9-0, and the 140 pot is yours. The session seed is revealed when the session ends. Tutorial finished."
+sebelum = ["call"]

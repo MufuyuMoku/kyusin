@@ -1,5 +1,6 @@
 /**
- * Meja casino antar-pemain M5b-1 (Texas Hold'em, Omaha, Teen Patti): bentuk
+ * Meja casino antar-pemain M5b (Texas Hold'em, Omaha, Teen Patti, Domino
+ * QiuQiu): bentuk
  * `view_data` (lihat `crates/games/src/poker_meja` dan `teen_patti`) dan
  * bantuan untuk kontrol taruhan. Aturan tetap di Rust.
  */
@@ -16,6 +17,8 @@ export interface SeatView {
 	menang: number;
 	terlihat?: boolean;
 	buta_ke?: number;
+	// Domino QiuQiu
+	nilai?: [number, number] | null;
 }
 
 export interface TableView {
@@ -45,6 +48,9 @@ export interface TableView {
 	boot?: number;
 	sideshow?: [number, number] | null;
 	alasan_tangan?: string | null;
+	// Domino QiuQiu
+	ante?: number;
+	putaran?: number;
 }
 
 export function isTableView(v: unknown): v is TableView {
@@ -52,7 +58,7 @@ export function isTableView(v: unknown): v is TableView {
 }
 
 /** Jumlah kartu tangan per kursi untuk tiap game. */
-export const HOLE: Record<string, number> = { 'texas-holdem': 2, omaha: 4, 'teen-patti': 3 };
+export const HOLE: Record<string, number> = { 'texas-holdem': 2, omaha: 4, 'teen-patti': 3, 'domino-qiuqiu': 4 };
 
 /** Total taruhan saat ini (taruhan tertinggi di babak berjalan). */
 export function currentBet(v: TableView): number {

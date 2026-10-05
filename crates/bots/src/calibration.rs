@@ -71,6 +71,10 @@ fn data(game: &str) -> Option<&'static str> {
         }
         kyusin_games::teen_patti::ID => include_str!("../../../data/calibration/teen-patti.json"),
         kyusin_games::omaha::ID => include_str!("../../../data/calibration/omaha.json"),
+        kyusin_games::domino_qiuqiu::ID => {
+            include_str!("../../../data/calibration/domino-qiuqiu.json")
+        }
+        kyusin_games::capsa_susun::ID => include_str!("../../../data/calibration/capsa-susun.json"),
         _ => return None,
     })
 }

@@ -1646,6 +1646,41 @@ mod tests {
         assert_eq!(s.history(None, 10).unwrap().len(), 1);
     }
 
+    /// M5b-2: Capsa Susun (susun serentak) dan Domino QiuQiu memakai jalur
+    /// meja yang sama: buy-in dari saldo, bot menyusun/bertindak, berdiri
+    /// mengembalikan tumpukan, rating dihitung.
+    #[test]
+    fn capsa_and_qiuqiu_tables_buy_in_play_and_stand_up() {
+        for (game, seats) in [("capsa-susun", 4), ("domino-qiuqiu", 6)] {
+            let db = Db::new(game);
+            let st = db.open();
+            start(&st, game.into(), 1, 0, None, None).unwrap();
+            assert_eq!(booked(&st), (8_000, 2_000), "{game}");
+            let mut r = take_running(&st);
+            assert_eq!(r.m.session().seats(), seats, "{game}");
+            let mut guard = 0;
+            while r.m.session().view_data(0)["fase"] != "antara" && guard < 100 {
+                bots_until_human(&st, &mut r);
+                if r.m.session().view_data(0)["fase"] == "antara" {
+                    break;
+                }
+                let neutral = r.m.session().view_data(0)["netral"]
+                    .as_str()
+                    .unwrap()
+                    .to_string();
+                act(&st, &mut r, &neutral).unwrap();
+                guard += 1;
+            }
+            let stack = r.m.session().view_data(0)["kursi"][0]["tumpukan"]
+                .as_i64()
+                .unwrap();
+            act(&st, &mut r, "leave").unwrap();
+            assert!(r.m.session().is_over(), "{game}");
+            assert_eq!(booked(&st), (8_000 + stack, 0), "{game}");
+            assert!(r.rating.is_some(), "{game}");
+        }
+    }
+
     #[test]
     fn a_killed_table_resumes_the_same_hand_and_abandoning_plays_it_out() {
         let db = Db::new("meja-mati");

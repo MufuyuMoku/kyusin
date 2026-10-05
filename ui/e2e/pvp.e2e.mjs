@@ -1,5 +1,5 @@
-// Tes jendela asli meja antar-pemain M5b-1 (SPEC §4, §7, §11; D-063):
-// Texas Hold'em, Omaha, Teen Patti melawan bot level 1. Untuk setiap game:
+// Tes jendela asli meja antar-pemain M5b (SPEC §4, §7, §11; D-063, D-065):
+// Texas Hold'em, Omaha, Teen Patti, Domino QiuQiu melawan bot level 1. Untuk setiap game:
 //  1. duduk: buy-in 2.000 dipindahkan dari saldo (D-059);
 //  2. keselarasan: kotak kartu kursi lawan sejajar per kolom kisi (paling
 //     banyak dua kolom), kotak kartu kursimu sejajar dengan kartu meja, kartu
@@ -20,7 +20,8 @@ import { KEYS } from './webdriver.mjs';
 const GAMES = [
 	{ id: 'texas-holdem', name: "Texas Hold'em", passive: ['[ CHECK ]', '[ CALL · '] },
 	{ id: 'omaha', name: 'Omaha (Pot-Limit)', passive: ['[ CHECK ]', '[ CALL · '] },
-	{ id: 'teen-patti', name: 'Teen Patti', passive: ['[ SHOW · ', '[ CHAAL · '] }
+	{ id: 'teen-patti', name: 'Teen Patti', passive: ['[ SHOW · ', '[ CHAAL · '] },
+	{ id: 'domino-qiuqiu', name: 'Domino QiuQiu', passive: ['[ CHECK ]', '[ CALL · '] }
 ];
 
 const layout = () => {

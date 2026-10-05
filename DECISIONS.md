@@ -586,6 +586,47 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - **Pekerjaan nanti (dicatat, belum dikerjakan):** bot poker (Texas Hold'em, Omaha) yang lebih kuat. Level 3 sekarang = equity Monte Carlo dengan model lawan sederhana; level di atasnya perlu strategi yang jelas lebih kuat (selisih ≥ 100, D-063 mencatat percobaan yang hanya +30).
 - Rujukan: SPEC §4, §8, §12; D-052, D-062, D-063.
 
+### D-065 — M5b-2: aturan lokal Capsa Susun dan Domino QiuQiu (jawaban klien)
+- Tanggal / milestone: 2026-10-05 / M5b-2
+- Diputuskan oleh: klien (semua pilihan di bawah dijawab lewat pertanyaan pilihan; klien memilih rekomendasi di setiap pertanyaan), sesuai D-062 butir 4.
+- Sumber varian yang ditawarkan: ringkasan pencarian aturan Capsa Susun dan Domino QiuQiu di situs panduan dan aplikasi berbahasa Indonesia (peraturan Capsa Susun di Medium/Blogspot; urutan kartu QiuQiu di beberapa panduan "urutan kartu domino QiuQiu"); pilihan yang direkomendasikan adalah yang paling sering muncul.
+- **Capsa Susun** (4 kursi, 13 kartu, baris depan 3 / tengah 5 / belakang 5):
+  - Poin: setiap pemain dibandingkan dengan setiap lawan per baris, 1 poin per baris; seri persis di satu baris = 0 poin (tanpa urutan jenis kartu).
+  - Sapu bersih (menang ketiga baris melawan satu lawan): poin baris dikali dua (6 poin).
+  - Royalti (dibayar lawan yang kalah di baris itu; baris yang kalah atau seri tidak dapat royalti): three of a kind di depan +3; full house di tengah +2; four of a kind di tengah +8, di belakang +4; straight flush di tengah +10, di belakang +5.
+  - Kartu istimewa (13 kartu yang langsung menang tanpa disusun): Naga (A sampai K berurutan) 13 poin; enam pasang, tiga flush, tiga straight masing-masing 3 poin dari setiap lawan. Dua kartu istimewa beradu: yang lebih tinggi menang.
+  - Salah susun dicegah: susunan yang tidak sah (depan ≤ tengah ≤ belakang dilanggar) tidak bisa dikirim; bot selalu sah. Tidak ada penalti karena tidak bisa terjadi.
+  - Straight A-2-3-4-5 adalah straight terendah, 10-J-Q-K-A tertinggi (seperti poker).
+- **Domino QiuQiu** (kartu domino 28, paling banyak **6 kursi**):
+  - Kartu spesial, tertinggi ke terendah: Enam Dewa (empat kartu berjumlah 6: 6/0, 5/1, 4/2, 3/3) > Balak (empat kartu balak) > Murni Kecil (total bulatan ≤ 9) > Murni Besar (total ≥ 39), lalu QiuQiu (9-9) dan pasangan biasa.
+  - Dua putaran taruhan: ante, bagi 3 kartu, putaran taruhan; bagi kartu ke-4, putaran taruhan; buka kartu.
+  - Raise pot-limit.
+  - Nilai dua pasangan sama: bandingkan pasangan tertinggi dulu, lalu kartu tunggal tertinggi (balak lebih tinggi dari non-balak, lalu jumlah bulatan, lalu angka terbesar). Bila masih sama, pot dibagi.
+- Rujukan: SPEC §6.3, §9 (M5b-2); D-062, D-063.
+
+### D-066 — M5b-2: penerapan Capsa Susun, Domino QiuQiu, dan mesin domino
+- Tanggal / milestone: 2026-10-05 / M5b-2
+- Diputuskan oleh: developer (dalam batas D-062, D-063, D-065)
+- **Mesin domino bersama** (`kyusin_games::domino`): set double-six 28 kartu, ditulis `besar-kecil`, dikocok Fisher–Yates dari RNG yang disuntikkan; dipakai Domino QiuQiu sekarang dan Gaple nanti.
+- **Sesi, buy-in, rating:** sama dengan meja M5b-1 (D-063): satu pertandingan = satu sesi meja, buy-in paling banyak 2.000 dari saldo (paling sedikit 400), kartu tiap tangan dikocok dari seed sesi dan nomor tangan, rating Glicko-2 per sesi dengan skor pecahan.
+- **Capsa Susun:**
+  - 2–4 kursi (bawaan 4); 13 kartu dibagi satu per satu mulai kursi setelah dealer; dealer bergilir.
+  - Semua kursi menyusun serentak (`arrange <13 kartu>` berurutan depan, tengah, belakang, atau `auto`); susunan dibuka setelah semua siap. Susunan ditampilkan persis seperti dikirim.
+  - Kartu istimewa diumumkan otomatis: kursi yang memegangnya tidak perlu menyusun. Bila beberapa jenis berlaku, yang tertinggi dipakai. Enam pasang menghitung four of a kind sebagai dua pasang.
+  - 1 poin = 10 chip. Bila yang kalah tidak bisa membayar penuh, ia membayar seluruh tumpukannya dan para pemenang menerima bagian sebanding klaim bersihnya (bulat ke bawah; sisa satu per satu ke klaim terbesar, lalu kursi terkecil). Pembayaran selalu berjumlah nol.
+  - Susunan saran (`auto`, tombol SARAN, aksi netral): belakang lima kartu terbaik, tengah lima kartu terbaik dari sisanya yang tetap sah, depan sisanya.
+  - UI: kursi lawan satu baris 13 slot dalam tiga kelompok; kursimu dua baris (tangan 13 slot tetap, susunan tiga kelompok). Pilih kartu lalu baris tujuannya, pilih kartu di susunan untuk mengembalikannya; SARAN, ULANG, KIRIM, SUSUN OTOMATIS. Sah atau tidaknya diputuskan mesin; perintah yang ditolak kini ditampilkan sebagai pesan di layar pertandingan (berlaku untuk semua game).
+- **Domino QiuQiu:**
+  - Ante 10; bet paling kecil 20; raise paling kecil sebesar raise terakhir; pot-limit; 2–6 kursi (bawaan 6); yang pertama bertindak di setiap putaran = kursi setelah dealer.
+  - Pembagian dua pasangan dipilih otomatis (nilai pasangan tertinggi, lalu kedua). Bila beberapa pembagian bernilai sama, pasangan tertinggi berisi kartu tertinggi. Kartu yang dibuka ditampilkan per pasangan.
+  - Seri di dalam kartu spesial: Murni Kecil = total lebih kecil menang, Murni Besar = total lebih besar menang; selain itu (dan sesudahnya) kartu tunggal tertinggi seperti pasangan biasa. Enam Dewa hanya punya satu kombinasi.
+  - UI memakai meja antar-pemain yang sama dengan poker; kartu domino berupa sprite piksel seukuran kartu remi dan tidak bertumpuk (geser 48 px) karena bulatannya memenuhi kartu.
+- **Bot dan kalibrasi** (antar-bot di GitHub Actions, sesi heads-up 60 tangan, 2.000 sesi per pasangan):
+  - Domino QiuQiu: strategi dasar equity Monte Carlo 400 kali dengan model lawan dan pot odds. Versi awal (level 1 selalu ikut, level 2 ambang tetap) membuat level 3 tidak lebih kuat dari level 2 (≈ −10), karena ruang strateginya sempit. Level dibentuk dari strategi yang sama dengan salah langkah acak 90% / 45% / 0%. Hasil: 1000 / 1185 / 1358 (selisih 185 / 173).
+  - Capsa Susun: strategi dasar menilai semua susunan sah (72.072) dengan peluang tiap baris mengalahkan baris lawan biasa, ditambah royalti dan sapu bersih. Susunan acak dan susunan saran terlalu lemah untuk tangga ≤ 400 (dalam sesi 60 tangan selisih kecil per tangan sudah ratusan poin). Level dibentuk dari campuran per tangan: susunan terbaik 60% / 85% / 100%, sisanya susunan saran. Hasil: 1000 / 1231 / 1413 (selisih 231 / 182).
+  - Semua selisih berurutan 100–400 (SPEC §8 Rev. 10 dan 13).
+- Rujukan: SPEC §4, §6.3, §7, §8; D-059, D-062, D-063, D-065.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya

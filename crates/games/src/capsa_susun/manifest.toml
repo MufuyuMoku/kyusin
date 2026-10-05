@@ -1,0 +1,28 @@
+id = "capsa-susun"
+nama = { id = "Capsa Susun", en = "Capsa Susun" }
+kategori = "casino-meja"
+pemain_min = 2
+pemain_maks = 4
+jenis = "giliran"
+lawan = "bot"
+kompetitif = true
+# Meja LAN menyusul di M9.
+lan = false
+agen = true
+tutorial = "tutorials/capsa-susun.toml"
+
+[[perintah]]
+pola = "arrange <13 kartu>"
+ringkas = { id = "Kirim susunan: 3 kartu depan, 5 tengah, 5 belakang (depan ≤ tengah ≤ belakang)", en = "Submit your arrangement: 3 front, 5 middle, 5 back cards (front ≤ middle ≤ back)" }
+
+[[perintah]]
+pola = "auto"
+ringkas = { id = "Kirim susunan saran", en = "Submit the suggested arrangement" }
+
+[[perintah]]
+pola = "next"
+ringkas = { id = "Lanjut ke tangan berikutnya", en = "Continue to the next hand" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berdiri di antara tangan; tumpukan kembali ke saldo", en = "Stand up between hands; your stack goes back to your balance" }

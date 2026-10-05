@@ -1,6 +1,7 @@
 <!--
-  Meja antar-pemain M5b-1 (SPEC §4, §6.3): Texas Hold'em, Omaha, Teen
-  Patti. Supaya meja enam kursi muat di jendela bawaan tanpa gulir (SPEC §4
+  Meja antar-pemain M5b (SPEC §4, §6.3): Texas Hold'em, Omaha, Teen Patti,
+  dan Domino QiuQiu (kartu domino tidak bertumpuk karena bulatannya memenuhi
+  kartu). Supaya meja enam kursi muat di jendela bawaan tanpa gulir (SPEC §4
   Rev. 13), kursi lawan diringkas dalam kisi dua kolom (kartu + dua baris
   keterangan), lalu kartu meja (poker), kursimu, pot, dan bilah aksi yang
   menempel di bawah. Kartu berslot tetap diposisikan absolut; kartu baru,
@@ -12,6 +13,7 @@
 	import { t, type Key } from '$lib/i18n.svelte';
 	import PixelSprite from './PixelSprite.svelte';
 	import { cardPixels } from './cards';
+	import { dominoPixels } from './domino';
 	import { BOARD_OFFSET, HOLE, OFFSET, currentBet, isTableView, presets } from './meja_pvp';
 
 	let {
@@ -34,6 +36,9 @@
 
 	const v = $derived(isTableView(view) ? view : null);
 	const teen = $derived(game === 'teen-patti');
+	const qq = $derived(game === 'domino-qiuqiu');
+	const pix = (c: string) => (qq ? dominoPixels(c) : cardPixels(c));
+	const off = $derived(qq ? BOARD_OFFSET : OFFSET);
 	const hole = $derived(HOLE[game] ?? 2);
 	const can = (usage: string) => interactive && actions.includes(usage);
 	const lit = (cmd: string) => highlight.has(cmd);
@@ -74,7 +79,8 @@
 		const k = v!.kursi[i];
 		const parts = [t(`pk.status.${k.status}` as Key)];
 		if (teen && k.status === 'aktif') parts.push(t(k.terlihat ? 'pk.seen' : 'pk.blind'));
-		if (k.tangan) parts.push(t(`mj.hand.${k.tangan}` as Key));
+		if (k.tangan && qq) parts.push(t(`pk.qq.${k.tangan}` as Key, { a: k.nilai?.[0] ?? 0, b: k.nilai?.[1] ?? 0 }));
+		else if (k.tangan) parts.push(t(`mj.hand.${k.tangan}` as Key));
 		return parts;
 	}
 
@@ -101,11 +107,11 @@
 
 {#if v}
 	{#snippet hand(i: number)}
-		<div class="hand" data-row={`kursi-${i}`} style:width={`calc(${(hole - 1) * OFFSET}px + var(--card-w) + 1ch)`}>
+		<div class="hand" data-row={`kursi-${i}`} style:width={`calc(${(hole - 1) * off}px + var(--card-w) + 1ch)`}>
 			<div class="cards">
 				{#each v!.kursi[i].kartu as c, j (j)}
-					<span class="card" data-card={c} style:left={`${j * OFFSET}px`}>
-						<PixelSprite pixels={cardPixels(c)} size={2} />
+					<span class="card" data-card={c} style:left={`${j * off}px`}>
+						<PixelSprite pixels={pix(c)} size={2} />
 					</span>
 				{/each}
 			</div>
@@ -117,7 +123,7 @@
 			{#each others as i (i)}
 				<div class="seat mini" data-seat={i}>
 					{@render hand(i)}
-					<div class="meta" class:dim={out(i)}>
+					<div class="meta" class:narrow={qq} class:dim={out(i)}>
 						<p class="line"><span class="dim">{seatName(i)}</span>{#if marks(i)}<span class="marks">{marks(i)}</span>{/if} · {statusParts(i).join(' · ')}</p>
 						<p class="line">{chipParts(i).join(' · ')}</p>
 					</div>
@@ -125,7 +131,7 @@
 			{/each}
 		</div>
 
-		{#if !teen}
+		{#if !teen && !qq}
 			<div class="row">
 				<span class="label dim">{t('pk.board')}</span>
 				<div class="hand" data-row="meja" style:width={`calc(${4 * BOARD_OFFSET}px + var(--card-w) + 1ch)`}>
@@ -148,7 +154,9 @@
 
 		<div class="row info dim">
 			<span>{t('pk.pot', { n: v.pot })}</span>
-			{#if teen}<span>{t('pk.stake', { n: v.stake ?? 0 })}</span>{:else}<span
+			{#if teen}<span>{t('pk.stake', { n: v.stake ?? 0 })}</span>{:else if qq}<span>{t('pk.ante', { n: v.ante ?? 0 })}</span><span
+					>{t('pk.round', { n: v.putaran ?? 1 })}</span
+				>{:else}<span
 					>{t('pk.blinds', { sb: v.blind?.[0] ?? 0, bb: v.blind?.[1] ?? 0 })}</span
 				>{/if}
 			<span>{t('pk.hand_no', { n: v.tangan_ke })}</span>
@@ -250,6 +258,9 @@
 	}
 	.meta .line {
 		width: auto;
+	}
+	.meta.narrow {
+		width: 26ch;
 	}
 	.label {
 		width: 12ch;

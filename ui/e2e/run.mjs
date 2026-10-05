@@ -24,6 +24,7 @@ import { run as chess } from './chess.e2e.mjs';
 import { run as blackjack } from './blackjack.e2e.mjs';
 import { run as meja } from './meja.e2e.mjs';
 import { run as pvp } from './pvp.e2e.mjs';
+import { run as capsa } from './capsa.e2e.mjs';
 import { run as pause } from './pause.e2e.mjs';
 import { run as profile } from './profile.e2e.mjs';
 import { Session } from './webdriver.mjs';
@@ -156,8 +157,10 @@ try {
 		await blackjack(s, artifacts, log);
 		console.log('meja casino M5a (jendela asli):');
 		await meja(s, artifacts, log);
-		console.log('meja antar-pemain M5b-1 (jendela asli):');
+		console.log('meja antar-pemain M5b (jendela asli):');
 		await pvp(s, artifacts, log);
+		console.log('meja Capsa Susun M5b-2 (jendela asli):');
+		await capsa(s, artifacts, log);
 		console.log('profil dan statistik (jendela asli):');
 		await profile(s, artifacts, log);
 	} catch (e) {

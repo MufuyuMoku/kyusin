@@ -71,6 +71,13 @@ impl Value {
         Value(v)
     }
 
+    /// Nilai dari kategori dan peringkat penentu (as = 14), misalnya untuk
+    /// baris tiga kartu Capsa Susun yang dibandingkan dengan baris lima
+    /// kartu.
+    pub fn from_parts(cat: Category, ranks: &[u8]) -> Value {
+        Value::new(cat, ranks)
+    }
+
     pub fn category(self) -> Category {
         Category::ALL[(self.0 >> 20) as usize]
     }
