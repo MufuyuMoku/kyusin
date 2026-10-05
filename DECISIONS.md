@@ -625,6 +625,7 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
   - Domino QiuQiu: strategi dasar equity Monte Carlo 400 kali dengan model lawan dan pot odds. Versi awal (level 1 selalu ikut, level 2 ambang tetap) membuat level 3 tidak lebih kuat dari level 2 (≈ −10), karena ruang strateginya sempit. Level dibentuk dari strategi yang sama dengan salah langkah acak 90% / 45% / 0%. Hasil: 1000 / 1185 / 1358 (selisih 185 / 173).
   - Capsa Susun: strategi dasar menilai semua susunan sah (72.072) dengan peluang tiap baris mengalahkan baris lawan biasa, ditambah royalti dan sapu bersih. Susunan acak dan susunan saran terlalu lemah untuk tangga ≤ 400 (dalam sesi 60 tangan selisih kecil per tangan sudah ratusan poin). Level dibentuk dari campuran per tangan: susunan terbaik 60% / 85% / 100%, sisanya susunan saran. Hasil: 1000 / 1231 / 1413 (selisih 231 / 182).
   - Semua selisih berurutan 100–400 (SPEC §8 Rev. 10 dan 13).
+- Layar pertandingan: perintah dari papan/meja yang sedang dikirim ditandai (`data-act`) dan klik kedua diabaikan sampai host menjawab, supaya perintah tidak terkirim dua kali. Ditambahkan saat menyelidiki klik CHECK yang sesekali tidak berefek di tes jendela asli (penyebabnya belum terbukti; tes kini merekam event klik).
 - Rujukan: SPEC §4, §6.3, §7, §8; D-059, D-062, D-063, D-065.
 
 ## Pertanyaan terbuka

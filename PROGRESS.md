@@ -62,7 +62,8 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 - Mesin: `domino` (bersama Gaple nanti), `domino_qiuqiu`, `capsa_susun`; tutorial keduanya; tes host (buy-in, main, berdiri, rating).
 - Bot 3 level, kalibrasi antar-bot di GitHub Actions: Domino QiuQiu 1000 / 1185 / 1358; Capsa Susun 1000 / 1231 / 1413 (selisih 231 / 182).
 - UI: meja Capsa Susun (pilih kartu, pindah ke baris, saran, kirim, susun otomatis), kartu domino piksel di meja antar-pemain, pesan untuk perintah yang ditolak. Kedua meja muat di jendela bawaan tanpa gulir (diukur di peramban dengan backend tiruan sementara, tidak di-commit; dibuktikan tes jendela asli).
-- Tes: 318 tes Rust, 42 tes UI. Tes jendela asli (CI Windows): E2E_RESULT
+- Tes: 318 tes Rust, 42 tes UI. Tes jendela asli (CI Windows, run 37272840314): lulus; Domino QiuQiu (buy-in, selaras, 9 kontrol tanpa geser, satu tangan, berdiri, verify, rating) dan Capsa Susun (buy-in, selaras dan muat tanpa gulir, 20 tombol tanpa geser, pindah/kembalikan kartu tanpa geser, saran dan kirim, susunan dibuka, tema P3/P4, berdiri, verify, rating). Sebelumnya: clippy CI yang lebih baru (sort_by_key), meja Capsa 40 px terlalu lebar (keterangan 48ch → 40ch), dan balapan di tes ronde berikutnya M5a; semua diperbaiki.
+- Klik CHECK yang sesekali tidak berefek di tes meja poker (3 dari 7 run sejak Rev. 13; tombol aktif, giliranmu, tanpa pesan, tidak terulang di run terakhir): penyebab belum terbukti. Bukan bilah sticky (sudah dicabut, masih terjadi sekali). Sekarang perintah yang sedang dikirim ditandai dan klik kedua diabaikan, dan tes merekam event klik bila terulang.
 - Belum/sisa: meja LAN (M9); kalibrasi dari sesi heads-up.
 - Langkah berikutnya: M6 sesuai SPEC §9.
 
