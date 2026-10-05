@@ -3,8 +3,7 @@
   dan Domino QiuQiu (kartu domino tidak bertumpuk karena bulatannya memenuhi
   kartu). Supaya meja enam kursi muat di jendela bawaan tanpa gulir (SPEC §4
   Rev. 13), kursi lawan diringkas dalam kisi dua kolom (kartu + dua baris
-  keterangan), lalu kartu meja (poker), kursimu, pot, dan bilah aksi yang
-  menempel di bawah. Kartu berslot tetap diposisikan absolut; kartu baru,
+  keterangan), lalu kartu meja (poker), kursimu, pot, dan bilah aksi. Kartu berslot tetap diposisikan absolut; kartu baru,
   hover, fokus, dan penanda giliran (lapisan garis tepi) tidak menggeser apa
   pun. Yang dikirim selalu perintah teks.
 -->
@@ -309,11 +308,7 @@
 		white-space: nowrap;
 		overflow: hidden;
 	}
-	/* Bilah aksi menempel di bawah area gulir (SPEC §4 Rev. 13). */
 	.controls {
-		position: sticky;
-		bottom: 0;
-		background: var(--bg);
 		display: flex;
 		flex-direction: column;
 		gap: calc(var(--cell-h) / 3);

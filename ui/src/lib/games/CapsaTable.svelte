@@ -286,11 +286,7 @@
 		white-space: nowrap;
 		overflow: hidden;
 	}
-	/* Bilah aksi menempel di bawah area gulir (SPEC §4 Rev. 13). */
 	.controls {
-		position: sticky;
-		bottom: 0;
-		background: var(--bg);
 		display: flex;
 		flex-direction: column;
 		gap: calc(var(--cell-h) / 3);
