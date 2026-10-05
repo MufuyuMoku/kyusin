@@ -14,6 +14,8 @@ pub mod caribbean_stud;
 pub mod casino_holdem;
 pub mod casino_war;
 pub mod catur;
+pub mod domino;
+pub mod domino_qiuqiu;
 pub mod dragon_tiger;
 pub mod fixture;
 pub mod let_it_ride;
@@ -48,6 +50,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(texas_holdem::cartridge()?)?;
     registry.register(omaha::cartridge()?)?;
     registry.register(teen_patti::cartridge()?)?;
+    registry.register(domino_qiuqiu::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

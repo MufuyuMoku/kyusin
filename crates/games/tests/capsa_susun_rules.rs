@@ -25,7 +25,9 @@ use kyusin_games::cards::Card;
 use serde_json::{Value, json};
 
 fn cards(text: &str) -> Vec<Card> {
-    text.split_whitespace().map(|c| c.parse().unwrap()).collect()
+    text.split_whitespace()
+        .map(|c| c.parse().unwrap())
+        .collect()
 }
 
 fn hand(front: &str, mid: &str, back: &str) -> Hand {
@@ -42,13 +44,29 @@ fn rows_compare_across_three_and_five_cards() {
     assert_eq!(front_value(&cards("Ah Kh Qh")).key(), "high_card");
     assert_eq!(front_value(&cards("Qs Qh Qd")).key(), "trips");
     // Pair 8 dengan kicker K di depan ≤ pair 8 K 5 3 di tengah.
-    assert!(valid(&cards("8s 8h Kd"), &cards("8c 8d Kc 5s 3h"), &cards("Ah Ad 2c 2d 9s")));
+    assert!(valid(
+        &cards("8s 8h Kd"),
+        &cards("8c 8d Kc 5s 3h"),
+        &cards("Ah Ad 2c 2d 9s")
+    ));
     // Pair 8 kicker A di depan > pair 8 kicker K di tengah: salah susun.
-    assert!(!valid(&cards("8s 8h Ad"), &cards("8c 8d Kc 5s 3h"), &cards("Ah Kd 2c 2d 9s")));
+    assert!(!valid(
+        &cards("8s 8h Ad"),
+        &cards("8c 8d Kc 5s 3h"),
+        &cards("Ah Kd 2c 2d 9s")
+    ));
     // Trips di depan > two pair di tengah: salah susun.
-    assert!(!valid(&cards("Qs Qh Qd"), &cards("8c 8d Kc Ks 3h"), &cards("Ah Ad Ac 2d 2s")));
+    assert!(!valid(
+        &cards("Qs Qh Qd"),
+        &cards("8c 8d Kc Ks 3h"),
+        &cards("Ah Ad Ac 2d 2s")
+    ));
     // Tengah lebih kuat dari belakang: salah susun.
-    assert!(!valid(&cards("2s 3h 4d"), &cards("5h 6h 7h 8h 9h"), &cards("Ac Jc 8c 6c 5c")));
+    assert!(!valid(
+        &cards("2s 3h 4d"),
+        &cards("5h 6h 7h 8h 9h"),
+        &cards("Ac Jc 8c 6c 5c")
+    ));
     // Wheel = straight terendah.
     assert!(row_value(&cards("Ah 2d 3c 4s 5h")) < row_value(&cards("2h 3d 4c 5s 6h")));
     assert!(row_value(&cards("Ah 2d 3c 4s 5h")) > row_value(&cards("Ah Ad Ac 2d 9s")));
@@ -106,15 +124,24 @@ fn special_hands() {
     assert_eq!(versus(&Hand::Special(Special::Naga), &normal), 13);
     assert_eq!(versus(&normal, &Hand::Special(Special::TigaFlush)), -3);
     assert_eq!(
-        versus(&Hand::Special(Special::Naga), &Hand::Special(Special::EnamPasang)),
+        versus(
+            &Hand::Special(Special::Naga),
+            &Hand::Special(Special::EnamPasang)
+        ),
         13
     );
     assert_eq!(
-        versus(&Hand::Special(Special::TigaFlush), &Hand::Special(Special::TigaStraight)),
+        versus(
+            &Hand::Special(Special::TigaFlush),
+            &Hand::Special(Special::TigaStraight)
+        ),
         3
     );
     assert_eq!(
-        versus(&Hand::Special(Special::TigaFlush), &Hand::Special(Special::TigaFlush)),
+        versus(
+            &Hand::Special(Special::TigaFlush),
+            &Hand::Special(Special::TigaFlush)
+        ),
         0
     );
 }
@@ -231,9 +258,16 @@ fn arranging_scoring_and_the_session() {
     assert_eq!(v["kursi"][1]["tumpukan"], 1850);
     assert_eq!(
         v["kursi"][1]["baris"],
-        json!([["Ah", "Kd", "3c"], ["5h", "6h", "7h", "8h", "9c"], ["Ac", "Jc", "8c", "6c", "5c"]])
+        json!([
+            ["Ah", "Kd", "3c"],
+            ["5h", "6h", "7h", "8h", "9c"],
+            ["Ac", "Jc", "8c", "6c", "5c"]
+        ])
     );
-    assert_eq!(v["kursi"][0]["nama_baris"], json!(["trips", "full_house", "quads"]));
+    assert_eq!(
+        v["kursi"][0]["nama_baris"],
+        json!(["trips", "full_house", "quads"])
+    );
     assert_eq!(v["netral"], "leave");
     act(&mut g, 1, "next");
     act(&mut g, 0, "leave");
@@ -241,7 +275,12 @@ fn arranging_scoring_and_the_session() {
     assert_eq!(v["fase"], "selesai");
     assert_eq!(v["bersih"], 150);
     assert_eq!(TurnGame::result(&g).unwrap().scores.iter().sum::<i64>(), 0);
-    for cmd in ["auto", "next", "leave", "arrange Qs Qh Qd 9s 9h 9d 4c 4h 2c 2d 2h 2s 7c"] {
+    for cmd in [
+        "auto",
+        "next",
+        "leave",
+        "arrange Qs Qh Qd 9s 9h 9d 4c 4h 2c 2d 2h 2s 7c",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }
@@ -265,10 +304,29 @@ fn special_hands_are_declared_automatically() {
 fn hands_are_dealt_from_the_session_seed() {
     let mk = |seed: u8| Capsa::new(Config::default(), [seed; 32]).unwrap();
     let (a, b, c) = (mk(1), mk(1), mk(2));
-    assert_eq!(view(&a, 0)["kursi"][0]["kartu"], view(&b, 0)["kursi"][0]["kartu"]);
-    assert_ne!(view(&a, 0)["kursi"][0]["kartu"], view(&c, 0)["kursi"][0]["kartu"]);
-    assert_eq!(view(&a, 0)["kursi"].as_array().unwrap().len(), 4, "bawaan 4 kursi");
-    assert!(Capsa::new(Config { kursi: Some(5), ..Config::default() }, [0; 32]).is_err());
+    assert_eq!(
+        view(&a, 0)["kursi"][0]["kartu"],
+        view(&b, 0)["kursi"][0]["kartu"]
+    );
+    assert_ne!(
+        view(&a, 0)["kursi"][0]["kartu"],
+        view(&c, 0)["kursi"][0]["kartu"]
+    );
+    assert_eq!(
+        view(&a, 0)["kursi"].as_array().unwrap().len(),
+        4,
+        "bawaan 4 kursi"
+    );
+    assert!(
+        Capsa::new(
+            Config {
+                kursi: Some(5),
+                ..Config::default()
+            },
+            [0; 32]
+        )
+        .is_err()
+    );
 }
 
 /// Properti: total chip meja tidak pernah berubah (SPEC §7 poin 1), juga
@@ -298,7 +356,12 @@ fn chips_are_conserved_under_random_play() {
                 if rng.below(2) == 0 {
                     "auto".to_string()
                 } else {
-                    let s: Vec<&str> = v["saran"].as_array().unwrap().iter().map(|c| c.as_str().unwrap()).collect();
+                    let s: Vec<&str> = v["saran"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|c| c.as_str().unwrap())
+                        .collect();
                     format!("arrange {}", s.join(" "))
                 }
             } else {

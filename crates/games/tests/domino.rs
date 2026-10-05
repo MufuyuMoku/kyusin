@@ -32,7 +32,10 @@ fn tiles_parse_in_either_order_and_print_high_first() {
     }
     let json = serde_json::to_string(&Tile::new(5, 2)).unwrap();
     assert_eq!(json, "\"5-2\"");
-    assert_eq!(serde_json::from_str::<Tile>(&json).unwrap(), Tile::new(5, 2));
+    assert_eq!(
+        serde_json::from_str::<Tile>(&json).unwrap(),
+        Tile::new(5, 2)
+    );
 }
 
 #[test]

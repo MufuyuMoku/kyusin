@@ -22,7 +22,9 @@ use kyusin_games::domino_qiuqiu::{Config, QiuQiu, QqClass, eval};
 use serde_json::Value;
 
 fn tiles(text: &str) -> Vec<Tile> {
-    text.split_whitespace().map(|t| t.parse().unwrap()).collect()
+    text.split_whitespace()
+        .map(|t| t.parse().unwrap())
+        .collect()
 }
 
 fn qq(seats: u8, dealer: u8, deck: &[&str]) -> QiuQiu {
@@ -102,8 +104,8 @@ fn the_best_split_is_chosen_automatically() {
     assert_eq!((a[0].pips() + a[1].pips()) % 10, 9);
     assert_eq!((b[0].pips() + b[1].pips()) % 10, 5);
     // Pasangan tertinggi menentukan lebih dulu: 9-0 > 8-8.
-    assert!(eval(&tiles("6-6 6-1 5-3 2-0")) > eval(&tiles("4-4 4-0 6-2 0-0")));
-    assert_eq!(eval(&tiles("4-4 4-0 6-2 0-0")).pairs(), (8, 8));
+    assert!(eval(&tiles("6-6 6-1 5-3 2-0")) > eval(&tiles("4-4 0-0 6-2 5-5")));
+    assert_eq!(eval(&tiles("4-4 0-0 6-2 5-5")).pairs(), (8, 8));
     assert!(eval(&tiles("6-3 0-0 5-4 6-2")) > eval(&tiles("6-3 0-0 5-4 6-1")));
 }
 
@@ -141,16 +143,30 @@ fn ante_three_tiles_two_rounds_and_showdown() {
     assert_eq!(v["ante"], 10);
     assert_eq!(v["pot"], 20);
     assert_eq!(stacks(&v), vec![1990, 1990]);
-    assert_eq!(v["kursi"][1]["kartu"], serde_json::json!(["6-3", "0-0", "5-4"]));
-    assert_eq!(v["kursi"][0]["kartu"], serde_json::json!(["??", "??", "??"]));
-    assert_eq!(TurnGame::pending_players(&g), vec![1], "kursi setelah dealer");
+    assert_eq!(
+        v["kursi"][1]["kartu"],
+        serde_json::json!(["6-3", "0-0", "5-4"])
+    );
+    assert_eq!(
+        v["kursi"][0]["kartu"],
+        serde_json::json!(["??", "??", "??"])
+    );
+    assert_eq!(
+        TurnGame::pending_players(&g),
+        vec![1],
+        "kursi setelah dealer"
+    );
     assert_eq!(legal(&g, 1), vec!["fold", "check", "bet <jumlah>"]);
     assert_eq!(v["naik_min"], 20);
     assert_eq!(v["naik_maks"], 20, "pot-limit: paling besar sebesar pot");
     act(&mut g, 1, "bet 20");
     act(&mut g, 0, "call");
     let v = view(&g, 1);
-    assert_eq!(v["kursi"][1]["kartu"].as_array().unwrap().len(), 4, "kartu ke-4");
+    assert_eq!(
+        v["kursi"][1]["kartu"].as_array().unwrap().len(),
+        4,
+        "kartu ke-4"
+    );
     assert_eq!(v["kursi"][0]["kartu"].as_array().unwrap().len(), 4);
     assert_eq!(v["putaran"], 2);
     assert_eq!(TurnGame::pending_players(&g), vec![1]);
@@ -163,7 +179,10 @@ fn ante_three_tiles_two_rounds_and_showdown() {
     assert_eq!(v["kursi"][0]["tangan"], "pasangan");
     assert_eq!(v["kursi"][0]["nilai"], serde_json::json!([9, 0]));
     // Kartu yang dibuka disusun per pasangan, pasangan tertinggi dulu.
-    assert_eq!(v["kursi"][0]["kartu"], serde_json::json!(["6-6", "6-1", "5-3", "2-0"]));
+    assert_eq!(
+        v["kursi"][0]["kartu"],
+        serde_json::json!(["6-6", "6-1", "5-3", "2-0"])
+    );
     assert_eq!(v["kursi"][1]["menang"], 60);
 }
 
@@ -175,13 +194,19 @@ fn pot_limit_raise_bounds() {
     let mut g = qq(3, 0, &deck);
     let v = view(&g, 1);
     assert_eq!(v["pot"], 30);
-    assert_eq!((v["naik_min"].as_i64(), v["naik_maks"].as_i64()), (Some(20), Some(30)));
+    assert_eq!(
+        (v["naik_min"].as_i64(), v["naik_maks"].as_i64()),
+        (Some(20), Some(30))
+    );
     act(&mut g, 1, "bet 20");
     let v = view(&g, 2);
     assert_eq!(v["panggil"], 20);
     assert_eq!(legal(&g, 2), vec!["fold", "call", "raise <jumlah>"]);
     // Raise paling kecil 20 + 20; paling besar 20 + (50 + 20).
-    assert_eq!((v["naik_min"].as_i64(), v["naik_maks"].as_i64()), (Some(40), Some(90)));
+    assert_eq!(
+        (v["naik_min"].as_i64(), v["naik_maks"].as_i64()),
+        (Some(40), Some(90))
+    );
     assert!(Session::act(&mut g, 2, "raise 91").is_err());
     act(&mut g, 2, "raise 90");
     assert_eq!(view(&g, 0)["panggil"], 90);
@@ -195,7 +220,11 @@ fn folding_down_to_one_wins_without_showing() {
     let v = view(&g, 0);
     assert_eq!(v["fase"], "antara");
     assert_eq!(stacks(&v), vec![1990, 2010]);
-    assert_eq!(v["kursi"][1]["kartu"], serde_json::json!(["??", "??", "??"]), "tidak dibuka");
+    assert_eq!(
+        v["kursi"][1]["kartu"],
+        serde_json::json!(["??", "??", "??"]),
+        "tidak dibuka"
+    );
     assert_eq!(v["kursi"][1]["tangan"], Value::Null);
 }
 
@@ -219,7 +248,9 @@ fn session_and_contract() {
     assert_eq!(v["bersih"], -10);
     let r = TurnGame::result(&g).unwrap();
     assert_eq!(r.scores.iter().sum::<i64>(), 0);
-    for cmd in ["fold", "check", "call", "bet 20", "raise 40", "next", "leave"] {
+    for cmd in [
+        "fold", "check", "call", "bet 20", "raise 40", "next", "leave",
+    ] {
         let a = g.parse_command(cmd).unwrap();
         assert_eq!(g.format_action(&a), cmd);
     }
@@ -240,9 +271,24 @@ fn a_new_hand_is_dealt_from_the_session_seed() {
         .unwrap()
     };
     let (a, b, c) = (mk(1), mk(1), mk(2));
-    assert_eq!(view(&a, 1)["kursi"][1]["kartu"], view(&b, 1)["kursi"][1]["kartu"]);
-    assert_ne!(view(&a, 1)["kursi"][1]["kartu"], view(&c, 1)["kursi"][1]["kartu"]);
-    assert!(QiuQiu::new(Config { kursi: Some(7), ..Config::default() }, [0; 32]).is_err());
+    assert_eq!(
+        view(&a, 1)["kursi"][1]["kartu"],
+        view(&b, 1)["kursi"][1]["kartu"]
+    );
+    assert_ne!(
+        view(&a, 1)["kursi"][1]["kartu"],
+        view(&c, 1)["kursi"][1]["kartu"]
+    );
+    assert!(
+        QiuQiu::new(
+            Config {
+                kursi: Some(7),
+                ..Config::default()
+            },
+            [0; 32]
+        )
+        .is_err()
+    );
 }
 
 /// Properti: total chip meja tidak pernah berubah (SPEC §7 poin 1).
