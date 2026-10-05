@@ -51,12 +51,19 @@
 	// Perintah dari papan/meja yang ditolak mesin (misalnya susunan Capsa
 	// yang tidak sah) ditampilkan, bukan diabaikan diam-diam.
 	let actError = $state<string | null>(null);
+	// Perintah yang sedang menunggu jawaban host: klik kedua diabaikan
+	// supaya perintah tidak terkirim dua kali (juga terbaca tes jendela asli).
+	let sending = $state<string | null>(null);
 	async function play(cmd: string) {
+		if (sending) return;
+		sending = cmd;
 		try {
 			await matchAct(cmd);
 			actError = null;
 		} catch (e) {
 			actError = e && typeof e === 'object' && 'id' in e ? L(e as Parameters<typeof L>[0]) : String(e);
+		} finally {
+			sending = null;
 		}
 	}
 
@@ -85,7 +92,7 @@
 </script>
 
 {#if m}
-	<div class="match">
+	<div class="match" data-act={sending}>
 		{#if paused}
 			<PauseMenu house={house || table} canLeave={usages.includes('leave')} />
 		{/if}

@@ -95,6 +95,17 @@ async function sweepControls(s, when) {
 
 async function press(s, label) {
 	const before = await s.exec(() => document.querySelector('.table')?.innerText ?? '');
+	// Perekam event untuk diagnosis bila klik tidak berefek.
+	await s.exec(() => {
+		const log = (window.__e2eEvents = []);
+		const t0 = performance.now();
+		const where = (el) => (el instanceof Element ? `${el.tagName}:${el.textContent.trim().slice(0, 16)}` : String(el));
+		if (!window.__e2eRecorder) {
+			window.__e2eRecorder = true;
+			for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click'])
+				document.addEventListener(type, (e) => window.__e2eEvents?.push(`${Math.round(performance.now() - t0)} ${type} ${where(e.target)} (${e.clientX},${e.clientY}) d${e.detail}`), true);
+		}
+	});
 	await s.click(await s.find('xpath', `//div[contains(@class,'controls')]//button[normalize-space(.)="${label}"]`));
 	try {
 		await s.waitFor((b) => (document.querySelector('.table')?.innerText ?? '') !== b, `meja berubah setelah ${label}`, 15000, before);
@@ -102,7 +113,9 @@ async function press(s, label) {
 		const why = await s.exec(() => ({
 			text: document.querySelector('.table')?.innerText,
 			buttons: [...document.querySelectorAll('.table .controls button')].map((b) => `${b.textContent.trim()}${b.getAttribute('aria-disabled') ? ' (nonaktif)' : ''}`),
-			active: document.activeElement?.textContent?.trim(),
+			active: `${document.activeElement?.tagName}:${document.activeElement?.textContent?.trim().slice(0, 30)}`,
+			sending: document.querySelector('.match')?.dataset.act ?? null,
+			events: window.__e2eEvents ?? [],
 			alert: [...document.querySelectorAll('[role="alert"], .error')].map((a) => a.textContent.trim()),
 			status: document.querySelector('.match [role="status"]')?.textContent.trim()
 		}));
