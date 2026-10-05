@@ -14,7 +14,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fail, inView, resetToMenu, tableSig, theme } from './helpers.mjs';
+import { changedSince, fail, inView, resetToMenu, tableSig, theme } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 /** Posisi dan ukuran elemen meja yang harus diam. */
@@ -63,7 +63,7 @@ const state = () => {
 async function press(s, label) {
 	const before = await s.exec(tableSig);
 	await s.click(await s.find('xpath', `//div[contains(@class,'controls')]//button[normalize-space(.)='${label}']`));
-	await s.waitFor((b) => tableSig() !== b, `meja berubah setelah ${label}`, 10000, before);
+	await s.waitFor(changedSince, `meja berubah setelah ${label}`, 10000, before);
 }
 
 /** Keselarasan statis meja. */

@@ -22,6 +22,13 @@ export const tableSig = () => {
 	return `${t?.dataset.fase}|${cards}|${t?.innerText ?? ''}`;
 };
 
+/** Syarat tunggu: tanda meja berbeda dari `before` (mandiri, dijalankan di halaman). */
+export const changedSince = (before) => {
+	const t = document.querySelector('.table');
+	const cards = [...(t?.querySelectorAll('[data-card]') ?? [])].map((c) => c.dataset.card).join(',');
+	return `${t?.dataset.fase}|${cards}|${t?.innerText ?? ''}` !== before;
+};
+
 /**
  * SPEC §4 Rev. 13: meja/papan dan kontrol aksi muat di jendela bawaan tanpa
  * gulir. Setiap elemen yang cocok dengan `selectors` harus seluruhnya berada

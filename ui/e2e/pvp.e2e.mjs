@@ -14,7 +14,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fail, inView, resetToMenu, tableSig, theme } from './helpers.mjs';
+import { changedSince, fail, inView, resetToMenu, tableSig, theme } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 const GAMES = [
@@ -160,7 +160,7 @@ async function press(s, label) {
 	);
 	await s.click(target);
 	try {
-		await s.waitFor((b) => tableSig() !== b, `meja berubah setelah ${label}`, 15000, before);
+		await s.waitFor(changedSince, `meja berubah setelah ${label}`, 15000, before);
 		// Bukti D-067: perubahan yang hanya terlihat dari kartu/fase, bukan teks.
 		const after = await s.exec(tableSig);
 		const text = (sig) => sig.split('|').slice(2).join('|');
