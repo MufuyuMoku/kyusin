@@ -155,12 +155,16 @@ fn by_rank(mut pair: [Tile; 2]) -> [Tile; 2] {
     pair
 }
 
+/// Calon pembagian: nilai dua pasangan, pasangan tertinggi berisi kartu
+/// tertinggi, dan pasangannya.
+type SplitChoice = ((u8, u8), bool, [[Tile; 2]; 2]);
+
 /// Pembagian terbaik empat kartu menjadi dua pasangan.
 fn best_split(t: &[Tile; 4]) -> ((u8, u8), [[Tile; 2]; 2]) {
     let top = (0..4)
         .max_by_key(|&i| tile_rank(t[i]))
         .expect("empat kartu");
-    let mut best: Option<((u8, u8), bool, [[Tile; 2]; 2])> = None;
+    let mut best: Option<SplitChoice> = None;
     for partner in 1..4 {
         let rest: Vec<usize> = (1..4).filter(|&i| i != partner).collect();
         let a = [t[0], t[partner]];

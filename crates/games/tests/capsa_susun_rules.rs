@@ -92,7 +92,8 @@ fn rows_scoop_and_royalties() {
     // Seri persis di satu baris = 0 dan bukan sapu bersih.
     let g = hand("2s 3h 4d", "5s 5h 7d 8c 9h", "Ts Th Td 3c 3d");
     let h = hand("2c 3d 4h", "4s 4c 7c 8d 9d", "Js Jh Jd 5c 5d");
-    assert_eq!(versus(&h, &g), 0 + -1 + 1);
+    // Depan seri (0), tengah kalah (−1), belakang menang (+1).
+    assert_eq!(versus(&h, &g), 0);
     let i = hand("2c 3c 4h", "6s 6h 7c 8d 9d", "Js Jh Jd 4c 4d");
     assert_eq!(versus(&i, &g), 2, "seri depan, menang tengah dan belakang");
 }

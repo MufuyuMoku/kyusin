@@ -9,6 +9,7 @@ pub mod andar_bahar;
 pub mod baccarat;
 pub mod blackjack;
 pub mod calibration;
+pub mod capsa;
 pub mod caribbean_stud;
 pub mod casino_holdem;
 pub mod casino_war;
@@ -19,6 +20,7 @@ pub mod let_it_ride;
 pub mod meja;
 pub mod pai_gow;
 pub mod poker;
+pub mod qiuqiu;
 pub mod red_dog;
 pub mod reversi;
 pub mod teen_patti;
@@ -31,6 +33,8 @@ pub fn levels(game: &str) -> u8 {
         kyusin_games::catur::ID => catur::LEVELS,
         kyusin_games::texas_holdem::ID | kyusin_games::omaha::ID => poker::LEVELS,
         kyusin_games::teen_patti::ID => teen_patti::LEVELS,
+        kyusin_games::capsa_susun::ID => capsa::LEVELS,
+        kyusin_games::domino_qiuqiu::ID => qiuqiu::LEVELS,
         _ => 0,
     }
 }
@@ -74,6 +78,12 @@ pub fn create(game: &str, level: u8, round_seed: &Seed, seat: u8) -> Option<Box<
         }
         kyusin_games::teen_patti::ID if (1..=teen_patti::LEVELS).contains(&level) => {
             Some(Box::new(teen_patti::TeenPattiBot::new(level, seed)))
+        }
+        kyusin_games::capsa_susun::ID if (1..=capsa::LEVELS).contains(&level) => {
+            Some(Box::new(capsa::CapsaBot::new(level, seed)))
+        }
+        kyusin_games::domino_qiuqiu::ID if (1..=qiuqiu::LEVELS).contains(&level) => {
+            Some(Box::new(qiuqiu::QiuQiuBot::new(level, seed)))
         }
         _ => None,
     }
