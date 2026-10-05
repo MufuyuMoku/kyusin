@@ -93,33 +93,83 @@ async function sweepControls(s, when) {
 	return buttons;
 }
 
-async function press(s, label) {
-	const before = await s.exec(() => document.querySelector('.table')?.innerText ?? '');
-	// Perekam event untuk diagnosis bila klik tidak berefek.
-	await s.exec(() => {
-		const log = (window.__e2eEvents = []);
-		const t0 = performance.now();
-		const where = (el) => (el instanceof Element ? `${el.tagName}:${el.textContent.trim().slice(0, 16)}` : String(el));
-		if (!window.__e2eRecorder) {
-			window.__e2eRecorder = true;
-			for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click'])
-				document.addEventListener(type, (e) => window.__e2eEvents?.push(`${Math.round(performance.now() - t0)} ${type} ${where(e.target)} (${e.clientX},${e.clientY}) d${e.detail}`), true);
+/**
+ * Perekam diagnosis klik yang hilang (dipasang sekali per halaman): event
+ * pointer/mouse/click dengan id node dan apakah node masih terpasang,
+ * tombol kontrol yang ditambah/dilepas (MutationObserver), dan setiap
+ * panggilan IPC ke host (mulai/selesai). Disimpan sebagai cincin 400 baris.
+ */
+const installRecorder = () => {
+	if (window.__e2eRec) return;
+	const rec = (window.__e2eRec = { lines: [], ids: new WeakMap(), next: 1, t0: performance.now() });
+	const id = (n) => {
+		if (!(n instanceof Element)) return String(n);
+		if (!rec.ids.has(n)) rec.ids.set(n, rec.next++);
+		return `#${rec.ids.get(n)}${n.isConnected ? '' : '(lepas)'}:${n.tagName}:${n.textContent.trim().slice(0, 14)}`;
+	};
+	const push = (line) => {
+		rec.lines.push(`${Math.round(performance.now() - rec.t0)} ${line}`);
+		if (rec.lines.length > 400) rec.lines.shift();
+	};
+	rec.push = push;
+	rec.id = id;
+	for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click'])
+		document.addEventListener(type, (e) => push(`${type} ${id(e.target)} (${e.clientX},${e.clientY}) d${e.detail}`), true);
+	new MutationObserver((list) => {
+		for (const m of list) {
+			for (const n of m.removedNodes)
+				if (n instanceof Element && (n.matches('button') || n.querySelector?.('button')) && m.target.closest?.('.table'))
+					push(`dilepas ${id(n.matches('button') ? n : n.querySelector('button'))} dari ${m.target.className}`);
+			for (const n of m.addedNodes)
+				if (n instanceof Element && (n.matches('button') || n.querySelector?.('button')) && m.target.closest?.('.table'))
+					push(`ditambah ${id(n.matches('button') ? n : n.querySelector('button'))}`);
 		}
-	});
-	await s.click(await s.find('xpath', `//div[contains(@class,'controls')]//button[normalize-space(.)="${label}"]`));
+	}).observe(document.body, { childList: true, subtree: true });
+	const internals = window.__TAURI_INTERNALS__;
+	const invoke = internals.invoke.bind(internals);
+	internals.invoke = (cmd, args, opts) => {
+		const label = `${cmd}${args?.command ? ` ${args.command}` : ''}`;
+		push(`ipc mulai ${label}`);
+		return invoke(cmd, args, opts).then(
+			(r) => (push(`ipc selesai ${label}`), r),
+			(e) => (push(`ipc gagal ${label}: ${JSON.stringify(e).slice(0, 80)}`), Promise.reject(e))
+		);
+	};
+};
+
+let artifactsDir = null;
+
+async function press(s, label) {
+	await s.exec(installRecorder);
+	const before = await s.exec(() => document.querySelector('.table')?.innerText ?? '');
+	const target = await s.find('xpath', `//div[contains(@class,'controls')]//button[normalize-space(.)="${label}"]`);
+	await s.exec(
+		(label) => {
+			const b = [...document.querySelectorAll('.table .controls button')].find((x) => x.textContent.trim() === label);
+			window.__e2eTarget = b;
+			window.__e2eRec.push(`tes: klik ${window.__e2eRec.id(b)}`);
+		},
+		label
+	);
+	await s.click(target);
 	try {
 		await s.waitFor((b) => (document.querySelector('.table')?.innerText ?? '') !== b, `meja berubah setelah ${label}`, 15000, before);
 	} catch (e) {
 		const why = await s.exec(() => ({
-			text: document.querySelector('.table')?.innerText,
-			buttons: [...document.querySelectorAll('.table .controls button')].map((b) => `${b.textContent.trim()}${b.getAttribute('aria-disabled') ? ' (nonaktif)' : ''}`),
-			active: `${document.activeElement?.tagName}:${document.activeElement?.textContent?.trim().slice(0, 30)}`,
+			target: window.__e2eRec.id(window.__e2eTarget),
+			buttons: [...document.querySelectorAll('.table .controls button')].map((b) => `${window.__e2eRec.id(b)}${b.getAttribute('aria-disabled') ? ' (nonaktif)' : ''}`),
+			active: window.__e2eRec.id(document.activeElement),
 			sending: document.querySelector('.match')?.dataset.act ?? null,
-			events: window.__e2eEvents ?? [],
-			alert: [...document.querySelectorAll('[role="alert"], .error')].map((a) => a.textContent.trim()),
-			status: document.querySelector('.match [role="status"]')?.textContent.trim()
+			alert: [...document.querySelectorAll('[role="alert"]')].map((a) => a.textContent.trim()),
+			status: document.querySelector('.match [role="status"]')?.textContent.trim(),
+			text: document.querySelector('.table')?.innerText,
+			events: window.__e2eRec.lines.slice(-120)
 		}));
 		console.log(`  diagnosis ${label}: ${JSON.stringify(why, null, 1)}`);
+		if (artifactsDir) {
+			writeFileSync(join(artifactsDir, 'klik-hilang.json'), JSON.stringify(why, null, 1));
+			writeFileSync(join(artifactsDir, 'klik-hilang.png'), await s.screenshot());
+		}
 		throw e;
 	}
 }
@@ -130,7 +180,10 @@ async function waitControls(s) {
 }
 
 export async function run(s, artifacts, log) {
-	for (const g of GAMES) {
+	artifactsDir = artifacts;
+	// KYUSIN_E2E_GAMES=texas-holdem,omaha: sebagian game saja (workflow ulang).
+	const only = process.env.KYUSIN_E2E_GAMES?.split(',').filter(Boolean);
+	for (const g of GAMES.filter((x) => !only || only.includes(x.id))) {
 		await resetToMenu(s);
 		const before = await s.exec(async () => {
 			const p = await window.__TAURI_INTERNALS__.invoke('profile_get');
@@ -189,6 +242,7 @@ export async function run(s, artifacts, log) {
 		writeFileSync(join(artifacts, `pvp-${g.id}-end.png`), await s.screenshot());
 		log(`${g.name}: buy-in 2000 dipotong, selaras, ${controls} kontrol tanpa geser, satu tangan dimainkan, berdiri dengan ${stack} (saldo ${before} → ${end.chips}), verify cocok, ${end.rating}`);
 	}
+	if (only) return;
 	await resetToMenu(s);
 	await s.click(await s.find('xpath', `//button[normalize-space(.)="› Teen Patti"]`));
 	await s.waitFor(() => !!document.querySelector('.game'), 'layar Teen Patti');

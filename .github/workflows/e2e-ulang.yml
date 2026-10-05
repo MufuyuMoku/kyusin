@@ -1,0 +1,84 @@
+name: Tes jendela asli berulang
+
+# Mengulang sebagian tes jendela asli (SPEC §11) berkali-kali dalam satu job
+# Windows untuk memancing kegagalan yang jarang (D-067: klik yang hilang di
+# meja poker). Setiap iterasi menjalankan aplikasi baru dengan folder data
+# baru; berhenti di kegagalan pertama dan mengunggah tangkapan layar serta
+# rekaman event (`klik-hilang.json`). Hanya manual.
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Jumlah iterasi"
+        default: "25"
+      suites:
+        description: "Bagian tes (board, chess, pause, blackjack, meja, pvp, capsa, profile)"
+        default: "pvp"
+      games:
+        description: "Game meja antar-pemain untuk bagian pvp (kosong = semua)"
+        default: "texas-holdem,omaha"
+
+permissions:
+  contents: read
+
+jobs:
+  ulang:
+    runs-on: windows-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: npm ci
+        working-directory: ui
+        run: npm ci
+
+      - name: Build interface
+        working-directory: ui
+        run: npm run build
+
+      - name: Build application
+        working-directory: src-tauri
+        run: npx --prefix ../ui tauri build --debug --no-bundle
+
+      - name: Install tauri-driver
+        run: cargo install tauri-driver --locked
+
+      - name: Repeat native window tests
+        working-directory: ui
+        shell: pwsh
+        env:
+          ITERATIONS: ${{ inputs.iterations }}
+          KYUSIN_E2E_SUITES: ${{ inputs.suites }}
+          KYUSIN_E2E_GAMES: ${{ inputs.games }}
+        run: |
+          $n = [int]$env:ITERATIONS
+          for ($i = 1; $i -le $n; $i++) {
+            Write-Host "=== iterasi $i dari $n ==="
+            npm run e2e
+            if ($LASTEXITCODE -ne 0) {
+              Write-Host "GAGAL di iterasi $i"
+              exit 1
+            }
+          }
+          Write-Host "LULUS $n iterasi berturut-turut"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-ulang
+          path: ui/e2e/artifacts
+          if-no-files-found: warn

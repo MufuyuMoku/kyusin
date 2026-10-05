@@ -147,22 +147,23 @@ try {
 	const log = (m) => console.log(`  ${m}`);
 	try {
 		await s.waitFor(() => !!document.querySelector('.crt'), 'jendela KyuSin');
-		console.log('papan Reversi (jendela asli):');
-		await board(s, artifacts, log);
-		console.log('papan catur (jendela asli):');
-		await chess(s, artifacts, log);
-		console.log('menu jeda, penundaan, dan kursor (jendela asli):');
-		await pause(s, artifacts, log);
-		console.log('meja Blackjack (jendela asli):');
-		await blackjack(s, artifacts, log);
-		console.log('meja casino M5a (jendela asli):');
-		await meja(s, artifacts, log);
-		console.log('meja antar-pemain M5b (jendela asli):');
-		await pvp(s, artifacts, log);
-		console.log('meja Capsa Susun M5b-2 (jendela asli):');
-		await capsa(s, artifacts, log);
-		console.log('profil dan statistik (jendela asli):');
-		await profile(s, artifacts, log);
+		const suites = [
+			['board', 'papan Reversi (jendela asli):', board],
+			['chess', 'papan catur (jendela asli):', chess],
+			['pause', 'menu jeda, penundaan, dan kursor (jendela asli):', pause],
+			['blackjack', 'meja Blackjack (jendela asli):', blackjack],
+			['meja', 'meja casino M5a (jendela asli):', meja],
+			['pvp', 'meja antar-pemain M5b (jendela asli):', pvp],
+			['capsa', 'meja Capsa Susun M5b-2 (jendela asli):', capsa],
+			['profile', 'profil dan statistik (jendela asli):', profile]
+		];
+		// KYUSIN_E2E_SUITES=pvp,capsa menjalankan sebagian saja (workflow ulang).
+		const only = process.env.KYUSIN_E2E_SUITES?.split(',').filter(Boolean);
+		for (const [id, title, suite] of suites) {
+			if (only && !only.includes(id)) continue;
+			console.log(title);
+			await suite(s, artifacts, log);
+		}
 	} catch (e) {
 		// Tangkapan layar saat gagal, untuk diagnosis dari artefak CI.
 		await s
