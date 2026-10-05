@@ -58,6 +58,9 @@ async function clickMove(s) {
 	if (picked.dots.length === 0) fail(`tidak ada titik tujuan untuk ${from}`);
 	const before = await s.exec(movesText);
 	await s.click(await s.find('css selector', `[data-sq="${picked.dots[0]}"]`));
+	// Bidak ke baris terakhir membuka pilihan promosi: pilih bidak pertama.
+	if (await s.exec(() => !!document.querySelector('.promo')))
+		await s.click(await s.find('css selector', '.promo button'));
 	try {
 		await s.waitFor((b) => (document.querySelector('.moves')?.textContent ?? '') !== b, 'langkah tercatat', 10000, before);
 	} catch (e) {
