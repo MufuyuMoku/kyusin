@@ -95,7 +95,19 @@ async function sweepControls(s, when) {
 async function press(s, label) {
 	const before = await s.exec(() => document.querySelector('.table')?.innerText ?? '');
 	await s.click(await s.find('xpath', `//div[contains(@class,'controls')]//button[normalize-space(.)="${label}"]`));
-	await s.waitFor((b) => (document.querySelector('.table')?.innerText ?? '') !== b, `meja berubah setelah ${label}`, 15000, before);
+	try {
+		await s.waitFor((b) => (document.querySelector('.table')?.innerText ?? '') !== b, `meja berubah setelah ${label}`, 15000, before);
+	} catch (e) {
+		const why = await s.exec(() => ({
+			text: document.querySelector('.table')?.innerText,
+			buttons: [...document.querySelectorAll('.table .controls button')].map((b) => `${b.textContent.trim()}${b.getAttribute('aria-disabled') ? ' (nonaktif)' : ''}`),
+			active: document.activeElement?.textContent?.trim(),
+			alert: [...document.querySelectorAll('[role="alert"], .error')].map((a) => a.textContent.trim()),
+			status: document.querySelector('.match [role="status"]')?.textContent.trim()
+		}));
+		console.log(`  diagnosis ${label}: ${JSON.stringify(why, null, 1)}`);
+		throw e;
+	}
 }
 
 /** Menunggu giliran pemain (kontrol muncul) atau tangan selesai. */
