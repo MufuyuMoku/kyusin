@@ -275,7 +275,9 @@
 	.line {
 		margin: 0;
 		height: var(--cell-h);
-		width: 48ch;
+		/* Lebar tetap yang masih muat di jendela bawaan (1028 px, baris
+		   susunan paling lebar); teks panjang dipotong. */
+		width: 40ch;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
