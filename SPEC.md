@@ -215,7 +215,7 @@ Game giliran di kelompok ini singleplayer (`lan: false`) tetapi **boleh dimainka
 Sebuah game belum boleh ditandai selesai sebelum semua poin ini terpenuhi:
 
 1. Mesin aturan + tes unit untuk aturan dan pembayaran, ditambah:
-   - **Casino melawan rumah (`rtp` berupa angka):** RTP di manifest dihitung secara analitis atau enumerasi bila memungkinkan (slot: enumerasi seluruh kombinasi reel; roulette, sic bo, dan sejenisnya: tabel peluang). Game yang bergantung strategi (Blackjack, Video Poker) memakai RTP untuk strategi dasar/optimal yang didokumentasikan, disimulasikan dengan bot yang memainkan strategi itu. Simulasi memverifikasi RTP: **≥100.000 ronde di CI setiap push**, dan **≥10.000.000 ronde di workflow terjadwal/manual**. Toleransi = 4 × σ/√n (σ = simpangan baku pembayaran per ronde dari simulasi itu sendiri), bukan angka tetap.
+   - **Casino melawan rumah (`rtp` berupa angka):** RTP di manifest dihitung secara analitis atau enumerasi bila memungkinkan (slot: enumerasi seluruh kombinasi reel; roulette, sic bo, dan sejenisnya: tabel peluang). Game yang bergantung strategi (Blackjack, Video Poker) memakai RTP untuk strategi dasar/optimal yang didokumentasikan, disimulasikan dengan bot yang memainkan strategi itu. Simulasi memverifikasi RTP: **≥100.000 ronde di CI setiap push**, dan **≥10.000.000 ronde di workflow terjadwal/manual**. Toleransi = 4 × σ/√n (σ = simpangan baku pembayaran per ronde dari simulasi itu sendiri), bukan angka tetap. Setiap game melawan bandar wajib RTP **di bawah 100%** dengan strategi optimal/terbaik yang didokumentasikan; untuk Video Poker artinya tabel bayar full pay yang RTP-nya di atas 100% (misalnya Deuces Wild dan Joker Poker full pay) tidak boleh dipakai. CI gagal bila manifest mencatat RTP ≥ 100%.
    - **Game antar-pemain:** tes peringkat tangan, pembagian pot termasuk side pot, dan *property test* kekekalan chip (total chip meja tidak pernah berubah).
 2. Lawan bila game-nya punya lawan (`lawan` di manifest): bandar untuk casino ber-bandar, bot untuk game ber-lawan. Game dengan `kompetitif: true` wajib minimal 3 tingkat kesulitan. Poin ini **tidak berlaku** untuk game solo (Klondike, Keno, Bingo, kartu gosok, slot, dan arcade dopamin).
 3. Kontrol visual lengkap: seluruh game bisa dimainkan tanpa mengetik.
@@ -252,7 +252,8 @@ Aturan: satu milestone per sesi. Setiap milestone diakhiri dengan pembaruan `PRO
 | M5a | Casino meja kartu melawan bandar (§6.3): Baccarat, Three Card Poker, Caribbean Stud, Casino Hold'em, Pai Gow Poker, Let It Ride, Casino War, Red Dog, Dragon Tiger, Andar Bahar |
 | M5b-1 | Casino meja kartu antar-pemain (§6.3), bagian 1: Texas Hold'em, Omaha, Teen Patti |
 | M5b-2 | Casino meja kartu antar-pemain (§6.3), bagian 2: Capsa Susun, Domino QiuQiu, termasuk mesin domino bersama (dipakai juga oleh Gaple di M8) |
-| M6 | Casino dadu/roda/ubin + lotere/instan (§6.4, §6.5) |
+| M6a | Casino dadu, roda, ubin (§6.4): Roulette Eropa dan Amerika, Craps, Sic Bo, Big Six, Fan-Tan, Pai Gow ubin, Chuck-a-luck |
+| M6b | Casino lotere dan instan (§6.5): Keno, Bingo, kartu gosok, Hi-Lo, Video Poker |
 | M7 | Kontrak `TickGame` + arcade dopamin (§6.6) |
 | M8 | Papan & kartu non-casino sisanya (§6.1, §6.2). **→ Poin akhir 1** |
 | M9 | LAN: host/join, penemuan otomatis, lobi, chip meja, provably fair lintas jaringan, reconnect. **→ Poin akhir 2** |
@@ -310,3 +311,4 @@ Aksi di luar `legal_actions` ditolak dengan pesan kesalahan yang jelas; permaina
 - **Revisi 11 (29 Sep 2026):** hasil uji klien atas M4 — M5 dipecah menjadi M5a (casino meja kartu melawan bandar) dan M5b (casino meja kartu antar-pemain) (§9).
 - **Revisi 12 (2 Okt 2026):** hasil uji klien atas M5a — M5b dipecah menjadi M5b-1 (Texas Hold'em, Omaha, Teen Patti) dan M5b-2 (Capsa Susun, Domino QiuQiu, mesin domino bersama) (§9).
 - **Revisi 13 (4 Okt 2026):** hasil tinjauan klien atas M5b-1 — selisih rating dua level bot berurutan paling kecil 100, diperiksa CI bersama batas 400 (§8); meja dan papan muat di jendela bawaan tanpa gulir dan kontrol aksi selalu terlihat, diperiksa tes jendela asli (§4). Klien menyebutnya Revisi 12; nomor 12 sudah dipakai untuk pemecahan M5b, jadi dicatat sebagai Revisi 13.
+- **Revisi 14 (5 Okt 2026):** hasil tinjauan klien atas M5b-2 — M6 dipecah menjadi M6a (§6.4: Roulette Eropa dan Amerika, Craps, Sic Bo, Big Six, Fan-Tan, Pai Gow ubin, Chuck-a-luck) dan M6b (§6.5: Keno, Bingo, kartu gosok, Hi-Lo, Video Poker) (§9); setiap game melawan bandar wajib RTP di bawah 100% dengan strategi optimal/terbaik, tabel bayar full pay di atas 100% tidak boleh dipakai, CI gagal bila manifest mencatat RTP ≥ 100% (§7 butir 1).

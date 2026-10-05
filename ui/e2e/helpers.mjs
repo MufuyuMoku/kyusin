@@ -30,6 +30,19 @@ export const changedSince = (before) => {
 };
 
 /**
+ * Keterangan kursi tidak boleh terpotong (`text-overflow: ellipsis`): teks
+ * yang lebih lebar dari kotaknya berarti nilai (misalnya nilai pasangan
+ * QiuQiu atau nama baris Capsa) tidak terbaca.
+ */
+export async function untruncated(s, selector, when) {
+	const cut = await s.exec(
+		(q) => [...document.querySelectorAll(q)].filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent.trim()),
+		selector
+	);
+	if (cut.length) fail(`${when}: keterangan terpotong: ${cut.join(' | ')}`);
+}
+
+/**
  * SPEC §4 Rev. 13: meja/papan dan kontrol aksi muat di jendela bawaan tanpa
  * gulir. Setiap elemen yang cocok dengan `selectors` harus seluruhnya berada
  * di area tampilan `main` yang belum digulir. Mengembalikan sisa ruang di

@@ -12,7 +12,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fail, inView, resetToMenu, theme } from './helpers.mjs';
+import { fail, inView, resetToMenu, theme, untruncated } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 const layout = () => {
@@ -51,6 +51,7 @@ async function checkAlignment(s, when) {
 	if (new Set(a.mine).size !== 1) fail(`capsa ${when}: tangan dan susunan tidak sejajar: ${a.mine}`);
 	if (a.sizes.some((z) => z !== '44x60')) fail(`capsa ${when}: ukuran kartu ${a.sizes}`);
 	await inView(s, ['.table', '.table .controls button'], `capsa ${when}`);
+	await untruncated(s, '.table .seat .line, .table .meta .line, .table .row .line', `capsa ${when}`);
 }
 
 async function button(s, label) {

@@ -18,7 +18,8 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M5a | selesai | 2026-10-02 | Sepuluh meja melawan bandar (Baccarat, Dragon Tiger, Casino War, Red Dog, Andar Bahar, Three Card Poker, Caribbean Stud, Casino Hold'em, Let It Ride, Pai Gow Poker). Sebelumnya: taruhan casino tercatat saat dipasang, titik simpan setiap aksi (D-059); SPEC Rev. 11 |
 | M5b-1 | selesai | 2026-10-02 | Texas Hold'em (No-Limit), Omaha (Pot-Limit), Teen Patti antar-pemain melawan bot; buy-in dari saldo; rating sesi multipemain; SPEC Rev. 12 |
 | M5b-2 | selesai | 2026-10-05 | Capsa Susun, Domino QiuQiu antar-pemain melawan bot; mesin domino bersama; aturan lokal pilihan klien (D-065) |
-| M6 | belum mulai | | |
+| M6a | belum mulai | | Roulette Eropa dan Amerika, Craps, Sic Bo, Big Six, Fan-Tan, Pai Gow ubin, Chuck-a-luck |
+| M6b | belum mulai | | Keno, Bingo, kartu gosok, Hi-Lo, Video Poker |
 | M7 | belum mulai | | |
 | M8 | belum mulai | | |
 | M9 | belum mulai | | |
@@ -55,6 +56,14 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 
 ## Log sesi
 
+### 2026-10-05 — Tinjauan klien atas M5b-2 (A–D) dan SPEC Revisi 14
+
+- A: workflow `e2e-ulang.yml`; kegagalan terekam di iterasi 1 (run 37278926425). Penyebab terbukti di tes, bukan aplikasi: tes menunggu teks meja berubah, padahal setelah semua check hanya kartu meja (sprite) yang berubah. Tes kini menunggu fase + kartu + teks; 25 iterasi lulus berturut-turut (run 37312629686) dengan 14 bukti tercatat. D-067.
+- B: batas waktu 10 detik untuk perintah yang dikirim (`Sender`), tes unit dan tes jendela asli. D-067.
+- C: QiuQiu lawan satu kolom, Capsa keterangan dua baris; pemeriksaan keterangan tidak terpotong di tes jendela asli. D-067.
+- D: SPEC Revisi 14 (M6a/M6b; RTP < 100%). D-068.
+- Tes jendela asli (CI Windows): REV14_E2E
+
 ### 2026-10-05 — M5b-2: Capsa Susun, Domino QiuQiu, mesin domino
 
 - Aturan lokal ditanyakan ke klien lebih dulu (11 pertanyaan; semua rekomendasi dipilih): D-065. Penerapan: D-066.
@@ -63,9 +72,9 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 - Bot 3 level, kalibrasi antar-bot di GitHub Actions: Domino QiuQiu 1000 / 1185 / 1358; Capsa Susun 1000 / 1231 / 1413 (selisih 231 / 182).
 - UI: meja Capsa Susun (pilih kartu, pindah ke baris, saran, kirim, susun otomatis), kartu domino piksel di meja antar-pemain, pesan untuk perintah yang ditolak. Kedua meja muat di jendela bawaan tanpa gulir (diukur di peramban dengan backend tiruan sementara, tidak di-commit; dibuktikan tes jendela asli).
 - Tes: 318 tes Rust, 42 tes UI. Tes jendela asli (CI Windows, run 37272840314): lulus; Domino QiuQiu (buy-in, selaras, 9 kontrol tanpa geser, satu tangan, berdiri, verify, rating) dan Capsa Susun (buy-in, selaras dan muat tanpa gulir, 20 tombol tanpa geser, pindah/kembalikan kartu tanpa geser, saran dan kirim, susunan dibuka, tema P3/P4, berdiri, verify, rating). Sebelumnya: clippy CI yang lebih baru (sort_by_key), meja Capsa 40 px terlalu lebar (keterangan 48ch → 40ch), dan balapan di tes ronde berikutnya M5a; semua diperbaiki.
-- Klik CHECK yang sesekali tidak berefek di tes meja poker (3 dari 7 run sejak Rev. 13; tombol aktif, giliranmu, tanpa pesan, tidak terulang di run terakhir): penyebab belum terbukti. Bukan bilah sticky (sudah dicabut, masih terjadi sekali). Sekarang perintah yang sedang dikirim ditandai dan klik kedua diabaikan, dan tes merekam event klik bila terulang.
+- Klik CHECK yang sesekali tidak berefek di tes meja poker: penyebabnya kemudian terbukti di tes (D-067).
 - Belum/sisa: meja LAN (M9); kalibrasi dari sesi heads-up.
-- Langkah berikutnya: M6 sesuai SPEC §9.
+- Langkah berikutnya: M6a sesuai SPEC §9 (Rev. 14).
 
 ### 2026-10-04 — Perbaikan M5b-1 dari tinjauan klien (SPEC Rev. 13)
 

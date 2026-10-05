@@ -76,7 +76,9 @@
 	/** Status kursi: status, buta/terlihat, nama tangan. */
 	function statusParts(i: number): string[] {
 		const k = v!.kursi[i];
-		const parts = [t(`pk.status.${k.status}` as Key)];
+		// Di antara tangan `duduk` tidak menambah informasi; ruangnya untuk
+		// nama tangan (keterangan tidak boleh terpotong).
+		const parts = v!.fase !== 'main' && k.status === 'duduk' ? [] : [t(`pk.status.${k.status}` as Key)];
 		if (teen && k.status === 'aktif') parts.push(t(k.terlihat ? 'pk.seen' : 'pk.blind'));
 		if (k.tangan && qq) parts.push(t(`pk.qq.${k.tangan}` as Key, { a: k.nilai?.[0] ?? 0, b: k.nilai?.[1] ?? 0 }));
 		else if (k.tangan) parts.push(t(`mj.hand.${k.tangan}` as Key));
@@ -118,12 +120,12 @@
 		</div>
 	{/snippet}
 	<div class="table" data-fase={v.fase} data-game={game}>
-		<div class="others">
+		<div class="others" class:single={qq}>
 			{#each others as i (i)}
 				<div class="seat mini" data-seat={i}>
 					{@render hand(i)}
-					<div class="meta" class:narrow={qq} class:dim={out(i)}>
-						<p class="line"><span class="dim">{seatName(i)}</span>{#if marks(i)}<span class="marks">{marks(i)}</span>{/if} · {statusParts(i).join(' · ')}</p>
+					<div class="meta" class:dim={out(i)}>
+						<p class="line"><span class="dim">{seatName(i)}</span>{#if marks(i)}<span class="marks">{marks(i)}</span>{/if}{#if statusParts(i).length} · {statusParts(i).join(' · ')}{/if}</p>
 						<p class="line">{chipParts(i).join(' · ')}</p>
 					</div>
 				</div>
@@ -258,8 +260,10 @@
 	.meta .line {
 		width: auto;
 	}
-	.meta.narrow {
-		width: 26ch;
+	/* Domino QiuQiu: kartu domino tidak bertumpuk, jadi lawan satu kolom
+	   supaya keterangannya muat (tanpa kartu meja, tingginya masih cukup). */
+	.others.single {
+		grid-template-columns: max-content;
 	}
 	.label {
 		width: 12ch;

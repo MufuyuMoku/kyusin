@@ -498,5 +498,6 @@
 	"cs.status_line.arrange": "Arrange your cards.",
 	"cs.status_line.waiting": "Waiting for the opponents to arrange.",
 	"match.act_error": "Rejected: {error}",
+	"match.act_timeout": "The host did not answer within {s} seconds; the controls are open again, please retry.",
 	"play.table": "Balance: {chips} chips. Sitting down buys table chips of up to 2,000 from your balance (at least 400); the rest comes back when you stand up. One match = one table session."
 }
