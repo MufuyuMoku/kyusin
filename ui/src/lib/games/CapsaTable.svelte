@@ -84,15 +84,22 @@
 		return k.baris ?? splitRows(k.kartu);
 	}
 
+	/** Baris pertama keterangan kursi: tumpukan, status, kartu istimewa, poin. */
 	function seatLine(i: number): string {
 		const k = v!.kursi[i];
-		const parts = [t('pk.stack', { n: k.tumpukan }), t(`cs.status.${k.status}` as Key)];
+		const parts = [t('pk.stack', { n: k.tumpukan })];
+		// Di antara tangan `duduk` tidak menambah informasi.
+		if (v!.fase === 'susun' || k.status !== 'duduk') parts.push(t(`cs.status.${k.status}` as Key));
 		if (k.istimewa) parts.push(t(`cs.special.${k.istimewa}` as Key));
-		if (v!.fase !== 'susun' && k.status !== 'berdiri' && k.status !== 'habis' && (k.baris || k.istimewa)) {
+		if (v!.fase !== 'susun' && k.status !== 'berdiri' && k.status !== 'habis' && (k.baris || k.istimewa))
 			parts.push(t('cs.points', { n: signed(k.poin) }));
-			if (k.nama_baris) parts.push(k.nama_baris.map((n) => t(`mj.hand.${n}` as Key)).join(' / '));
-		}
 		return parts.join(' · ');
+	}
+
+	/** Baris kedua: jenis tangan ketiga baris yang dibuka. */
+	function rowNames(i: number, sep = ' / '): string {
+		const names = v!.kursi[i].nama_baris;
+		return names ? names.map((n) => t(`mj.hand.${n}` as Key)).join(sep) : '';
 	}
 
 	const others = $derived(v ? v.kursi.map((_, i) => i).filter((i) => i !== v.kamu) : []);
@@ -116,7 +123,10 @@
 						{/each}
 					</div>
 				</div>
-				<p class="line" class:dim={v.kursi[i].status === 'berdiri' || v.kursi[i].status === 'habis'}>{seatLine(i)}</p>
+				<div class="meta" class:dim={v.kursi[i].status === 'berdiri' || v.kursi[i].status === 'habis'}>
+					<p class="line">{seatLine(i)}</p>
+					<p class="line">{rowNames(i)}</p>
+				</div>
 			</div>
 		{/each}
 
@@ -138,7 +148,7 @@
 					{/if}
 				</div>
 			</div>
-			<p class="line" class:dim={!arranging}>{arranging ? t('cs.left', { n: 13 - placed.size }) : ''}</p>
+			<p class="line names" class:dim={arranging}>{arranging ? t('cs.left', { n: 13 - placed.size }) : rowNames(v.kamu, '/')}</p>
 		</div>
 
 		<div class="row">
@@ -271,6 +281,17 @@
 	.chosen {
 		outline: 2px solid var(--fg);
 		outline-offset: -2px;
+	}
+	/* Keterangan kursi lawan dua baris, lebih lebar (kartunya rapat). */
+	.meta {
+		width: 50ch;
+	}
+	.meta .line {
+		width: auto;
+	}
+	/* Nama baris kursimu di baris tangan (kosong di antara tangan). */
+	.line.names {
+		width: 45ch;
 	}
 	.line {
 		margin: 0;

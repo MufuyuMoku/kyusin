@@ -20,6 +20,7 @@
 	import { GAME_UI } from '$lib/games';
 	import { signed } from '$lib/format';
 	import { L, t } from '$lib/i18n.svelte';
+	import { ACT_TIMEOUT_MS, Sender, TIMEOUT } from '$lib/sender';
 	import FairPanel from './FairPanel.svelte';
 	import Frame from './Frame.svelte';
 	import NavButton from './NavButton.svelte';
@@ -48,24 +49,24 @@
 	const canResign = $derived(!!m && !m.over && m.your_turn && buttons.includes(RESIGN));
 	let confirmResign = $state(false);
 
-	// Perintah dari papan/meja yang ditolak mesin (misalnya susunan Capsa
-	// yang tidak sah) ditampilkan, bukan diabaikan diam-diam.
+	// Perintah dari papan/meja: satu sekaligus; yang ditolak mesin atau
+	// tidak dijawab host dalam batas waktu ditampilkan, dan kontrol dibuka
+	// lagi (D-067).
 	let actError = $state<string | null>(null);
-	// Perintah yang sedang menunggu jawaban host: klik kedua diabaikan
-	// supaya perintah tidak terkirim dua kali (juga terbaca tes jendela asli).
 	let sending = $state<string | null>(null);
-	async function play(cmd: string) {
-		if (sending) return;
+	const sender = new Sender(ACT_TIMEOUT_MS, (cmd, error) => {
 		sending = cmd;
-		try {
-			await matchAct(cmd);
-			actError = null;
-		} catch (e) {
-			actError = e && typeof e === 'object' && 'id' in e ? L(e as Parameters<typeof L>[0]) : String(e);
-		} finally {
-			sending = null;
-		}
-	}
+		if (cmd) return;
+		actError =
+			error === null
+				? null
+				: error === TIMEOUT
+					? t('match.act_timeout', { s: ACT_TIMEOUT_MS / 1000 })
+					: error && typeof error === 'object' && 'id' in error
+						? t('match.act_error', { error: L(error as Parameters<typeof L>[0]) })
+						: t('match.act_error', { error: String(error) });
+	});
+	const play = (cmd: string) => sender.send(cmd, () => matchAct(cmd));
 
 	const names = $derived<[string, string]>(
 		(m?.seats ?? []).map((s) => (s.kind === 'bot' ? t('match.bot_name', { level: s.level }) : t('match.you'))) as [
@@ -118,7 +119,7 @@
 						/>
 					{/key}
 					<ui.status view={m.view_data} botTurn={m.bot_turn} />
-					{#if actError}<p class="act-error" role="alert">{t('match.act_error', { error: actError })}</p>{/if}
+					{#if actError}<p class="act-error" role="alert">{actError}</p>{/if}
 				{:else}
 					<pre>{L(m.view_text)}</pre>
 				{/if}

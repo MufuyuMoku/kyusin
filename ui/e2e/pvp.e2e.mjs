@@ -14,7 +14,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { changedSince, fail, inView, resetToMenu, tableSig, theme } from './helpers.mjs';
+import { changedSince, fail, inView, resetToMenu, tableSig, theme, untruncated } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 const GAMES = [
@@ -73,6 +73,7 @@ async function checkAlignment(s, id) {
 	if (a.sizes.some((z) => z !== '44x60')) fail(`${id}: ukuran kartu ${a.sizes}`);
 	if (a.offsets.some((o) => o !== 18 && o !== 48)) fail(`${id}: geser kartu ${a.offsets}`);
 	await inView(s, ['.table', '.table .controls button'], `${id}: meja`);
+	await untruncated(s, '.table .seat .line, .table .meta .line', `${id}: kursi`);
 	return a;
 }
 
@@ -188,6 +189,31 @@ async function press(s, label) {
 	}
 }
 
+/**
+ * Host tidak menjawab (D-067): klik pertama menandai perintah yang dikirim
+ * dan klik berikutnya diabaikan; setelah batas waktu muncul pesan dan
+ * penanda dilepas, lalu klik yang sama berhasil.
+ */
+async function hostTimeout(s, g) {
+	await s.exec(installRecorder);
+	const pick = (await s.exec(state)).buttons.find((b) => b.on && g.passive.some((p) => b.label.startsWith(p)));
+	const find = () => s.find('xpath', `//div[contains(@class,'controls')]//button[normalize-space(.)="${pick.label}"]`);
+	await s.exec(() => (window.__e2eHang = true));
+	const calls = () => window.__e2eRec.lines.filter((l) => l.includes('ipc mulai match_act')).length;
+	const before = await s.exec(calls);
+	await s.click(await find());
+	if ((await s.exec(() => document.querySelector('.match')?.dataset.act)) !== pick.label.replace(/^\[ |\s*·.*$| \]$/g, '').toLowerCase())
+		fail(`${g.id}: penanda perintah tidak terpasang`);
+	await s.click(await find());
+	if ((await s.exec(calls)) !== before + 1) fail(`${g.id}: klik kedua terkirim saat perintah masih menunggu`);
+	await s.waitFor(() => !document.querySelector('.match')?.dataset.act, `${g.id}: penanda dilepas setelah batas waktu`, 15000);
+	const alert = await s.exec(() => document.querySelector('.match .act-error')?.textContent.trim() ?? '');
+	if (!alert.includes('tidak menjawab')) fail(`${g.id}: pesan batas waktu tidak tampil: ${alert}`);
+	await s.exec(() => (window.__e2eHang = false));
+	await press(s, pick.label);
+	await waitControls(s);
+}
+
 /** Menunggu giliran pemain (kontrol muncul) atau tangan selesai. */
 async function waitControls(s) {
 	await s.waitFor(() => document.querySelectorAll('.table .controls button').length > 0 || !!document.querySelector('.match .result'), 'giliran pemain', 60000);
@@ -214,6 +240,7 @@ export async function run(s, artifacts, log) {
 		if (sat.chips !== before - 2000) fail(`${g.id}: buy-in tidak dipotong (${before} → ${sat.chips})`);
 		await checkAlignment(s, g.id);
 		const controls = await sweepControls(s, `${g.id} giliran`);
+		if (g === GAMES[0] || only?.[0] === g.id) await hostTimeout(s, g);
 		writeFileSync(join(artifacts, `pvp-${g.id}-turn.png`), await s.elementScreenshot(await s.find('css selector', '.left')));
 
 		// Mainkan sampai tangan selesai: pilihan pasif (check/call/show/chaal).

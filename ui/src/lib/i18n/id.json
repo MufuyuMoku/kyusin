@@ -498,5 +498,6 @@
 	"cs.status_line.arrange": "Susun kartumu.",
 	"cs.status_line.waiting": "Menunggu lawan menyusun.",
 	"match.act_error": "Ditolak: {error}",
+	"match.act_timeout": "Host tidak menjawab dalam {s} detik; kontrol dibuka lagi, coba lagi.",
 	"play.table": "Saldo: {chips} chip. Duduk membeli chip meja sampai 2.000 dari saldo (paling sedikit 400); sisanya kembali saat berdiri. Satu pertandingan = satu sesi meja."
 }
