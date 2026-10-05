@@ -586,6 +586,24 @@ D-001 s.d. D-011 adalah jawaban klien lewat SPEC Revisi 2 (27 Sep 2026) atas tem
 - **Pekerjaan nanti (dicatat, belum dikerjakan):** bot poker (Texas Hold'em, Omaha) yang lebih kuat. Level 3 sekarang = equity Monte Carlo dengan model lawan sederhana; level di atasnya perlu strategi yang jelas lebih kuat (selisih ≥ 100, D-063 mencatat percobaan yang hanya +30).
 - Rujukan: SPEC §4, §8, §12; D-052, D-062, D-063.
 
+### D-065 — M5b-2: aturan lokal Capsa Susun dan Domino QiuQiu (jawaban klien)
+- Tanggal / milestone: 2026-10-05 / M5b-2
+- Diputuskan oleh: klien (semua pilihan di bawah dijawab lewat pertanyaan pilihan; klien memilih rekomendasi di setiap pertanyaan), sesuai D-062 butir 4.
+- Sumber varian yang ditawarkan: ringkasan pencarian aturan Capsa Susun dan Domino QiuQiu di situs panduan dan aplikasi berbahasa Indonesia (peraturan Capsa Susun di Medium/Blogspot; urutan kartu QiuQiu di beberapa panduan "urutan kartu domino QiuQiu"); pilihan yang direkomendasikan adalah yang paling sering muncul.
+- **Capsa Susun** (4 kursi, 13 kartu, baris depan 3 / tengah 5 / belakang 5):
+  - Poin: setiap pemain dibandingkan dengan setiap lawan per baris, 1 poin per baris; seri persis di satu baris = 0 poin (tanpa urutan jenis kartu).
+  - Sapu bersih (menang ketiga baris melawan satu lawan): poin baris dikali dua (6 poin).
+  - Royalti (dibayar lawan yang kalah di baris itu; baris yang kalah atau seri tidak dapat royalti): three of a kind di depan +3; full house di tengah +2; four of a kind di tengah +8, di belakang +4; straight flush di tengah +10, di belakang +5.
+  - Kartu istimewa (13 kartu yang langsung menang tanpa disusun): Naga (A sampai K berurutan) 13 poin; enam pasang, tiga flush, tiga straight masing-masing 3 poin dari setiap lawan. Dua kartu istimewa beradu: yang lebih tinggi menang.
+  - Salah susun dicegah: susunan yang tidak sah (depan ≤ tengah ≤ belakang dilanggar) tidak bisa dikirim; bot selalu sah. Tidak ada penalti karena tidak bisa terjadi.
+  - Straight A-2-3-4-5 adalah straight terendah, 10-J-Q-K-A tertinggi (seperti poker).
+- **Domino QiuQiu** (kartu domino 28, paling banyak **6 kursi**):
+  - Kartu spesial, tertinggi ke terendah: Enam Dewa (empat kartu berjumlah 6: 6/0, 5/1, 4/2, 3/3) > Balak (empat kartu balak) > Murni Kecil (total bulatan ≤ 9) > Murni Besar (total ≥ 39), lalu QiuQiu (9-9) dan pasangan biasa.
+  - Dua putaran taruhan: ante, bagi 3 kartu, putaran taruhan; bagi kartu ke-4, putaran taruhan; buka kartu.
+  - Raise pot-limit.
+  - Nilai dua pasangan sama: bandingkan pasangan tertinggi dulu, lalu kartu tunggal tertinggi (balak lebih tinggi dari non-balak, lalu jumlah bulatan, lalu angka terbesar). Bila masih sama, pot dibagi.
+- Rujukan: SPEC §6.3, §9 (M5b-2); D-062, D-063.
+
 ## Pertanyaan terbuka
 
 ### Q-001 — Host dapat mengeluarkan peserta setelah melihat seed-nya
