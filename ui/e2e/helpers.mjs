@@ -10,6 +10,19 @@ export function fail(msg) {
 }
 
 /**
+ * Tanda keadaan meja untuk menunggu perubahan setelah aksi (D-067): teks,
+ * nilai setiap kartu (`data-card`), dan fase. Teks saja tidak cukup: kartu
+ * berupa sprite SVG, jadi kartu baru setelah semua pemain check bisa
+ * membuat teks meja persis sama (log tiga aksi terakhir "check · check ·
+ * check", pot dan tumpukan tetap).
+ */
+export const tableSig = () => {
+	const t = document.querySelector('.table');
+	const cards = [...(t?.querySelectorAll('[data-card]') ?? [])].map((c) => c.dataset.card).join(',');
+	return `${t?.dataset.fase}|${cards}|${t?.innerText ?? ''}`;
+};
+
+/**
  * SPEC §4 Rev. 13: meja/papan dan kontrol aksi muat di jendela bawaan tanpa
  * gulir. Setiap elemen yang cocok dengan `selectors` harus seluruhnya berada
  * di area tampilan `main` yang belum digulir. Mengembalikan sisa ruang di

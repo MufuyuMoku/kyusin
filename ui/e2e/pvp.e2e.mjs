@@ -14,7 +14,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fail, inView, resetToMenu, theme } from './helpers.mjs';
+import { fail, inView, resetToMenu, tableSig, theme } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 const GAMES = [
@@ -125,23 +125,30 @@ const installRecorder = () => {
 					push(`ditambah ${id(n.matches('button') ? n : n.querySelector('button'))}`);
 		}
 	}).observe(document.body, { childList: true, subtree: true });
-	const internals = window.__TAURI_INTERNALS__;
-	const invoke = internals.invoke.bind(internals);
-	internals.invoke = (cmd, args, opts) => {
-		const label = `${cmd}${args?.command ? ` ${args.command}` : ''}`;
-		push(`ipc mulai ${label}`);
-		return invoke(cmd, args, opts).then(
-			(r) => (push(`ipc selesai ${label}`), r),
-			(e) => (push(`ipc gagal ${label}: ${JSON.stringify(e).slice(0, 80)}`), Promise.reject(e))
+	// IPC Tauri 2 lewat fetch ke ipc.localhost (menimpa
+	// `__TAURI_INTERNALS__.invoke` tidak berefek).
+	const fetch0 = window.fetch.bind(window);
+	window.fetch = (input, init) => {
+		const url = String(input?.url ?? input);
+		if (!url.includes('ipc.localhost') && !url.startsWith('ipc:')) return fetch0(input, init);
+		const cmd = decodeURIComponent(url.split('?')[0].split('/').pop());
+		push(`ipc mulai ${cmd}`);
+		// Tes batas waktu (D-067): host "tidak menjawab".
+		if (window.__e2eHang && cmd === 'match_act') return new Promise(() => {});
+		return fetch0(input, init).then(
+			(r) => (push(`ipc selesai ${cmd} ${r.status}`), r),
+			(e) => (push(`ipc gagal ${cmd}`), Promise.reject(e))
 		);
 	};
 };
 
 let artifactsDir = null;
+/** Aksi yang hanya terdeteksi lewat kartu/fase (teks meja tidak berubah). */
+let textBlind = 0;
 
 async function press(s, label) {
 	await s.exec(installRecorder);
-	const before = await s.exec(() => document.querySelector('.table')?.innerText ?? '');
+	const before = await s.exec(tableSig);
 	const target = await s.find('xpath', `//div[contains(@class,'controls')]//button[normalize-space(.)="${label}"]`);
 	await s.exec(
 		(label) => {
@@ -153,7 +160,14 @@ async function press(s, label) {
 	);
 	await s.click(target);
 	try {
-		await s.waitFor((b) => (document.querySelector('.table')?.innerText ?? '') !== b, `meja berubah setelah ${label}`, 15000, before);
+		await s.waitFor((b) => tableSig() !== b, `meja berubah setelah ${label}`, 15000, before);
+		// Bukti D-067: perubahan yang hanya terlihat dari kartu/fase, bukan teks.
+		const after = await s.exec(tableSig);
+		const text = (sig) => sig.split('|').slice(2).join('|');
+		if (text(after) === text(before)) {
+			textBlind++;
+			console.log(`  bukti D-067: setelah ${label} teks meja sama persis, hanya kartu/fase yang berubah (${before.split('|')[1]} → ${after.split('|')[1]})`);
+		}
 	} catch (e) {
 		const why = await s.exec(() => ({
 			target: window.__e2eRec.id(window.__e2eTarget),
