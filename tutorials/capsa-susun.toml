@@ -1,0 +1,118 @@
+game = "capsa-susun"
+judul = { id = "Capsa Susun: dasar", en = "Capsa Susun: basics" }
+
+# Berdua dengan kartu tetap supaya setiap langkah selalu sama (tes tutorial
+# di CI). Dealer kursi 1; kamu kursi 0 dan menerima kartu pertama.
+[config]
+kursi = 2
+dealer = 1
+dek = [[
+  # Bergantian mulai dari kamu. Kamu: Q Q Q 9 9 9 4 4 2 2 2 2 7.
+  # Lawan: A K 3, 5-6-7-8-9, lima keriting.
+  "Qs", "Ah", "Qh", "Kd", "Qd", "3c", "9s", "5h", "9h", "6h", "9d", "7h", "4c",
+  "8h", "4h", "9c", "2c", "Ac", "2d", "Jc", "2h", "8c", "2s", "6c", "7c", "5c",
+]]
+
+[man.aturan]
+id = """
+Permainan kartu antar-pemain untuk 2–4 orang. Setiap pemain menerima 13
+kartu dan menyusunnya menjadi tiga baris: depan 3 kartu, tengah 5 kartu,
+belakang 5 kartu. Baris belakang harus paling kuat dan baris depan paling
+lemah (depan ≤ tengah ≤ belakang); susunan yang salah tidak bisa dikirim.
+Baris depan hanya mengenal kartu tinggi, pair, dan three of a kind. Urutan
+tangan seperti poker; A-2-3-4-5 adalah straight terendah.
+
+Setelah semua menyusun, susunanmu dibandingkan dengan setiap lawan per
+baris: menang 1 poin, kalah −1, sama persis 0. Menang ketiga baris melawan
+satu lawan (sapu bersih) = 6 poin.
+
+Royalti, untuk baris yang menang: three of a kind di depan +3; full house di
+tengah +2; four of a kind di tengah +8, di belakang +4; straight flush di
+tengah +10, di belakang +5.
+
+Kartu istimewa, langsung menang tanpa disusun (diumumkan otomatis): Naga
+(A sampai K berurutan) 13 poin dari setiap lawan; enam pasang, tiga flush
+(depan, tengah, belakang masing-masing sejenis), atau tiga straight
+masing-masing 3 poin. Dua kartu istimewa: yang lebih tinggi menang (Naga >
+enam pasang > tiga flush > tiga straight).
+
+Aturan meja ini: 1 poin = 10 chip, sampai 4 kursi, buy-in paling banyak
+2.000 dari saldo (bot 2.000), tanpa rake. Pemain yang kalah membayar
+paling banyak tumpukannya; bila kurang, para pemenang menerima bagian
+sebanding klaimnya.
+
+Rating lokal: satu sesi = satu pertandingan melawan level bot, skor =
+bagian bot yang hasil bersihnya di bawahmu. Antar-pemain: tanpa house edge.
+
+Provably fair per sesi: komitmen seed saat duduk, setiap tangan dikocok dari
+seed sesi dan nomor tangan, seed dibuka saat sesi selesai, verify memutar
+ulang semua tangan.
+"""
+en = """
+A player-versus-player card game for 2–4 players. Each player gets 13 cards
+and arranges them into three rows: front 3 cards, middle 5 cards, back 5
+cards. The back row must be the strongest and the front row the weakest
+(front ≤ middle ≤ back); an invalid arrangement cannot be submitted. The
+front row only counts high card, pair, and three of a kind. Hands rank as in
+poker; A-2-3-4-5 is the lowest straight.
+
+When everyone has arranged, your rows are compared with every opponent row
+by row: a win is 1 point, a loss −1, an exact tie 0. Winning all three rows
+against one opponent (a scoop) = 6 points.
+
+Royalties, for a winning row: three of a kind in front +3; a full house in
+the middle +2; four of a kind in the middle +8, in the back +4; a straight
+flush in the middle +10, in the back +5.
+
+Special hands win at once without arranging (declared automatically): a
+Dragon (A to K in sequence) 13 points from every opponent; six pairs, three
+flushes (front, middle, and back each one suit), or three straights 3 points
+each. Two special hands: the higher wins (Dragon > six pairs > three flushes
+> three straights).
+
+This table: 1 point = 10 chips, up to 4 seats, a buy-in of at most 2,000
+from your balance (bots 2,000), no rake. A losing player pays at most their
+stack; if that is short, the winners receive shares in proportion to their
+claims.
+
+Local rating: one session = one match against the bot level, scored as the
+share of bots whose net result is below yours. Player versus player: no
+house edge.
+
+Provably fair per session: seed commitment when you sit down, every hand
+shuffled from the session seed and the hand number, the seed revealed when
+the session ends, verify replays every hand.
+"""
+
+[man.kontrol]
+id = """
+Saat menyusun: pilih kartu di tanganmu, lalu pilih baris tujuan
+([ KE DEPAN ], [ KE TENGAH ], [ KE BELAKANG ]); pilih kartu di baris untuk
+mengembalikannya. [ SUSUN OTOMATIS ] memasang susunan saran, [ KIRIM ]
+mengirim susunan yang sah. Di antara tangan: [ LANJUT ] atau [ BERDIRI ].
+Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+While arranging: choose a card in your hand, then choose the target row
+([ TO FRONT ], [ TO MIDDLE ], [ TO BACK ]); choose a card in a row to take
+it back. [ AUTO ARRANGE ] fills in the suggested arrangement, [ SUBMIT ]
+sends a valid arrangement. Between hands: [ NEXT ] or [ STAND UP ].
+Keyboard: the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Kamu memegang 13 kartu: tiga Q, tiga 9, sepasang 4, empat 2, dan sebuah 7. Susun menjadi depan 3, tengah 5, belakang 5, dengan belakang paling kuat."
+teks.en = "You hold 13 cards: three queens, three nines, a pair of fours, four twos, and a seven. Arrange them into front 3, middle 5, back 5, with the back row strongest."
+
+[[langkah]]
+teks.id = "Susunan saran: belakang four of a kind 2, tengah full house 9 dengan Q, depan sepasang 4. Pilih SUSUN OTOMATIS."
+teks.en = "The suggested arrangement: four twos in the back, a full house of nines over queens in the middle, a pair of fours in front. Choose AUTO ARRANGE."
+aksi = "auto"
+sorot = ["aksi:auto"]
+petunjuk.id = "Pilih SUSUN OTOMATIS."
+petunjuk.en = "Choose AUTO ARRANGE."
+
+[[langkah]]
+teks.id = "Lawan menyusun A-K-3, straight 5-9, dan flush keriting. Kamu menang ketiga baris: sapu bersih 6 poin, ditambah royalti full house di tengah +2 dan four of a kind di belakang +4, jadi 12 poin = 120 chip. Tutorial selesai."
+teks.en = "The opponent arranges A-K-3, a 5-9 straight, and a club flush. You win all three rows: a 6-point scoop, plus royalties for the middle full house +2 and the back four of a kind +4, so 12 points = 120 chips. Tutorial finished."
+sebelum = ["auto"]

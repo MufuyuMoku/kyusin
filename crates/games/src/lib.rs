@@ -9,6 +9,7 @@ use kyusin_core::{Registry, RegistryError};
 pub mod andar_bahar;
 pub mod baccarat;
 pub mod blackjack;
+pub mod capsa_susun;
 pub mod cards;
 pub mod caribbean_stud;
 pub mod casino_holdem;
@@ -50,6 +51,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(texas_holdem::cartridge()?)?;
     registry.register(omaha::cartridge()?)?;
     registry.register(teen_patti::cartridge()?)?;
+    registry.register(capsa_susun::cartridge()?)?;
     registry.register(domino_qiuqiu::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
