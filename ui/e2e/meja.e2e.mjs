@@ -193,6 +193,9 @@ export async function run(s, artifacts, log) {
 	const first = await s.exec(commit);
 	await press(s, '[ + ANTE ]');
 	await s.waitFor((f) => (document.querySelector('.right')?.innerText ?? '') !== f, 'komitmen ronde baru', 10000, first);
+	// Ronde baru dimulai dulu, taruhannya dikirim sesudahnya: tunggu taruhan
+	// tercatat di meja.
+	await s.waitFor(() => Number((/Di meja: (\d+)/.exec(document.querySelector('.table')?.innerText ?? '') ?? [])[1] ?? 0) > 0, 'taruhan ronde baru', 10000);
 	const st = await s.exec(state);
 	if (st.fase !== 'taruhan' || !(st.risk > 0)) fail(`ronde berikutnya: fase ${st.fase}, di meja ${st.risk}`);
 	log('ronde berikutnya: taruhan di meja yang selesai memulai pertandingan baru dengan komitmen seed baru');
