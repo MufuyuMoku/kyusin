@@ -164,7 +164,9 @@ impl Manifest {
         match (self.is_against_house(), self.rtp) {
             (true, None) => errs.push("casino melawan rumah wajib punya `rtp`".into()),
             (true, Some(r)) if !(r > 0.0 && r < 100.0) => {
-                errs.push(format!("rtp {r} harus di antara 0 dan 100 (persen)"))
+                // SPEC §7 butir 1 (Rev. 14): RTP casino melawan rumah dengan
+                // strategi terbaik wajib di bawah 100%.
+                errs.push(format!("rtp {r} harus di atas 0 dan di bawah 100 (persen)"))
             }
             (false, Some(_)) => {
                 errs.push("`rtp` hanya untuk casino melawan rumah; hapus kuncinya".into())
@@ -265,6 +267,41 @@ mod tests {
         assert!(m.validate().iter().any(|e| e.contains("wajib punya `rtp`")));
         let ok = Manifest {
             rtp: Some(92.5),
+            ..m.clone()
+        };
+        assert_eq!(ok.validate(), Vec::<String>::new());
+    }
+
+    /// SPEC §7 butir 1 (Rev. 14): RTP ≥ 100% (misalnya tabel bayar full pay
+    /// Deuces Wild) membuat manifest tidak sah, jadi CI gagal.
+    #[test]
+    fn house_rtp_must_be_below_100_percent() {
+        let m = with(
+            "",
+            (
+                "kategori = \"papan\"
+        pemain_min = 2",
+                "kategori = \"casino-lotere\"
+        pemain_min = 1",
+            ),
+        );
+        let m = Manifest {
+            opponent: Opponent::TidakAda,
+            competitive: false,
+            ..m
+        };
+        for bad in [100.0, 100.76, 101.0] {
+            let v = Manifest {
+                rtp: Some(bad),
+                ..m.clone()
+            };
+            assert!(
+                v.validate().iter().any(|e| e.contains("di bawah 100")),
+                "{bad}"
+            );
+        }
+        let ok = Manifest {
+            rtp: Some(99.99),
             ..m.clone()
         };
         assert_eq!(ok.validate(), Vec::<String>::new());

@@ -18,7 +18,8 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M5a | selesai | 2026-10-02 | Sepuluh meja melawan bandar (Baccarat, Dragon Tiger, Casino War, Red Dog, Andar Bahar, Three Card Poker, Caribbean Stud, Casino Hold'em, Let It Ride, Pai Gow Poker). Sebelumnya: taruhan casino tercatat saat dipasang, titik simpan setiap aksi (D-059); SPEC Rev. 11 |
 | M5b-1 | selesai | 2026-10-02 | Texas Hold'em (No-Limit), Omaha (Pot-Limit), Teen Patti antar-pemain melawan bot; buy-in dari saldo; rating sesi multipemain; SPEC Rev. 12 |
 | M5b-2 | selesai | 2026-10-05 | Capsa Susun, Domino QiuQiu antar-pemain melawan bot; mesin domino bersama; aturan lokal pilihan klien (D-065) |
-| M6 | belum mulai | | |
+| M6a | belum mulai | | Roulette Eropa dan Amerika, Craps, Sic Bo, Big Six, Fan-Tan, Pai Gow ubin, Chuck-a-luck |
+| M6b | belum mulai | | Keno, Bingo, kartu gosok, Hi-Lo, Video Poker |
 | M7 | belum mulai | | |
 | M8 | belum mulai | | |
 | M9 | belum mulai | | |
