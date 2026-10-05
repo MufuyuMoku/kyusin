@@ -62,7 +62,7 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 - B: batas waktu 10 detik untuk perintah yang dikirim (`Sender`), tes unit dan tes jendela asli. D-067.
 - C: QiuQiu lawan satu kolom, Capsa keterangan dua baris; pemeriksaan keterangan tidak terpotong di tes jendela asli. D-067.
 - D: SPEC Revisi 14 (M6a/M6b; RTP < 100%). D-068.
-- Tes jendela asli (CI Windows): REV14_E2E
+- Tes jendela asli (CI Windows, run 37314326582): lulus, termasuk batas waktu perintah dan keterangan kursi tidak terpotong di semua meja antar-pemain dan Capsa. Workflow ulang pada kode gabungan: 25 iterasi lulus berturut-turut (run 37314376903).
 
 ### 2026-10-05 — M5b-2: Capsa Susun, Domino QiuQiu, mesin domino
 
