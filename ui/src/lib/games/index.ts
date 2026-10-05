@@ -7,6 +7,8 @@
 import type { Component } from 'svelte';
 import type { Key } from '$lib/i18n.svelte';
 import BlackjackStatus from './BlackjackStatus.svelte';
+import CapsaStatus from './CapsaStatus.svelte';
+import CapsaTable from './CapsaTable.svelte';
 import BlackjackTable from './BlackjackTable.svelte';
 import ChessBoard from './ChessBoard.svelte';
 import ChessStatus from './ChessStatus.svelte';
@@ -90,5 +92,7 @@ export const GAME_UI: Record<string, GameUi> = {
 	'pai-gow': meja(true),
 	'texas-holdem': { board: PokerTable, status: PokerStatus, seats: [] },
 	omaha: { board: PokerTable, status: PokerStatus, seats: [] },
-	'teen-patti': { board: PokerTable, status: PokerStatus, seats: [] }
+	'teen-patti': { board: PokerTable, status: PokerStatus, seats: [] },
+	'domino-qiuqiu': { board: PokerTable, status: PokerStatus, seats: [] },
+	'capsa-susun': { board: CapsaTable, status: CapsaStatus, seats: [] }
 };

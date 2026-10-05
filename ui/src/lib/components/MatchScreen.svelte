@@ -48,6 +48,18 @@
 	const canResign = $derived(!!m && !m.over && m.your_turn && buttons.includes(RESIGN));
 	let confirmResign = $state(false);
 
+	// Perintah dari papan/meja yang ditolak mesin (misalnya susunan Capsa
+	// yang tidak sah) ditampilkan, bukan diabaikan diam-diam.
+	let actError = $state<string | null>(null);
+	async function play(cmd: string) {
+		try {
+			await matchAct(cmd);
+			actError = null;
+		} catch (e) {
+			actError = e && typeof e === 'object' && 'id' in e ? L(e as Parameters<typeof L>[0]) : String(e);
+		}
+	}
+
 	const names = $derived<[string, string]>(
 		(m?.seats ?? []).map((s) => (s.kind === 'bot' ? t('match.bot_name', { level: s.level }) : t('match.you'))) as [
 			string,
@@ -92,13 +104,14 @@
 							view={m.view_data}
 							game={m.game}
 							interactive={(m.your_turn || roundOver) && !paused}
-							onplay={roundOver ? (cmd: string) => nextRound(m.game, cmd) : matchAct}
+							onplay={roundOver ? (cmd: string) => nextRound(m.game, cmd) : play}
 							nextRound={roundOver}
 							actions={usages}
 							chips={m.chips}
 						/>
 					{/key}
 					<ui.status view={m.view_data} botTurn={m.bot_turn} />
+					{#if actError}<p class="act-error" role="alert">{t('match.act_error', { error: actError })}</p>{/if}
 				{:else}
 					<pre>{L(m.view_text)}</pre>
 				{/if}
