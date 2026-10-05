@@ -347,7 +347,7 @@ pub fn suggest(cards: &[Card]) -> Vec<Card> {
             (row_value(&b), b, rest)
         })
         .collect();
-    backs.sort_by(|a, b| b.0.cmp(&a.0));
+    backs.sort_by_key(|b| std::cmp::Reverse(b.0));
     for (bv, back, rest) in backs {
         let mut best: Option<(Value, Vec<Card>, Vec<Card>)> = None;
         for idx in combos(8, 5) {
