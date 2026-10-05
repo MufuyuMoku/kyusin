@@ -253,6 +253,9 @@ fn random_shooters_settle_consistently() {
                 }
             }
             let _ = Session::act(&mut g, 0, "bet odds-pass 10");
+            if view(&g)["taruhan_meja"] == 0 {
+                act(&mut g, "bet field 10");
+            }
             act(&mut g, "roll");
             let v = view(&g);
             paid += v["bayar"]

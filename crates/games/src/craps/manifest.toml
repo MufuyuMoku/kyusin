@@ -1,0 +1,31 @@
+id = "craps"
+nama = { id = "Craps", en = "Craps" }
+kategori = "casino-dadu"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# RTP Pass Line 2 × 244/495 = 98,586% (tepat); Don't Pass 98,636%, Place 6/8
+# 98,485%, Field (12 dibayar 3:1) 97,222%, Hardways 88,89–90,91%; Odds 100%
+# hanya di belakang Pass/Come/Don't. D-069.
+rtp = 98.59
+tutorial = "tutorials/craps.toml"
+
+[[perintah]]
+pola = "bet <tempat> <jumlah>"
+ringkas = { id = "Pasang atau tambah taruhan (pass, dont-pass, come, odds-pass, place-6, field, hard-8, …; batas tiap tempat tampil di layar)", en = "Place or add a bet (pass, dont-pass, come, odds-pass, place-6, field, hard-8, …; each spot's limits are shown)" }
+
+[[perintah]]
+pola = "take <tempat>"
+ringkas = { id = "Tarik taruhan yang bukan kontrak (place, hardways, odds, field, don't)", en = "Take down a non-contract bet (place, hardways, odds, field, don't)" }
+
+[[perintah]]
+pola = "roll"
+ringkas = { id = "Lempar dua dadu", en = "Roll the two dice" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti; taruhan yang boleh ditarik dikembalikan (tidak bisa saat ada taruhan kontrak)", en = "Stop; removable bets are returned (not while a contract bet is up)" }
