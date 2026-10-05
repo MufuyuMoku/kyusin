@@ -19,7 +19,7 @@ Permainan kartu antar-pemain untuk 2–4 orang. Setiap pemain menerima 13
 kartu dan menyusunnya menjadi tiga baris: depan 3 kartu, tengah 5 kartu,
 belakang 5 kartu. Baris belakang harus paling kuat dan baris depan paling
 lemah (depan ≤ tengah ≤ belakang); susunan yang salah tidak bisa dikirim.
-Baris depan hanya mengenal kartu tinggi, pair, dan three of a kind. Urutan
+Baris depan hanya mengenal kartu tinggi, pair, dan three of a kind (tanpa straight atau flush). Urutan
 tangan seperti poker; A-2-3-4-5 adalah straight terendah.
 
 Setelah semua menyusun, susunanmu dibandingkan dengan setiap lawan per
@@ -53,7 +53,7 @@ A player-versus-player card game for 2–4 players. Each player gets 13 cards
 and arranges them into three rows: front 3 cards, middle 5 cards, back 5
 cards. The back row must be the strongest and the front row the weakest
 (front ≤ middle ≤ back); an invalid arrangement cannot be submitted. The
-front row only counts high card, pair, and three of a kind. Hands rank as in
+front row only counts high card, pair, and three of a kind (no straights or flushes). Hands rank as in
 poker; A-2-3-4-5 is the lowest straight.
 
 When everyone has arranged, your rows are compared with every opponent row
@@ -86,18 +86,25 @@ the session ends, verify replays every hand.
 
 [man.kontrol]
 id = """
-Saat menyusun: pilih kartu di tanganmu, lalu pilih baris tujuan
-([ KE DEPAN ], [ KE TENGAH ], [ KE BELAKANG ]); pilih kartu di baris untuk
-mengembalikannya. [ SUSUN OTOMATIS ] memasang susunan saran, [ KIRIM ]
-mengirim susunan yang sah. Di antara tangan: [ LANJUT ] atau [ BERDIRI ].
-Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+Saat menyusun: pilih kartu di tanganmu (boleh beberapa), lalu baris
+tujuannya ([ KE DEPAN ], [ KE TENGAH ], [ KE BELAKANG ]); pilih kartu di
+susunan untuk mengembalikannya ke tangan. [ SARAN ] mengisi susunan saran
+yang masih bisa kamu ubah, [ ULANG ] mengosongkan susunan, [ KIRIM ]
+mengirim susunan 3/5/5, dan [ SUSUN OTOMATIS ] langsung mengirim susunan
+saran. Susunan yang salah (depan ≤ tengah ≤ belakang dilanggar) ditolak
+dengan pesan. Di antara tangan: [ LANJUT ] atau [ BERDIRI ]. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
 """
 en = """
-While arranging: choose a card in your hand, then choose the target row
-([ TO FRONT ], [ TO MIDDLE ], [ TO BACK ]); choose a card in a row to take
-it back. [ AUTO ARRANGE ] fills in the suggested arrangement, [ SUBMIT ]
-sends a valid arrangement. Between hands: [ NEXT ] or [ STAND UP ].
-Keyboard: the arrow keys move the focus, Enter or Space selects.
+While arranging: choose cards in your hand (several at once if you like),
+then their target row ([ TO FRONT ], [ TO MIDDLE ], [ TO BACK ]); choose a
+card in the rows to return it to your hand. [ SUGGEST ] fills in the
+suggested arrangement, which you can still change, [ CLEAR ] empties the
+rows, [ SUBMIT ] sends a 3/5/5 arrangement, and [ AUTO ARRANGE ] sends the
+suggested arrangement at once. An invalid arrangement (front ≤ middle ≤
+back broken) is rejected with a message. Between hands: [ NEXT ] or
+[ STAND UP ]. Keyboard: the arrow keys move the focus, Enter or Space
+selects.
 """
 
 [[langkah]]
