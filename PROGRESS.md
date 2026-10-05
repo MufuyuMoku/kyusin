@@ -17,7 +17,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M4 | selesai | 2026-09-29 | Mesin kartu bersama, ekonomi chip (saldo, tunjangan harian, ringkasan bandar), Blackjack (RTP 99,64% strategi dasar, provably fair per shoe), label level deskriptif |
 | M5a | selesai | 2026-10-02 | Sepuluh meja melawan bandar (Baccarat, Dragon Tiger, Casino War, Red Dog, Andar Bahar, Three Card Poker, Caribbean Stud, Casino Hold'em, Let It Ride, Pai Gow Poker). Sebelumnya: taruhan casino tercatat saat dipasang, titik simpan setiap aksi (D-059); SPEC Rev. 11 |
 | M5b-1 | selesai | 2026-10-02 | Texas Hold'em (No-Limit), Omaha (Pot-Limit), Teen Patti antar-pemain melawan bot; buy-in dari saldo; rating sesi multipemain; SPEC Rev. 12 |
-| M5b-2 | belum mulai | | Capsa Susun, Domino QiuQiu, mesin domino bersama |
+| M5b-2 | selesai | 2026-10-05 | Capsa Susun, Domino QiuQiu antar-pemain melawan bot; mesin domino bersama; aturan lokal pilihan klien (D-065) |
 | M6 | belum mulai | | |
 | M7 | belum mulai | | |
 | M8 | belum mulai | | |
@@ -50,8 +50,21 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Texas Hold'em | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-1); meja LAN menyusul |
 | Omaha | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-1); meja LAN menyusul |
 | Teen Patti | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-1); meja LAN menyusul |
+| Capsa Susun | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-2); meja LAN menyusul |
+| Domino QiuQiu | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-2); meja LAN menyusul |
 
 ## Log sesi
+
+### 2026-10-05 — M5b-2: Capsa Susun, Domino QiuQiu, mesin domino
+
+- Aturan lokal ditanyakan ke klien lebih dulu (11 pertanyaan; semua rekomendasi dipilih): D-065. Penerapan: D-066.
+- Tes aturan di-commit sebelum mesinnya: domino (3), Domino QiuQiu (10: urutan kartu spesial, Murni Kecil/Besar, pembagian otomatis, pemecah seri, ante dan dua putaran, batas pot-limit, fold, sesi dan kontrak chip, kartu dari seed, kekekalan chip 60 sesi acak), Capsa Susun (9: baris tiga vs lima kartu dan salah susun, poin baris/sapu bersih/royalti/seri, kartu istimewa, pembayaran proporsional, saran selalu sah, susun serentak dan sesi, kartu istimewa otomatis, kartu dari seed, kekekalan chip 40 sesi acak).
+- Mesin: `domino` (bersama Gaple nanti), `domino_qiuqiu`, `capsa_susun`; tutorial keduanya; tes host (buy-in, main, berdiri, rating).
+- Bot 3 level, kalibrasi antar-bot di GitHub Actions: Domino QiuQiu 1000 / 1185 / 1358; Capsa Susun 1000 / 1231 / 1413 (selisih 231 / 182).
+- UI: meja Capsa Susun (pilih kartu, pindah ke baris, saran, kirim, susun otomatis), kartu domino piksel di meja antar-pemain, pesan untuk perintah yang ditolak. Kedua meja muat di jendela bawaan tanpa gulir (diukur di peramban dengan backend tiruan sementara, tidak di-commit; dibuktikan tes jendela asli).
+- Tes: 318 tes Rust, 42 tes UI. Tes jendela asli (CI Windows): E2E_RESULT
+- Belum/sisa: meja LAN (M9); kalibrasi dari sesi heads-up.
+- Langkah berikutnya: M6 sesuai SPEC §9.
 
 ### 2026-10-04 — Perbaikan M5b-1 dari tinjauan klien (SPEC Rev. 13)
 

@@ -1,0 +1,62 @@
+{
+  "config": {
+    "kursi": 2,
+    "tangan_maks": 60
+  },
+  "date": "2026-10-05",
+  "game": "domino-qiuqiu",
+  "games_per_pairing": 2000,
+  "levels": [
+    {
+      "anchor": true,
+      "ci95": [
+        1000.0,
+        1000.0
+      ],
+      "elo": 1000.0,
+      "extrapolated": false,
+      "level": 1,
+      "results": []
+    },
+    {
+      "ci95": [
+        1167.0,
+        1202.0
+      ],
+      "elo": 1185.0,
+      "extrapolated": false,
+      "level": 2,
+      "results": [
+        {
+          "games": 2000,
+          "opponent_level": 1,
+          "points": 1486.5
+        }
+      ]
+    },
+    {
+      "ci95": [
+        1344.0,
+        1372.0
+      ],
+      "elo": 1358.0,
+      "extrapolated": false,
+      "level": 3,
+      "results": [
+        {
+          "games": 2000,
+          "opponent_level": 1,
+          "points": 1821.5
+        },
+        {
+          "games": 2000,
+          "opponent_level": 2,
+          "points": 1413.0
+        }
+      ]
+    }
+  ],
+  "method": "level 1 dipatok 1000; level berikutnya ditaksir berurutan dari hasil melawan semua level di bawahnya (kemungkinan maksimum model Elo logistik, selang 95% dari informasi Fisher); 0 langkah pembuka acak, kursi bergantian",
+  "opponent": "antar-bot",
+  "random_plies": 0
+}
