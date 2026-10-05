@@ -14,7 +14,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fail, resetToMenu, theme } from './helpers.mjs';
+import { fail, inView, resetToMenu, theme } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 /** Posisi dan ukuran elemen meja yang harus diam. */
@@ -89,6 +89,7 @@ async function checkAlignment(s) {
 	for (let i = 1; i < a.lefts.length; i++) if (a.lefts[i] <= a.lefts[i - 1]) fail(`urutan kotak tangan: ${a.lefts}`);
 	if (a.sizes.some((z) => z !== '44x60')) fail(`ukuran kartu: ${a.sizes}`);
 	if (a.offsets.some((o) => o !== 18)) fail(`geser kartu: ${a.offsets}`);
+	await inView(s, ['.table', '.table .controls button'], 'blackjack: meja');
 	return a;
 }
 

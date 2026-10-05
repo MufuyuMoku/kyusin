@@ -1,10 +1,12 @@
 // Tes jendela asli meja antar-pemain M5b-1 (SPEC §4, §7, §11; D-063):
 // Texas Hold'em, Omaha, Teen Patti melawan bot level 1. Untuk setiap game:
 //  1. duduk: buy-in 2.000 dipindahkan dari saldo (D-059);
-//  2. keselarasan: semua kotak kartu kursi berawal di x yang sama, kartu
+//  2. keselarasan: kotak kartu kursi lawan sejajar per kolom kisi (paling
+//     banyak dua kolom), kotak kartu kursimu sejajar dengan kartu meja, kartu
 //     44×60, geser kartu tetap (18 px; kartu meja poker 48 px);
-//  3. hover dan kursor keyboard ke setiap kontrol tidak menggeser apa pun
-//     (diukur di koordinat isi halaman; gulir `main` bukan geseran);
+//  3. meja dan semua kontrol aksi muat di jendela bawaan tanpa gulir (SPEC §4
+//     Rev. 13); hover dan kursor keyboard ke setiap kontrol tidak menggeser
+//     apa pun;
 //  4. satu tangan dimainkan sampai selesai lewat kontrol visual; kartu baru
 //     tidak menggeser kotak kursi;
 //  5. berdiri: tumpukan kembali ke saldo, verify cocok, rating lokal tampil;
@@ -12,7 +14,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fail, resetToMenu, theme } from './helpers.mjs';
+import { fail, inView, resetToMenu, theme } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 const GAMES = [
@@ -21,16 +23,10 @@ const GAMES = [
 	{ id: 'teen-patti', name: 'Teen Patti', passive: ['[ SHOW · ', '[ CHAAL · '] }
 ];
 
-// Posisi dalam koordinat isi halaman: meja enam kursi lebih tinggi dari
-// jendela, jadi fokus keyboard boleh menggulir `main` ke kontrol yang dipilih;
-// itu bukan geseran tata letak.
 const layout = () => {
-	const main = document.querySelector('main');
-	const sx = main?.scrollLeft ?? 0;
-	const sy = main?.scrollTop ?? 0;
 	const r = (el) => {
 		const b = el.getBoundingClientRect();
-		return [Math.round((b.x + sx) * 10) / 10, Math.round((b.y + sy) * 10) / 10, Math.round(b.width * 10) / 10, Math.round(b.height * 10) / 10];
+		return [Math.round(b.x * 10) / 10, Math.round(b.y * 10) / 10, Math.round(b.width * 10) / 10, Math.round(b.height * 10) / 10];
 	};
 	const out = {};
 	document.querySelectorAll('.table [data-row]').forEach((h) => (out[`row:${h.dataset.row}`] = r(h)));
@@ -60,18 +56,22 @@ const state = () => {
 
 async function checkAlignment(s, id) {
 	const a = await s.exec(() => {
-		const seats = [...document.querySelectorAll('.table [data-row^="kursi"]')].map((h) => Math.round(h.getBoundingClientRect().left));
+		const left = (q) => [...document.querySelectorAll(q)].map((h) => Math.round(h.getBoundingClientRect().left));
+		const seats = left('.table .others [data-row^="kursi"]');
+		const mine = left('.table .me [data-row], .table [data-row="meja"]');
 		const cards = [...document.querySelectorAll('.table .card')].map((c) => {
 			const b = c.getBoundingClientRect();
 			return { x: b.x, w: b.width, h: b.height, parent: c.parentElement };
 		});
 		const offsets = [];
 		for (let i = 1; i < cards.length; i++) if (cards[i].parent === cards[i - 1].parent) offsets.push(Math.round(cards[i].x - cards[i - 1].x));
-		return { seats, sizes: cards.map((c) => `${Math.round(c.w)}x${Math.round(c.h)}`), offsets };
+		return { seats, mine, sizes: cards.map((c) => `${Math.round(c.w)}x${Math.round(c.h)}`), offsets };
 	});
-	if (new Set(a.seats).size > 1) fail(`${id}: kotak kursi tidak sejajar: ${a.seats}`);
+	if (new Set(a.seats).size > 2) fail(`${id}: kotak kursi lawan tidak sejajar per kolom: ${a.seats}`);
+	if (new Set(a.mine).size > 1) fail(`${id}: kotak kursimu tidak sejajar dengan kartu meja: ${a.mine}`);
 	if (a.sizes.some((z) => z !== '44x60')) fail(`${id}: ukuran kartu ${a.sizes}`);
 	if (a.offsets.some((o) => o !== 18 && o !== 48)) fail(`${id}: geser kartu ${a.offsets}`);
+	await inView(s, ['.table', '.table .controls button'], `${id}: meja`);
 	return a;
 }
 

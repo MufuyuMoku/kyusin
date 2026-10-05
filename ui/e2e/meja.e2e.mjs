@@ -16,7 +16,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fail, resetToMenu, theme } from './helpers.mjs';
+import { fail, inView, resetToMenu, theme } from './helpers.mjs';
 import { KEYS } from './webdriver.mjs';
 
 const GAMES = [
@@ -86,6 +86,7 @@ async function checkAlignment(s, id) {
 	if (new Set(a.hands).size > 1) fail(`${id}: kotak kartu tidak sejajar: ${a.hands}`);
 	if (a.sizes.some((z) => z !== '44x60')) fail(`${id}: ukuran kartu ${a.sizes}`);
 	if (a.offsets.some((o) => o !== 18 && o !== 48 && o !== 64)) fail(`${id}: geser kartu ${a.offsets}`);
+	await inView(s, ['.table', '.table .controls button'], `${id}: meja`);
 	return a;
 }
 

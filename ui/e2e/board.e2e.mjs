@@ -4,7 +4,7 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { checkAlignment, readCells, resetToMenu, sameCells, sweepHover, sweepKeyboard, theme } from './helpers.mjs';
+import { checkAlignment, inView, readCells, resetToMenu, sameCells, sweepHover, sweepKeyboard, theme } from './helpers.mjs';
 
 export async function run(s, artifacts, log) {
 	await resetToMenu(s);
@@ -16,6 +16,7 @@ export async function run(s, artifacts, log) {
 	const base = await s.exec(readCells);
 	const shape = checkAlignment(base);
 	log(`selaras: sel ${shape.cell}, jarak ${shape.pitch}px`);
+	log(`muat tanpa gulir: papan dan kontrol, sisa ${await inView(s, ['[role="grid"]', '.left .controls button'], 'papan')} px`);
 	log(`kursor keyboard: ${await sweepKeyboard(s, base)} sel, tidak ada sel yang bergeser`);
 	const legal = await s.exec(() => document.querySelector('[role="gridcell"].can').dataset.sq);
 	log(`hover: ${await sweepHover(s, base)} sel, tidak ada sel yang bergeser`);

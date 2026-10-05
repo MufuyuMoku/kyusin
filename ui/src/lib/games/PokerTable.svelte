@@ -1,9 +1,11 @@
 <!--
   Meja antar-pemain M5b-1 (SPEC §4, §6.3): Texas Hold'em, Omaha, Teen
-  Patti. Setiap kursi satu baris berukuran tetap (label, kartu dengan slot
-  tetap diposisikan absolut, keterangan satu baris), lalu kartu meja (poker),
-  pot, dan kontrol. Kartu baru, hover, fokus, dan penanda giliran (lapisan
-  garis tepi) tidak menggeser apa pun. Yang dikirim selalu perintah teks.
+  Patti. Supaya meja enam kursi muat di jendela bawaan tanpa gulir (SPEC §4
+  Rev. 13), kursi lawan diringkas dalam kisi dua kolom (kartu + dua baris
+  keterangan), lalu kartu meja (poker), kursimu, pot, dan bilah aksi yang
+  menempel di bawah. Kartu berslot tetap diposisikan absolut; kartu baru,
+  hover, fokus, dan penanda giliran (lapisan garis tepi) tidak menggeser apa
+  pun. Yang dikirim selalu perintah teks.
 -->
 <script lang="ts">
 	import NavButton from '$lib/components/NavButton.svelte';
@@ -65,17 +67,29 @@
 		return m.join(' ');
 	}
 
-	function seatLine(i: number): string {
+	const out = (i: number) => ['fold', 'pack', 'habis', 'berdiri'].includes(v!.kursi[i].status);
+
+	/** Status kursi: status, buta/terlihat, nama tangan. */
+	function statusParts(i: number): string[] {
+		const k = v!.kursi[i];
+		const parts = [t(`pk.status.${k.status}` as Key)];
+		if (teen && k.status === 'aktif') parts.push(t(k.terlihat ? 'pk.seen' : 'pk.blind'));
+		if (k.tangan) parts.push(t(`mj.hand.${k.tangan}` as Key));
+		return parts;
+	}
+
+	/** Angka kursi: tumpukan, taruhan, kemenangan. */
+	function chipParts(i: number): string[] {
 		const k = v!.kursi[i];
 		const parts = [t('pk.stack', { n: k.tumpukan })];
 		if (!teen && (k.taruhan ?? 0) > 0) parts.push(t('pk.bet', { n: k.taruhan ?? 0 }));
 		if (teen && k.taruhan_tangan > 0) parts.push(t('pk.in_pot', { n: k.taruhan_tangan }));
-		parts.push(t(`pk.status.${k.status}` as Key));
-		if (teen && k.status === 'aktif') parts.push(t(k.terlihat ? 'pk.seen' : 'pk.blind'));
-		if (k.tangan) parts.push(t(`mj.hand.${k.tangan}` as Key));
 		if (v!.fase !== 'main' && k.menang > 0) parts.push(t('pk.won', { n: k.menang }));
-		return parts.join(' · ');
+		return parts;
 	}
+
+	const seatLine = (i: number) => [...chipParts(i), ...statusParts(i)].join(' · ');
+	const others = $derived(v ? v.kursi.map((_, i) => i).filter((i) => i !== v.kamu) : []);
 
 	const lastActions = $derived(
 		v ? v.log.slice(-3).map(([s, c]) => `${seatName(s)}: ${c}`).join(' · ') : ''
@@ -86,25 +100,30 @@
 </script>
 
 {#if v}
-	<div class="table" data-fase={v.fase} data-game={game}>
-		{#each v.kursi as k, i (i)}
-			<div class="row seat" class:me={i === v.kamu} data-seat={i}>
-				<span class="label" class:dim={i !== v.kamu}>{seatName(i)}<span class="marks">{marks(i)}</span></span>
-				<div class="hand" data-row={`kursi-${i}`} style:width={`calc(${(hole - 1) * OFFSET}px + var(--card-w) + 1ch)`}>
-					<div class="cards">
-						{#each k.kartu as c, j (j)}
-							<span class="card" data-card={c} style:left={`${j * OFFSET}px`}>
-								<PixelSprite pixels={cardPixels(c)} size={2} />
-							</span>
-						{/each}
-					</div>
-					{#if v.giliran === i}<div class="layer turn" aria-hidden="true"></div>{/if}
-				</div>
-				<p class="line" class:dim={k.status === 'fold' || k.status === 'pack' || k.status === 'habis' || k.status === 'berdiri'}>
-					{seatLine(i)}
-				</p>
+	{#snippet hand(i: number)}
+		<div class="hand" data-row={`kursi-${i}`} style:width={`calc(${(hole - 1) * OFFSET}px + var(--card-w) + 1ch)`}>
+			<div class="cards">
+				{#each v!.kursi[i].kartu as c, j (j)}
+					<span class="card" data-card={c} style:left={`${j * OFFSET}px`}>
+						<PixelSprite pixels={cardPixels(c)} size={2} />
+					</span>
+				{/each}
 			</div>
-		{/each}
+			{#if v!.giliran === i}<div class="layer turn" aria-hidden="true"></div>{/if}
+		</div>
+	{/snippet}
+	<div class="table" data-fase={v.fase} data-game={game}>
+		<div class="others">
+			{#each others as i (i)}
+				<div class="seat mini" data-seat={i}>
+					{@render hand(i)}
+					<div class="meta" class:dim={out(i)}>
+						<p class="line"><span class="dim">{seatName(i)}</span>{#if marks(i)}<span class="marks">{marks(i)}</span>{/if} · {statusParts(i).join(' · ')}</p>
+						<p class="line">{chipParts(i).join(' · ')}</p>
+					</div>
+				</div>
+			{/each}
+		</div>
 
 		{#if !teen}
 			<div class="row">
@@ -120,6 +139,12 @@
 				</div>
 			</div>
 		{/if}
+
+		<div class="row seat me" data-seat={v.kamu}>
+			<span class="label">{seatName(v.kamu)}<span class="marks">{marks(v.kamu)}</span></span>
+			{@render hand(v.kamu)}
+			<p class="line" class:dim={out(v.kamu)}>{seatLine(v.kamu)}</p>
+		</div>
 
 		<div class="row info dim">
 			<span>{t('pk.pot', { n: v.pot })}</span>
@@ -210,6 +235,22 @@
 		gap: 2ch;
 		align-items: center;
 	}
+	.others {
+		display: grid;
+		grid-template-columns: repeat(2, max-content);
+		gap: calc(var(--cell-h) / 3) 3ch;
+	}
+	.mini {
+		display: flex;
+		gap: 1ch;
+		align-items: center;
+	}
+	.meta {
+		width: 34ch;
+	}
+	.meta .line {
+		width: auto;
+	}
 	.label {
 		width: 12ch;
 		flex: none;
@@ -257,10 +298,14 @@
 		white-space: nowrap;
 		overflow: hidden;
 	}
+	/* Bilah aksi menempel di bawah area gulir (SPEC §4 Rev. 13). */
 	.controls {
+		position: sticky;
+		bottom: 0;
+		background: var(--bg);
 		display: flex;
 		flex-direction: column;
-		gap: calc(var(--cell-h) / 2);
+		gap: calc(var(--cell-h) / 3);
 	}
 	.bet-row {
 		display: flex;
@@ -273,6 +318,6 @@
 	}
 	.hint {
 		margin: 0;
-		min-height: calc(var(--cell-h) * 2);
+		min-height: var(--cell-h);
 	}
 </style>
