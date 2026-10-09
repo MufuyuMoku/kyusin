@@ -188,9 +188,14 @@ async function boardGame(s, g, log, artifacts) {
 		same(base, await s.exec(layout), 'memilih angka mode GABUNG');
 		const label = await s.exec(() => [...document.querySelectorAll('.table .controls button')].map((b) => b.textContent.trim()).find((t) => t.startsWith('[ + ')));
 		if (label !== '[ + SPLIT 17/20 ]') fail(`roulette: tombol gabung "${label}"`);
-		await press(s, label);
-		const inside = await s.exec(() => document.querySelector('.table [data-inside]')?.textContent.trim());
-		if (!inside?.includes('split 17/20 ·10')) fail(`roulette: taruhan gabungan tidak tampil: "${inside}"`);
+		// Pilihan dikosongkan seketika (label tombol berubah sebelum host
+		// menjawab), jadi tunggu taruhannya sendiri tampil di baris gabungan.
+		await tap(s, label);
+		await s.waitFor(
+			() => (document.querySelector('.table [data-inside]')?.textContent ?? '').includes('split 17/20 ·10'),
+			'roulette: taruhan gabungan tampil',
+			10000
+		);
 		await tap(s, '[ LURUS ]');
 		extra = ', split 17/20 lewat mode GABUNG';
 	}
