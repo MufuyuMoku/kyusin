@@ -41,16 +41,18 @@ from the round seed, the seed is revealed afterwards, verify replays it.
 
 [man.kontrol]
 id = """
-Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan. Untuk
-split, street, corner, dan line, pilih jenis taruhannya lalu klik angka
-pojok kiri atasnya. [ ULANG ] menarik taruhan, [ PUTAR ] memutar roda.
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan. Mode
+[ LURUS ]: klik angka memasang straight. Mode [ GABUNG ]: klik angka-angka
+yang dicakup (2 split, 3 street/trio, 4 corner, 5 top line, 6 line), lalu
+[ + PASANG ]. [ ULANG TARUHAN ] menarik taruhan, [ PUTAR ] memutar roda.
 Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
 """
 en = """
-Choose a chip value, then click a spot on the layout to add a bet. For
-split, street, corner, and line, choose the bet type and click its top-left
-number. [ CLEAR ] takes the bets back, [ SPIN ] spins the wheel. Keyboard:
-the arrow keys move the focus, Enter or Space selects.
+Choose a chip value, then click a spot on the layout to add a bet.
+[ STRAIGHT ] mode: clicking a number bets it straight up. [ COMBINE ] mode:
+click the numbers covered (2 split, 3 street/trio, 4 corner, 5 top line, 6
+line), then [ + PLACE ]. [ CLEAR BETS ] takes the bets back, [ SPIN ] spins
+the wheel. Keyboard: the arrow keys move the focus, Enter or Space selects.
 """
 
 [[langkah]]

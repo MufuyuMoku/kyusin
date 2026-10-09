@@ -61,14 +61,14 @@ done.
 
 [man.kontrol]
 id = """
-Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan; klik
-[ TARIK ] di samping taruhan untuk menariknya. [ LEMPAR ] melempar dadu.
-Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan.
+[ TARIK ] menyalakan mode tarik: klik taruhan untuk menariknya. [ LEMPAR ]
+melempar dadu. Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
 """
 en = """
-Choose a chip value, then click a spot on the layout to add a bet; click
-[ TAKE ] beside a bet to take it down. [ ROLL ] rolls the dice. Keyboard:
-the arrow keys move the focus, Enter or Space selects.
+Choose a chip value, then click a spot on the layout to add a bet. [ TAKE ]
+turns on take mode: click a bet to take it down. [ ROLL ] rolls the dice.
+Keyboard: the arrow keys move the focus, Enter or Space selects.
 """
 
 [[langkah]]

@@ -50,12 +50,12 @@ the round seed, the seed is revealed afterwards, verify replays it.
 
 [man.kontrol]
 id = """
-Pilih nilai chip lalu [ PASANG ]. Klik dua ubin untuk tangan pertama lalu
+Pilih nilai chip lalu [ BAGI · n ]. Klik dua ubin untuk satu tangan lalu
 [ SUSUN ], atau [ HOUSE WAY ] untuk susunan bandar. Keyboard: panah
 memindahkan fokus, Enter atau Spasi memilih.
 """
 en = """
-Choose a chip value, then [ BET ]. Click two tiles for the first hand, then
+Choose a chip value, then [ DEAL · n ]. Click two tiles for one hand, then
 [ SET ], or [ HOUSE WAY ] for the house way. Keyboard: the arrow keys move
 the focus, Enter or Space selects.
 """
@@ -65,8 +65,8 @@ teks.id = "Pasang 100."
 teks.en = "Bet 100."
 aksi = "bet 100"
 sorot = ["aksi:bet 100"]
-petunjuk.id = "Pilih chip 100 lalu PASANG."
-petunjuk.en = "Choose the 100 chip, then BET."
+petunjuk.id = "Susun taruhan 100 lalu pilih BAGI · 100."
+petunjuk.en = "Make the bet 100, then choose DEAL · 100."
 
 [[langkah]]
 teks.id = "Kamu mendapat sepasang Teen (6-6), 5-4 (9), dan 6-2 (8). Memecah Teen memberi Wong (6-6 + 5-4) dan Gong (6-6 + 6-2), lebih kuat daripada pasangan Teen dengan tangan 7. Susun 6-6 dan 5-4."

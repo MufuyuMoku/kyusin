@@ -14,6 +14,8 @@ import ChessBoard from './ChessBoard.svelte';
 import ChessStatus from './ChessStatus.svelte';
 import MejaStatus from './MejaStatus.svelte';
 import MejaTable from './MejaTable.svelte';
+import PapanStatus from './PapanStatus.svelte';
+import PapanTable from './PapanTable.svelte';
 import PokerStatus from './PokerStatus.svelte';
 import PokerTable from './PokerTable.svelte';
 import ReversiBoard from './ReversiBoard.svelte';
@@ -36,6 +38,8 @@ export interface BoardProps {
 
 export interface StatusProps {
 	view: unknown;
+	/** Id game (status papan taruhan memilih kata kerjanya dari sini). */
+	game?: string;
 	botTurn?: boolean;
 	/** Penonton (replay): tanpa kalimat giliranmu. */
 	observer?: boolean;
@@ -61,6 +65,8 @@ export interface GameUi {
 }
 
 const meja = (perRound: boolean): GameUi => ({ board: MejaTable, status: MejaStatus, seats: [], perRound });
+/** Papan taruhan M6a: satu ronde (Craps: satu penembak) per pertandingan. */
+const papan: GameUi = { board: PapanTable, status: PapanStatus, seats: [], perRound: true };
 
 export const GAME_UI: Record<string, GameUi> = {
 	catur: {
@@ -90,6 +96,14 @@ export const GAME_UI: Record<string, GameUi> = {
 	'casino-holdem': meja(true),
 	'let-it-ride': meja(true),
 	'pai-gow': meja(true),
+	'roulette-eropa': papan,
+	'roulette-amerika': papan,
+	'sic-bo': papan,
+	'chuck-a-luck': papan,
+	'big-six': papan,
+	'fan-tan': papan,
+	craps: papan,
+	'pai-gow-ubin': meja(true),
 	'texas-holdem': { board: PokerTable, status: PokerStatus, seats: [] },
 	omaha: { board: PokerTable, status: PokerStatus, seats: [] },
 	'teen-patti': { board: PokerTable, status: PokerStatus, seats: [] },

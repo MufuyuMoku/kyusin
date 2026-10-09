@@ -44,7 +44,7 @@
 					onplay={tutorialAct}
 					actions={tut.actions.map((a) => a.usage)}
 				/>
-				<ui.status view={tut.view_data} />
+				<ui.status view={tut.view_data} game={tut.game} />
 			</div>
 		{:else}
 			<Frame title={t('tutorial.board')}>

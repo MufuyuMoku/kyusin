@@ -39,14 +39,14 @@ from the round seed, the seed is revealed afterwards, verify replays it.
 
 [man.kontrol]
 id = """
-Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan. [ ULANG ]
-menarik taruhan, [ LEMPAR ] menjalankan ronde. Keyboard: panah memindahkan
-fokus, Enter atau Spasi memilih.
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan.
+[ ULANG TARUHAN ] menarik taruhan, [ LEMPAR ] menjalankan ronde. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
 """
 en = """
-Choose a chip value, then click a spot on the layout to add a bet. [ CLEAR ]
-takes the bets back, [ ROLL ] plays the round. Keyboard: the arrow keys move
-the focus, Enter or Space selects.
+Choose a chip value, then click a spot on the layout to add a bet.
+[ CLEAR BETS ] takes the bets back, [ ROLL ] plays the round. Keyboard: the
+arrow keys move the focus, Enter or Space selects.
 """
 
 [[langkah]]
