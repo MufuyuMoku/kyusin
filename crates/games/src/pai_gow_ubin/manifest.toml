@@ -9,9 +9,9 @@ kompetitif = false
 lan = false
 agen = true
 # Bandar selalu bankir, komisi 5% dari kemenangan, copy untuk bandar, house
-# way terdokumentasi (D-069). RTP house way lawan house way, dienumerasi tepat
-# di GitHub Actions (rtp_exact).
-rtp = 97.4
+# way terdokumentasi (D-069). RTP house way lawan house way 97,6047%,
+# enumerasi tepat semua pembagian di GitHub Actions (rtp_exact).
+rtp = 97.6
 tutorial = "tutorials/pai-gow-ubin.toml"
 
 [[perintah]]

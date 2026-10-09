@@ -18,7 +18,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M5a | selesai | 2026-10-02 | Sepuluh meja melawan bandar (Baccarat, Dragon Tiger, Casino War, Red Dog, Andar Bahar, Three Card Poker, Caribbean Stud, Casino Hold'em, Let It Ride, Pai Gow Poker). Sebelumnya: taruhan casino tercatat saat dipasang, titik simpan setiap aksi (D-059); SPEC Rev. 11 |
 | M5b-1 | selesai | 2026-10-02 | Texas Hold'em (No-Limit), Omaha (Pot-Limit), Teen Patti antar-pemain melawan bot; buy-in dari saldo; rating sesi multipemain; SPEC Rev. 12 |
 | M5b-2 | selesai | 2026-10-05 | Capsa Susun, Domino QiuQiu antar-pemain melawan bot; mesin domino bersama; aturan lokal pilihan klien (D-065) |
-| M6a | belum mulai | | Roulette Eropa dan Amerika, Craps, Sic Bo, Big Six, Fan-Tan, Pai Gow ubin, Chuck-a-luck |
+| M6a | selesai | 2026-10-09 | Roulette Eropa dan Amerika, Craps, Sic Bo, Big Six, Fan-Tan, Pai Gow ubin, Chuck-a-luck; varian pilihan klien (D-069), mesin papan taruhan bersama (D-070) |
 | M6b | belum mulai | | Keno, Bingo, kartu gosok, Hi-Lo, Video Poker |
 | M7 | belum mulai | | |
 | M8 | belum mulai | | |
@@ -53,8 +53,27 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Teen Patti | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-1); meja LAN menyusul |
 | Capsa Susun | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-2); meja LAN menyusul |
 | Domino QiuQiu | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M5b-2); meja LAN menyusul |
+| Roulette Eropa | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Roulette Amerika | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Craps | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Sic Bo | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Big Six | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Fan-Tan | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Pai Gow ubin | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Chuck-a-luck | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
 
 ## Log sesi
+
+### 2026-10-09 — M6a: casino dadu dan roda
+
+- Varian dan tabel bayar ditanyakan ke klien lebih dulu (12 pertanyaan dengan rekomendasi dan sumber; semua rekomendasi dipilih): D-069. Penerapan: D-070.
+- Tes aturan di-commit sebelum mesinnya (commit 8ebe501): Roulette (7), dadu dan roda (Sic Bo, Chuck-a-luck, Big Six, Fan-Tan; 5), Craps (8), Pai Gow ubin (7).
+- Mesin: `papan_taruhan` (mesin bersama), `dadu`, Roulette Eropa/Amerika, Sic Bo, Chuck-a-luck, Big Six, Fan-Tan, Craps (satu penembak per pertandingan), Pai Gow ubin (32 ubin Cina, house way, komisi 5%, copy untuk bandar); manifest, man, dan tutorial delapan game.
+- RTP: 41 taruhan diumumkan, semua di bawah 100%; dihitung tepat (enumerasi/rantai Markov; Pai Gow ubin 736.281.000 pembagian di Actions: 97,6047%) dan diverifikasi simulasi ≥100.000 ronde di CI serta 10.000.000 ronde per taruhan di `rtp.yml` (run 37869499586: semua cocok kecuali angka sementara Pai Gow ubin 97,4%, lalu diganti angka tepat).
+- UI: `PapanTable` untuk tujuh game dadu/roda (sel taruhan tetap, dadu sprite, roulette dengan mode LURUS/GABUNG, Craps dengan mode TARIK), Pai Gow ubin di `MejaTable` dengan sprite ubin. Tata letak diukur di peramban dengan halaman pratinjau sementara (tidak di-commit; bukan bukti visual), lalu dibuktikan tes jendela asli `papan.e2e.mjs` (keselarasan sel, label dan jumlah tidak terpotong, muat tanpa gulir, hover/kursor tanpa geser, taruhan dipotong saat dipasang, saldo = hasil ronde, verify, split lewat GABUNG, TARIK di Craps, penembak sampai seven-out, ubin dipilih tanpa geser, ronde berikutnya).
+- Tes: 346 tes Rust, 49 tes UI.
+- Belum/sisa: tidak ada untuk M6a.
+- Langkah berikutnya: M6b (Keno, Bingo, kartu gosok, Hi-Lo, Video Poker) setelah tinjauan klien; tabel bayar Video Poker ditanyakan lebih dulu (full pay > 100% tidak boleh, D-068).
 
 ### 2026-10-05 — Tinjauan klien atas M5b-2 (A–D) dan SPEC Revisi 14
 

@@ -39,11 +39,12 @@ pub const LIMITS: Limits = Limits {
     step: 20,
 };
 
-/// RTP per taruhan, pemain dan bandar memakai house way (enumerasi tepat
-/// semua pasangan tangan di GitHub Actions; D-069).
+/// RTP per taruhan, pemain dan bandar memakai house way: enumerasi tepat
+/// semua 736.281.000 pembagian di GitHub Actions (`rtp_exact`), menang kedua
+/// tangan 239.437.760, kalah kedua tangan 245.102.212 (D-069).
 pub const RTP: &[WagerRtp] = &[WagerRtp {
     wager: "bet",
-    percent: 97.4,
+    percent: 97.6047,
     manifest: true,
 }];
 

@@ -22,7 +22,7 @@ Nilai sama dimenangkan ubin tertinggi; masih sama, atau sama-sama 0, adalah
 copy dan dimenangkan bandar. Bandar selalu bankir dan menyusun menurut house
 way. Menang kedua tangan dibayar 1:1 dipotong komisi 5%, menang satu kalah
 satu push, kalah kedua tangan kehilangan taruhan. Taruhan 20–2.000,
-kelipatan 20. RTP dengan house way sekitar 97%.
+kelipatan 20. RTP dengan house way 97,60%.
 
 Provably fair per ronde: komitmen seed sebelum taruhan, ubin dari seed
 ronde, seed dibuka sesudahnya, verify memutar ulang.
@@ -42,7 +42,7 @@ Equal values go to the highest tile; still equal, or both 0, is a copy and
 goes to the dealer. The dealer always banks and sets the house way. Winning
 both hands pays 1:1 less a 5% commission, one win and one loss is a push,
 losing both hands loses the bet. Bets 20–2,000, multiples of 20. The return
-with the house way is about 97%.
+with the house way is 97.60%.
 
 Provably fair per round: seed commitment before betting, the tiles come from
 the round seed, the seed is revealed afterwards, verify replays it.
