@@ -1,0 +1,16 @@
+# Teks tampilan papan taruhan casino dadu dan roda (M6a) dalam dua bahasa.
+[id]
+"result" = "Hasil: {result}"
+"bets" = "Taruhan: {bets}"
+"place_bet" = "Susun taruhan: bet <tempat> <jumlah>, lalu {verb}. clear menarik taruhan, leave berhenti."
+"over.ronde_selesai" = "Ronde selesai: bersih {net}. Seed ronde dibuka."
+"over.berhenti" = "Kamu berhenti tanpa memasang taruhan. Seed ronde dibuka."
+"summary" = "Ronde selesai: bersih {net} chip."
+
+[en]
+"result" = "Result: {result}"
+"bets" = "Bets: {bets}"
+"place_bet" = "Build your bets: bet <spot> <amount>, then {verb}. clear takes the bets back, leave stops."
+"over.ronde_selesai" = "Round finished: net {net}. The round seed is revealed."
+"over.berhenti" = "You stopped without betting. The round seed is revealed."
+"summary" = "Round finished: net {net} chips."

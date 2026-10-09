@@ -48,6 +48,21 @@ fn main() {
         t.elapsed().as_secs_f64(),
     );
 
+    let t = std::time::Instant::now();
+    let threads = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let c = kyusin_bots::pai_gow_ubin::exact_count(threads);
+    println!(
+        "pai-gow-ubin: {} pembagian, menang {}, kalah {}",
+        c.total, c.win, c.lose
+    );
+    report(
+        kyusin_games::pai_gow_ubin::ID,
+        "bet",
+        kyusin_games::pai_gow_ubin::RTP,
+        kyusin_bots::pai_gow_ubin::percent(c),
+        t.elapsed().as_secs_f64(),
+    );
+
     if check && !failed.is_empty() {
         eprintln!("GAGAL: {failed:?}");
         std::process::exit(1);

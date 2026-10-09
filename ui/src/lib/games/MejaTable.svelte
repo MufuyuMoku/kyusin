@@ -17,6 +17,7 @@
 	import { t } from '$lib/i18n.svelte';
 	import PixelSprite from './PixelSprite.svelte';
 	import { cardPixels } from './cards';
+	import { dominoPixels } from './domino';
 	import { cardLeft, chipSteps, isMejaView, rowSpan, tableModel } from './meja';
 
 	let {
@@ -62,7 +63,8 @@
 
 	// Tutorial: `bet <tempat> <n>` / `bet <n>` menyetel jumlah taruhan,
 	// `set a b` memilih kartu.
-	let selected = $state<string[]>([]);
+	// Pilihan berupa indeks: Pai Gow ubin punya ubin kembar (dua 6-6).
+	let selected = $state<number[]>([]);
 	$effect(() => {
 		for (const h of highlight) {
 			const m = /^bet (?:\S+ )?(\d+)$/.exec(h);
@@ -79,10 +81,12 @@
 		amount = Math.min(maxBet, amount + n);
 	}
 
-	function toggle(card: string) {
-		if (selected.includes(card)) selected = selected.filter((c) => c !== card);
-		else if (selected.length < (model?.pick ?? 0)) selected = [...selected, card];
+	function toggle(i: number) {
+		if (selected.includes(i)) selected = selected.filter((c) => c !== i);
+		else if (selected.length < (model?.pick ?? 0)) selected = [...selected, i];
 	}
+	const pickRow = $derived(model?.rows.find((r) => r.selectable));
+	const pix = (c: string) => (model?.tiles ? dominoPixels(c) : cardPixels(c));
 
 	function spotRoom(spot: string): number {
 		return (v?.maks_taruhan ?? 2000) - (nextRound ? 0 : (placed[spot] ?? 0));
@@ -109,18 +113,18 @@
 							{#if row.selectable && interactive}
 								<span class="card pick" data-card={c} style:left={`${cardLeft(row, i)}px`}>
 									<NavButton
-										pressed={selected.includes(c)}
+										pressed={selected.includes(i)}
 										sorot={litCards.has(c)}
 										label={t('mj.pick_card', { card: c })}
-										onclick={() => toggle(c)}
+										onclick={() => toggle(i)}
 									>
-										<PixelSprite pixels={cardPixels(c)} size={2} />
+										<PixelSprite pixels={pix(c)} size={2} />
 									</NavButton>
-									{#if selected.includes(c)}<span class="layer chosen" aria-hidden="true"></span>{/if}
+									{#if selected.includes(i)}<span class="layer chosen" aria-hidden="true"></span>{/if}
 								</span>
 							{:else}
 								<span class="card" data-card={c} style:left={`${cardLeft(row, i)}px`}>
-									<PixelSprite pixels={cardPixels(c)} size={2} />
+									<PixelSprite pixels={pix(c)} size={2} />
 								</span>
 							{/if}
 						{/each}
@@ -194,7 +198,7 @@
 							<NavButton
 								sorot={[...highlight].some((h) => h.startsWith('set '))}
 								disabled={selected.length !== model.pick}
-								onclick={() => onplay(`set ${selected.join(' ')}`)}>[ {t('mj.cmd.set')} ]</NavButton
+								onclick={() => onplay(`set ${selected.map((i) => pickRow?.cards[i]).join(' ')}`)}>[ {t('mj.cmd.set')} ]</NavButton
 							>
 						{/if}
 						{#each model.choices as c (c.cmd)}
@@ -204,7 +208,9 @@
 						{/each}
 					</div>
 					<p class="hint dim">
-						{model.pick ? t('mj.pick_hint', { n: selected.length }) : t('mj.choice_hint')}
+						{model.pick
+							? t(model.tiles ? 'mj.pgu.pick_hint' : 'mj.pick_hint', { n: selected.length })
+							: t('mj.choice_hint')}
 					</p>
 				{/if}
 			</div>

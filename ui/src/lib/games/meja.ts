@@ -71,6 +71,8 @@ export interface TableModel {
 	outcome: string;
 	/** Pai Gow: jumlah kartu yang dipilih untuk `set`. */
 	pick?: number;
+	/** Baris berisi ubin domino (Pai Gow ubin), bukan kartu remi. */
+	tiles?: boolean;
 }
 
 type V = MejaView & Record<string, any>;
@@ -316,6 +318,51 @@ const MODELS: Record<string, (v: V) => TableModel> = {
 	}
 };
 
+/** Nama tangan Pai Gow ubin: `pair`, `wong`, `gong`, `gee_joon`, atau nilai 0–9. */
+function tileHand(key: unknown): string {
+	if (typeof key !== 'string') return '';
+	return /^\d$/.test(key) ? t('mj.pgu.points', { n: key }) : t(`mj.pgu.${key}` as Key);
+}
+
+MODELS['pai-gow-ubin'] = (v) => {
+	const over = v.fase === 'selesai' && v.ronde > 0;
+	const nama = (v.nama ?? []) as string[];
+	const res = (r: unknown) => (typeof r === 'string' ? t(`mj.pg.${r}` as Key) : '');
+	const hasil = (v.hasil ?? []) as string[];
+	return {
+		rows: [
+			{
+				id: 'bandar',
+				label: t('mj.dealer'),
+				cards: over ? [...v.bandar_tinggi, ...v.bandar_rendah] : v.bandar,
+				slots: 4,
+				spread: true,
+				gapAfter: over ? 2 : undefined,
+				line: over ? t('mj.pgu.hands', { hi: tileHand(nama[2]), lo: tileHand(nama[3]) }) : ''
+			},
+			{
+				id: 'pemain',
+				label: t('mj.you'),
+				cards: over ? [...v.tinggi, ...v.rendah] : v.pemain,
+				slots: 4,
+				spread: true,
+				selectable: v.fase === 'susun',
+				gapAfter: over ? 2 : undefined,
+				line: over
+					? t('mj.pgu.hands', { hi: `${tileHand(nama[0])} ${res(hasil[0])}`, lo: `${tileHand(nama[1])} ${res(hasil[1])}` })
+					: v.fase === 'susun' && Array.isArray(v.saran) && v.saran.length
+						? t('mj.pgu.advice', { tiles: (v.saran as string[]).join(' ') })
+						: ''
+			}
+		],
+		spots: null,
+		choices: v.fase === 'susun' ? [choice('houseway')] : [],
+		outcome: over ? outcomeOf(v, '') : '',
+		pick: v.fase === 'susun' ? 2 : 0,
+		tiles: true
+	};
+};
+
 export function tableModel(game: string, v: MejaView): TableModel | null {
 	const make = MODELS[game];
 	return make ? make(v as V) : null;
@@ -323,7 +370,9 @@ export function tableModel(game: string, v: MejaView): TableModel | null {
 
 /** Pilihan chip untuk menyusun taruhan, menurut kelipatan meja. */
 export function chipSteps(step: number): number[] {
-	return step === 20 ? [20, 100, 500] : [10, 50, 100, 500];
+	if (step === 20) return [20, 100, 500];
+	if (step === 120) return [120, 600];
+	return [10, 50, 100, 500];
 }
 
 /** Lebar kartu bertumpuk / terpisah (px). */

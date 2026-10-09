@@ -1,0 +1,20 @@
+# Teks tampilan Craps dalam dua bahasa.
+[id]
+"roll" = "Lemparan: {a} + {b} = {sum}"
+"point" = "Titik: {p}"
+"comeout" = "Lemparan come-out (belum ada titik)"
+"bets" = "Taruhan: {bets}"
+"prompt" = "bet <tempat> <jumlah>, take <tempat>, roll; leave bila tidak ada taruhan kontrak."
+"over.seven_out" = "Seven-out: penembak selesai, bersih {net}. Seed dibuka."
+"over.berhenti" = "Kamu berhenti, bersih {net}. Seed dibuka."
+"summary" = "Penembak selesai: {rounds} lemparan, bersih {net} chip."
+
+[en]
+"roll" = "Roll: {a} + {b} = {sum}"
+"point" = "Point: {p}"
+"comeout" = "Come-out roll (no point yet)"
+"bets" = "Bets: {bets}"
+"prompt" = "bet <spot> <amount>, take <spot>, roll; leave when no contract bet is up."
+"over.seven_out" = "Seven-out: the shooter is done, net {net}. The seed is revealed."
+"over.berhenti" = "You stopped, net {net}. The seed is revealed."
+"summary" = "Shooter finished: {rounds} rolls, net {net} chips."

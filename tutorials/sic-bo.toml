@@ -1,0 +1,78 @@
+game = "sic-bo"
+judul = { id = "Sic Bo: dasar", en = "Sic Bo: basics" }
+
+# Hasil tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+hasil = [2, 3, 5]
+
+[man.aturan]
+id = """
+Tiga dadu dilempar sekaligus. Tabel bayar Macau/Hong Kong:
+- Kecil (total 4–10) dan Besar (11–17), Ganjil dan Genap: 1:1, kalah bila
+  ketiga dadu sama (triple).
+- Total tertentu: 4 atau 17 50:1, 5/16 18:1, 6/15 14:1, 7/14 12:1, 8/13 8:1,
+  9/12 dan 10/11 6:1.
+- Kombinasi dua angka tertentu muncul: 6:1. Double tertentu: 8:1. Triple
+  apa saja: 24:1. Triple tertentu: 150:1.
+- Angka tunggal: 1:1, 2:1, 3:1 untuk satu, dua, tiga dadu yang cocok.
+RTP Kecil/Besar 97,22%; taruhan lain antara 66,67% dan 97,22%. Batas
+10–2.000 per tempat, kelipatan 10.
+
+Provably fair per ronde: komitmen seed sebelum taruhan, hasil dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+Three dice are rolled at once. Macau/Hong Kong pay table:
+- Small (total 4–10) and Big (11–17), Odd and Even: 1:1, they lose when all
+  three dice match (a triple).
+- Specific totals: 4 or 17 50:1, 5/16 18:1, 6/15 14:1, 7/14 12:1, 8/13 8:1,
+  9/12 and 10/11 6:1.
+- A specific two-number combination: 6:1. A specific double: 8:1. Any
+  triple: 24:1. A specific triple: 150:1.
+- Single number: 1:1, 2:1, 3:1 for one, two, three matching dice.
+Small/Big return 97.22%; other bets between 66.67% and 97.22%. Limits
+10–2,000 per spot, multiples of 10.
+
+Provably fair per round: seed commitment before betting, the result comes
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan.
+[ ULANG TARUHAN ] menarik taruhan, [ LEMPAR ] menjalankan ronde. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then click a spot on the layout to add a bet.
+[ CLEAR BETS ] takes the bets back, [ ROLL ] plays the round. Keyboard: the
+arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 di Kecil: total 4–10, dibayar 1:1."
+teks.en = "Bet 10 on Small: a total of 4–10 pays 1:1."
+aksi = "bet small 10"
+sorot = ["aksi:bet small 10"]
+petunjuk.id = "Pilih KECIL."
+petunjuk.en = "Choose SMALL."
+
+[[langkah]]
+teks.id = "Tambah 10 di total 10: dibayar 6:1."
+teks.en = "Add 10 on total 10: it pays 6:1."
+aksi = "bet total-10 10"
+sorot = ["aksi:bet total-10 10"]
+petunjuk.id = "Pilih TOTAL 10."
+petunjuk.en = "Choose TOTAL 10."
+
+[[langkah]]
+teks.id = "Lempar dadu."
+teks.en = "Roll the dice."
+aksi = "roll"
+sorot = ["aksi:roll"]
+petunjuk.id = "Pilih LEMPAR."
+petunjuk.en = "Choose ROLL."
+
+[[langkah]]
+teks.id = "2, 3, 5 = 10: Kecil +10, total 10 +60, bersih +70. Seed ronde dibuka. Tutorial selesai."
+teks.en = "2, 3, 5 = 10: Small +10, total 10 +60, net +70. The round seed is revealed. Tutorial finished."

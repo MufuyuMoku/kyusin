@@ -13,7 +13,7 @@ on:
         description: "Jumlah ronde per taruhan (minimal 10000000)"
         default: "10000000"
       game:
-        description: "Meja M5a yang disimulasikan (all atau id game)"
+        description: "Meja casino yang disimulasikan (all atau id game)"
         default: "all"
   schedule:
     - cron: "17 3 * * 1"
@@ -54,7 +54,7 @@ jobs:
         with:
           key: rtp
 
-      - name: Meja M5a (semua taruhan)
+      - name: Meja casino M5a/M6a (semua taruhan)
         run: |
           cargo run --release -p kyusin-bots --example rtp_meja -- \
             --rounds "${{ inputs.rounds || '10000000' }}" \

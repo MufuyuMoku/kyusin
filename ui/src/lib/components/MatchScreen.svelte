@@ -118,7 +118,7 @@
 							chips={m.chips}
 						/>
 					{/key}
-					<ui.status view={m.view_data} botTurn={m.bot_turn} />
+					<ui.status view={m.view_data} game={m.game} botTurn={m.bot_turn} />
 					{#if actError}<p class="act-error" role="alert">{actError}</p>{/if}
 				{:else}
 					<pre>{L(m.view_text)}</pre>

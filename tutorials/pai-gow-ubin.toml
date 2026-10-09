@@ -1,0 +1,81 @@
+game = "pai-gow-ubin"
+judul = { id = "Pai Gow (ubin): dasar", en = "Pai Gow (tiles): basics" }
+
+# Ubin tetap supaya setiap langkah selalu sama (tes tutorial di CI): empat
+# ubin pemain, lalu empat ubin bandar.
+[config]
+ubin = ["6-6", "6-6", "5-4", "6-2", "6-5", "4-1", "5-2", "6-1"]
+
+[man.aturan]
+id = """
+Dimainkan dengan 32 ubin domino Cina. Kamu dan bandar masing-masing menerima
+empat ubin dan menyusunnya menjadi dua tangan dua ubin: tangan tinggi dan
+tangan rendah (tangan tinggi tidak boleh lebih rendah; urutannya diatur
+otomatis). Urutan tangan dari tertinggi:
+- Gee Joon (2-1 dan 4-2), lalu pasangan: Teen (6-6), Day (1-1), Yun (4-4),
+  Gor (3-1), Mooy (5-5), Chong (3-3), Bon (2-2), Foo (6-5), Ping (6-4),
+  Tit (6-1), Look (5-1), lalu pasangan campuran 9, 8, 7, 5.
+- Wong: Teen atau Day dengan 9. Gong: Teen atau Day dengan 8.
+- Selain itu nilai = jumlah bulatan mod 10 (9 tertinggi); Gee Joon boleh
+  dihitung 3 atau 6.
+Nilai sama dimenangkan ubin tertinggi; masih sama, atau sama-sama 0, adalah
+copy dan dimenangkan bandar. Bandar selalu bankir dan menyusun menurut house
+way. Menang kedua tangan dibayar 1:1 dipotong komisi 5%, menang satu kalah
+satu push, kalah kedua tangan kehilangan taruhan. Taruhan 20–2.000,
+kelipatan 20. RTP dengan house way 97,60%.
+
+Provably fair per ronde: komitmen seed sebelum taruhan, ubin dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+Played with the 32 Chinese domino tiles. You and the dealer each receive four
+tiles and set them into two hands of two tiles: a high hand and a low hand
+(the high hand may not be lower; the order is set automatically). Hands from
+highest:
+- Gee Joon (2-1 and 4-2), then the pairs: Teen (6-6), Day (1-1), Yun (4-4),
+  Gor (3-1), Mooy (5-5), Chong (3-3), Bon (2-2), Foo (6-5), Ping (6-4),
+  Tit (6-1), Look (5-1), then the mixed pairs 9, 8, 7, 5.
+- Wong: Teen or Day with a 9. Gong: Teen or Day with an 8.
+- Otherwise the value = total pips mod 10 (9 highest); a Gee Joon tile may
+  count as 3 or 6.
+Equal values go to the highest tile; still equal, or both 0, is a copy and
+goes to the dealer. The dealer always banks and sets the house way. Winning
+both hands pays 1:1 less a 5% commission, one win and one loss is a push,
+losing both hands loses the bet. Bets 20–2,000, multiples of 20. The return
+with the house way is 97.60%.
+
+Provably fair per round: seed commitment before betting, the tiles come from
+the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip lalu [ BAGI · n ]. Klik dua ubin untuk satu tangan lalu
+[ SUSUN ], atau [ HOUSE WAY ] untuk susunan bandar. Keyboard: panah
+memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then [ DEAL · n ]. Click two tiles for one hand, then
+[ SET ], or [ HOUSE WAY ] for the house way. Keyboard: the arrow keys move
+the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 100."
+teks.en = "Bet 100."
+aksi = "bet 100"
+sorot = ["aksi:bet 100"]
+petunjuk.id = "Susun taruhan 100 lalu pilih BAGI · 100."
+petunjuk.en = "Make the bet 100, then choose DEAL · 100."
+
+[[langkah]]
+teks.id = "Kamu mendapat sepasang Teen (6-6), 5-4 (9), dan 6-2 (8). Memecah Teen memberi Wong (6-6 + 5-4) dan Gong (6-6 + 6-2), lebih kuat daripada pasangan Teen dengan tangan 7. Susun 6-6 dan 5-4."
+teks.en = "You hold a pair of Teens (6-6), 5-4 (9), and 6-2 (8). Splitting the Teens gives a Wong (6-6 + 5-4) and a Gong (6-6 + 6-2), stronger than the Teen pair with a 7. Set 6-6 and 5-4."
+aksi = "set 6-6 5-4"
+sorot = ["aksi:set 6-6 5-4"]
+petunjuk.id = "Pilih 6-6 dan 5-4, lalu SUSUN."
+petunjuk.en = "Choose 6-6 and 5-4, then SET."
+
+[[langkah]]
+teks.id = "Bandar tanpa Teen atau Day tidak bisa membuat Wong atau Gong: kedua tanganmu menang, 100 dipotong komisi 5, bersih +95. Seed ronde dibuka. Tutorial selesai."
+teks.en = "Without a Teen or Day the dealer cannot make a Wong or Gong: both your hands win, 100 less a 5 commission, net +95. The round seed is revealed. Tutorial finished."

@@ -1,0 +1,60 @@
+game = "big-six"
+judul = { id = "Big Six: dasar", en = "Big Six: basics" }
+
+# Hasil tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+hasil = "5"
+
+[man.aturan]
+id = """
+Roda besar dengan 54 segmen: 24 × 1, 15 × 2, 7 × 5, 4 × 10, 2 × 20, satu
+Joker, dan satu logo. Pasang taruhan pada simbol; bila roda berhenti di
+simbol itu, dibayar sesuai angkanya (1:1, 2:1, 5:1, 10:1, 20:1), Joker dan
+logo 40:1. RTP antara 75,93% (Joker/logo) dan 88,89% (simbol 1). Batas
+10–2.000 per tempat, kelipatan 10.
+
+Provably fair per ronde: komitmen seed sebelum taruhan, hasil dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+A big wheel with 54 segments: 24 × 1, 15 × 2, 7 × 5, 4 × 10, 2 × 20, one
+Joker, and one logo. Bet on a symbol; if the wheel stops on it, it pays its
+number (1:1, 2:1, 5:1, 10:1, 20:1), Joker and logo 40:1. Returns range from
+75.93% (Joker/logo) to 88.89% (symbol 1). Limits 10–2,000 per spot,
+multiples of 10.
+
+Provably fair per round: seed commitment before betting, the result comes
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan.
+[ ULANG TARUHAN ] menarik taruhan, [ PUTAR ] menjalankan ronde. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then click a spot on the layout to add a bet.
+[ CLEAR BETS ] takes the bets back, [ SPIN ] plays the round. Keyboard: the
+arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 di simbol 5: dibayar 5:1."
+teks.en = "Bet 10 on symbol 5: it pays 5:1."
+aksi = "bet 5 10"
+sorot = ["aksi:bet 5 10"]
+petunjuk.id = "Pilih simbol 5."
+petunjuk.en = "Choose symbol 5."
+
+[[langkah]]
+teks.id = "Putar roda."
+teks.en = "Spin the wheel."
+aksi = "spin"
+sorot = ["aksi:spin"]
+petunjuk.id = "Pilih PUTAR."
+petunjuk.en = "Choose SPIN."
+
+[[langkah]]
+teks.id = "Roda berhenti di 5: bersih +50. Seed ronde dibuka. Tutorial selesai."
+teks.en = "The wheel stops on 5: net +50. The round seed is revealed. Tutorial finished."

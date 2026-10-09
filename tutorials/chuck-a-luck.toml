@@ -1,0 +1,59 @@
+game = "chuck-a-luck"
+judul = { id = "Chuck-a-luck: dasar", en = "Chuck-a-luck: basics" }
+
+# Hasil tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+hasil = [4, 4, 2]
+
+[man.aturan]
+id = """
+Tiga dadu diputar dalam sangkar. Pasang taruhan pada angka 1–6:
+dibayar 1:1 bila satu dadu menunjukkan angka itu, 2:1 bila dua dadu, 10:1
+bila ketiganya. Taruhan lain: triple apa saja 30:1; Kecil (4–10) dan Besar
+(11–17) 1:1, kalah bila triple. RTP taruhan angka 95,37%. Batas 10–2.000 per
+tempat, kelipatan 10.
+
+Provably fair per ronde: komitmen seed sebelum taruhan, hasil dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+Three dice tumble in a cage. Bet on a number 1–6: it pays 1:1 if one
+die shows it, 2:1 if two dice do, 10:1 if all three do. Other bets: any
+triple 30:1; Small (4–10) and Big (11–17) 1:1, they lose on a triple. The
+number bets return 95.37%. Limits 10–2,000 per spot, multiples of 10.
+
+Provably fair per round: seed commitment before betting, the result comes
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan.
+[ ULANG TARUHAN ] menarik taruhan, [ LEMPAR ] menjalankan ronde. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then click a spot on the layout to add a bet.
+[ CLEAR BETS ] takes the bets back, [ ROLL ] plays the round. Keyboard: the
+arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 di angka 4."
+teks.en = "Bet 10 on number 4."
+aksi = "bet single-4 10"
+sorot = ["aksi:bet single-4 10"]
+petunjuk.id = "Pilih angka 4."
+petunjuk.en = "Choose number 4."
+
+[[langkah]]
+teks.id = "Putar sangkar."
+teks.en = "Spin the cage."
+aksi = "roll"
+sorot = ["aksi:roll"]
+petunjuk.id = "Pilih LEMPAR."
+petunjuk.en = "Choose ROLL."
+
+[[langkah]]
+teks.id = "4, 4, 2: dua dadu menunjukkan 4, dibayar 2:1, bersih +20. Seed ronde dibuka. Tutorial selesai."
+teks.en = "4, 4, 2: two dice show 4, paid 2:1, net +20. The round seed is revealed. Tutorial finished."

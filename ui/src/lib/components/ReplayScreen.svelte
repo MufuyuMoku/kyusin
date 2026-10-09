@@ -69,7 +69,7 @@
 			<div class="left">
 				{#if ui}
 					<ui.board view={frame.view_data} game={r?.game} />
-					<ui.status view={frame.view_data} observer />
+					<ui.status view={frame.view_data} game={r?.game} observer />
 				{:else}
 					<pre>{L(frame.view_text)}</pre>
 				{/if}

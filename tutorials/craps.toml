@@ -1,0 +1,108 @@
+game = "craps"
+judul = { id = "Craps: dasar", en = "Craps: basics" }
+
+# Lemparan tetap supaya setiap langkah selalu sama (tes tutorial di CI):
+# 4+2 (titik 6), lalu 5+1 (titik tercapai).
+[config]
+lemparan = [[4, 2], [5, 1]]
+
+[man.aturan]
+id = """
+Penembak melempar dua dadu. Lemparan pertama adalah come-out: 7 atau 11
+memenangkan Pass Line, 2, 3, atau 12 (craps) mengalahkannya; angka lain (4,
+5, 6, 8, 9, 10) menjadi titik. Sesudah itu Pass menang bila titik keluar
+lagi sebelum 7, dan kalah bila 7 keluar lebih dulu (seven-out: penembak
+selesai). Don't Pass kebalikannya; 12 di come-out seri.
+
+Taruhan lain:
+- Come/Don't Come: seperti Pass/Don't Pass, dipasang saat sudah ada titik.
+- Odds di belakang Pass/Come: paling banyak 3x (4/10), 4x (5/9), 5x (6/8),
+  dibayar peluang sebenarnya 2:1, 3:2, 6:5 (tanpa house edge). Lay odds di
+  belakang Don't paling banyak 6x, dibayar 1:2, 2:3, 5:6.
+- Place 4/10 9:5, 5/9 7:5, 6/8 7:6 (kelipatan 30), menang tiap kali angkanya
+  keluar sebelum 7.
+- Field satu lemparan: 2 dibayar 2:1, 12 dibayar 3:1, 3/4/9/10/11 1:1.
+- Hardways 4/10 7:1 dan 6/8 9:1: angka itu keluar sebagai pasangan sebelum 7
+  atau versi lunaknya.
+Place, Hardways, dan Odds Come tidak berlaku di lemparan come-out.
+
+RTP Pass 98,59%, Don't Pass 98,64%, Place 6/8 98,48%, Field 97,22%,
+Hardways 88,89–90,91%. Satu pertandingan = satu penembak.
+
+Provably fair per penembak: komitmen seed sebelum lemparan pertama, setiap
+lemparan dari seed dan nomor lemparan, seed dibuka saat penembak selesai.
+"""
+en = """
+The shooter rolls two dice. The first roll is the come-out: 7 or 11 wins the
+Pass Line, 2, 3, or 12 (craps) loses it; any other number (4, 5, 6, 8, 9, 10)
+becomes the point. Then Pass wins if the point rolls again before a 7, and
+loses if a 7 comes first (a seven-out: the shooter is done). Don't Pass is the
+opposite; 12 on the come-out is a push.
+
+Other bets:
+- Come/Don't Come: like Pass/Don't Pass, placed while a point is on.
+- Odds behind Pass/Come: up to 3x (4/10), 4x (5/9), 5x (6/8), paid at true
+  odds 2:1, 3:2, 6:5 (no house edge). Lay odds behind Don't up to 6x, paid
+  1:2, 2:3, 5:6.
+- Place 4/10 9:5, 5/9 7:5, 6/8 7:6 (multiples of 30), wins each time the
+  number rolls before a 7.
+- Field, one roll: 2 pays 2:1, 12 pays 3:1, 3/4/9/10/11 1:1.
+- Hardways 4/10 7:1 and 6/8 9:1: the number rolls as a pair before a 7 or
+  its easy version.
+Place, Hardways, and Come odds are off on the come-out roll.
+
+Pass returns 98.59%, Don't Pass 98.64%, Place 6/8 98.48%, Field 97.22%,
+Hardways 88.89–90.91%. One match = one shooter.
+
+Provably fair per shooter: seed commitment before the first roll, every roll
+from the seed and the roll number, the seed is revealed when the shooter is
+done.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip, lalu klik tempat di papan untuk menambah taruhan.
+[ TARIK ] menyalakan mode tarik: klik taruhan untuk menariknya. [ LEMPAR ]
+melempar dadu. Keyboard: panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then click a spot on the layout to add a bet. [ TAKE ]
+turns on take mode: click a bet to take it down. [ ROLL ] rolls the dice.
+Keyboard: the arrow keys move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 di Pass Line sebelum lemparan come-out."
+teks.en = "Bet 10 on the Pass Line before the come-out roll."
+aksi = "bet pass 10"
+sorot = ["aksi:bet pass 10"]
+petunjuk.id = "Pilih PASS LINE."
+petunjuk.en = "Choose PASS LINE."
+
+[[langkah]]
+teks.id = "Lempar dadu."
+teks.en = "Roll the dice."
+aksi = "roll"
+sorot = ["aksi:roll"]
+petunjuk.id = "Pilih LEMPAR."
+petunjuk.en = "Choose ROLL."
+
+[[langkah]]
+teks.id = "4 + 2 = 6: titiknya 6. Pasang Odds 50 di belakang Pass (paling banyak 5x pada 6); Odds dibayar 6:5 tanpa house edge."
+teks.en = "4 + 2 = 6: the point is 6. Put 50 in Odds behind the Pass (at most 5x on 6); Odds pay 6:5 with no house edge."
+aksi = "bet odds-pass 50"
+sorot = ["aksi:bet odds-pass 50"]
+petunjuk.id = "Pilih ODDS PASS."
+petunjuk.en = "Choose PASS ODDS."
+
+[[langkah]]
+teks.id = "Lempar lagi; 6 sebelum 7 memenangkan Pass."
+teks.en = "Roll again; a 6 before a 7 wins the Pass."
+aksi = "roll"
+sorot = ["aksi:roll"]
+petunjuk.id = "Pilih LEMPAR."
+petunjuk.en = "Choose ROLL."
+
+[[langkah]]
+teks.id = "5 + 1 = 6: titik tercapai. Pass +10, Odds +60, bersih +70. Penembak tetap melempar sampai seven-out. Tutorial selesai."
+teks.en = "5 + 1 = 6: point made. Pass +10, Odds +60, net +70. The shooter keeps rolling until a seven-out. Tutorial finished."
