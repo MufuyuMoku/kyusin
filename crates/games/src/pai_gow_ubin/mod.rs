@@ -23,7 +23,10 @@ use std::sync::OnceLock;
 
 use kyusin_core::game::{GameResult, create_session};
 use kyusin_core::i18n::{Catalog, Lang};
-use kyusin_core::{ActionSpec, Cartridge, GameError, GameRng, Param, ParamKind, PlayerId, RegistryError, Seed, TurnGame};
+use kyusin_core::{
+    ActionSpec, Cartridge, GameError, GameRng, Param, ParamKind, PlayerId, RegistryError, Seed,
+    TurnGame,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::domino::Tile;
@@ -108,7 +111,13 @@ fn teen_or_day(t: Tile) -> bool {
 pub fn set() -> Vec<Tile> {
     groups()
         .iter()
-        .flat_map(|g| if g.len() == 1 { vec![g[0], g[0]] } else { g.clone() })
+        .flat_map(|g| {
+            if g.len() == 1 {
+                vec![g[0], g[0]]
+            } else {
+                g.clone()
+            }
+        })
         .collect()
 }
 
@@ -152,7 +161,11 @@ impl Hand {
     }
 
     fn high_rank(&self) -> u8 {
-        self.tiles.iter().filter_map(|t| rank(*t)).max().unwrap_or(0)
+        self.tiles
+            .iter()
+            .filter_map(|t| rank(*t))
+            .max()
+            .unwrap_or(0)
     }
 
     /// Kekuatan kasar untuk ambang house way: nilai 0–9, Gong 10, Wong 11,
@@ -168,7 +181,13 @@ impl Hand {
 }
 
 pub fn hand(a: Tile, b: Tile) -> Hand {
-    let values = |t: Tile| if gee_joon(t) { vec![3u8, 6] } else { vec![t.pips()] };
+    let values = |t: Tile| {
+        if gee_joon(t) {
+            vec![3u8, 6]
+        } else {
+            vec![t.pips()]
+        }
+    };
     let points = values(a)
         .iter()
         .flat_map(|x| values(b).into_iter().map(move |y| (x + y) % 10))
@@ -216,7 +235,11 @@ fn splits(t: [Tile; 4]) -> Vec<(Hand, Hand)> {
         .iter()
         .map(|&(p, x, y)| {
             let (h1, h2) = (hand(t[0], t[p]), hand(t[x], t[y]));
-            if compare(&h1, &h2) == Ordering::Less { (h2, h1) } else { (h1, h2) }
+            if compare(&h1, &h2) == Ordering::Less {
+                (h2, h1)
+            } else {
+                (h1, h2)
+            }
         })
         .collect()
 }
@@ -247,7 +270,17 @@ pub fn house_way(t: [Tile; 4]) -> ([Tile; 2], [Tile; 2]) {
     }
     if let Some(kept) = all.iter().find(|s| paired(s)) {
         let pair_tile = kept.0.tiles[0];
-        let never = [T(3, 1), T(2, 2), T(4, 1), T(3, 2), T(3, 3), T(5, 1), T(5, 5), T(6, 4), T(6, 5)];
+        let never = [
+            T(3, 1),
+            T(2, 2),
+            T(4, 1),
+            T(3, 2),
+            T(3, 3),
+            T(5, 1),
+            T(5, 5),
+            T(6, 4),
+            T(6, 5),
+        ];
         if kept.0.kind == HandKind::GeeJoon || never.contains(&pair_tile) {
             return pick(kept);
         }
@@ -271,13 +304,22 @@ pub fn house_way(t: [Tile; 4]) -> ([Tile; 2], [Tile; 2]) {
             .filter(|s| kind(&s.0) && s.1.level() >= 4)
             .max_by(|a, b| better_low(a, b))
     };
-    let high_nine = |h: &Hand| h.kind == HandKind::Points && h.points == 9 && h.tiles.iter().any(|t| teen_or_day(*t));
+    let high_nine = |h: &Hand| {
+        h.kind == HandKind::Points && h.points == 9 && h.tiles.iter().any(|t| teen_or_day(*t))
+    };
     let gong = |h: &Hand| h.kind == HandKind::Gong;
     let wong = |h: &Hand| h.kind == HandKind::Wong;
-    if let Some(s) = special(high_nine).or_else(|| special(gong)).or_else(|| special(wong)) {
+    if let Some(s) = special(high_nine)
+        .or_else(|| special(gong))
+        .or_else(|| special(wong))
+    {
         return pick(s);
     }
-    pick(all.iter().max_by(|a, b| better_low(a, b)).expect("tiga pembagian"))
+    pick(
+        all.iter()
+            .max_by(|a, b| better_low(a, b))
+            .expect("tiga pembagian"),
+    )
 }
 
 /// Jumlah bulatan kelompok ubin (untuk aturan pecah pasangan).
@@ -368,7 +410,9 @@ impl PaiGowUbin {
     fn settle(&mut self, mine: ([Tile; 2], [Tile; 2])) {
         let r = self.round.as_mut().expect("ronde berjalan");
         let dealer = house_way(r.dealer);
-        let win = |a: [Tile; 2], b: [Tile; 2]| compare(&hand(a[0], a[1]), &hand(b[0], b[1])) == Ordering::Greater;
+        let win = |a: [Tile; 2], b: [Tile; 2]| {
+            compare(&hand(a[0], a[1]), &hand(b[0], b[1])) == Ordering::Greater
+        };
         let wins = [win(mine.0, dealer.0), win(mine.1, dealer.1)];
         r.payout = Some(match wins {
             [true, true] => r.bet * 19 / 20,
@@ -432,7 +476,11 @@ impl TurnGame for PaiGowUbin {
     }
 
     fn pending_players(&self) -> Vec<PlayerId> {
-        if self.phase == Phase::Over { Vec::new() } else { vec![0] }
+        if self.phase == Phase::Over {
+            Vec::new()
+        } else {
+            vec![0]
+        }
     }
 
     fn legal_actions(&self, player: PlayerId) -> Vec<ActionSpec> {
@@ -547,7 +595,13 @@ impl TurnGame for PaiGowUbin {
             meja,
             pemain: r.map(|r| text(&r.player)).unwrap_or_default(),
             bandar: r
-                .map(|r| if over { text(&r.dealer) } else { vec!["??".into(); 4] })
+                .map(|r| {
+                    if over {
+                        text(&r.dealer)
+                    } else {
+                        vec!["??".into(); 4]
+                    }
+                })
                 .unwrap_or_default(),
             tinggi: set.map(|s| text(&s.0)).unwrap_or_default(),
             rendah: set.map(|s| text(&s.1)).unwrap_or_default(),
@@ -556,7 +610,11 @@ impl TurnGame for PaiGowUbin {
             nama,
             hasil: r
                 .and_then(|r| r.wins)
-                .map(|w| w.iter().map(|x| if *x { "menang" } else { "kalah" }.to_string()).collect())
+                .map(|w| {
+                    w.iter()
+                        .map(|x| if *x { "menang" } else { "kalah" }.to_string())
+                        .collect()
+                })
                 .unwrap_or_default(),
             saran: if self.phase == Phase::Set {
                 r.map(|r| text(&house_way(r.player).1)).unwrap_or_default()
@@ -572,7 +630,14 @@ impl TurnGame for PaiGowUbin {
         let c = catalog();
         let mut out = String::new();
         if !view.pemain.is_empty() {
-            out.push_str(&c.text(lang, "tiles", &[("you", &view.pemain.join(" ")), ("dealer", &view.bandar.join(" "))]));
+            out.push_str(&c.text(
+                lang,
+                "tiles",
+                &[
+                    ("you", &view.pemain.join(" ")),
+                    ("dealer", &view.bandar.join(" ")),
+                ],
+            ));
             out.push('\n');
         }
         if view.nama.len() == 4 {
@@ -587,24 +652,38 @@ impl TurnGame for PaiGowUbin {
                 lang,
                 "hands",
                 &[
-                    ("hi", &format!("{} ({})", view.tinggi.join(" "), kind(&view.nama[0]))),
-                    ("lo", &format!("{} ({})", view.rendah.join(" "), kind(&view.nama[1]))),
-                    ("dhi", &format!("{} ({})", view.bandar_tinggi.join(" "), kind(&view.nama[2]))),
-                    ("dlo", &format!("{} ({})", view.bandar_rendah.join(" "), kind(&view.nama[3]))),
+                    (
+                        "hi",
+                        &format!("{} ({})", view.tinggi.join(" "), kind(&view.nama[0])),
+                    ),
+                    (
+                        "lo",
+                        &format!("{} ({})", view.rendah.join(" "), kind(&view.nama[1])),
+                    ),
+                    (
+                        "dhi",
+                        &format!("{} ({})", view.bandar_tinggi.join(" "), kind(&view.nama[2])),
+                    ),
+                    (
+                        "dlo",
+                        &format!("{} ({})", view.bandar_rendah.join(" "), kind(&view.nama[3])),
+                    ),
                 ],
             ));
             out.push('\n');
         }
-        out.push_str(&match (view.meja.fase.as_str(), view.meja.alasan.as_deref()) {
-            ("taruhan", _) => c.text(lang, "place_bet", &[]),
-            ("susun", _) => c.text(lang, "set", &[]),
-            (_, Some(reason)) => c.text(
-                lang,
-                &format!("over.{reason}"),
-                &[("net", &format!("{:+}", view.bayar.unwrap_or(0)))],
-            ),
-            _ => String::new(),
-        });
+        out.push_str(
+            &match (view.meja.fase.as_str(), view.meja.alasan.as_deref()) {
+                ("taruhan", _) => c.text(lang, "place_bet", &[]),
+                ("susun", _) => c.text(lang, "set", &[]),
+                (_, Some(reason)) => c.text(
+                    lang,
+                    &format!("over.{reason}"),
+                    &[("net", &format!("{:+}", view.bayar.unwrap_or(0)))],
+                ),
+                _ => String::new(),
+            },
+        );
         out
     }
 
@@ -629,7 +708,10 @@ impl TurnGame for PaiGowUbin {
         let err = || GameError::Parse(c.into());
         match parts.as_slice() {
             ["bet", n] => Ok(Action::Bet(meja::amount(n).ok_or_else(err)?)),
-            ["set", a, b] => Ok(Action::Set(a.parse().map_err(|_| err())?, b.parse().map_err(|_| err())?)),
+            ["set", a, b] => Ok(Action::Set(
+                a.parse().map_err(|_| err())?,
+                b.parse().map_err(|_| err())?,
+            )),
             ["houseway"] => Ok(Action::HouseWay),
             ["leave"] => Ok(Action::Leave),
             _ => Err(err()),
