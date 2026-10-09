@@ -1,0 +1,28 @@
+# Teks tampilan Pai Gow ubin dalam dua bahasa.
+[id]
+"tiles" = "Ubinmu: {you}. Bandar: {dealer}."
+"hands" = "Tinggi {hi}, rendah {lo}; bandar tinggi {dhi}, rendah {dlo}."
+"place_bet" = "bet <jumlah> (kelipatan 20) untuk menerima empat ubin."
+"set" = "set <ubin> <ubin> menyusun satu tangan, dua ubin lain jadi tangan kedua; houseway memakai susunan bandar."
+"kind.points" = "{n}"
+"kind.gong" = "Gong"
+"kind.wong" = "Wong"
+"kind.pair" = "pasangan"
+"kind.gee_joon" = "Gee Joon"
+"over.ronde_selesai" = "Ronde selesai, bersih {net}. Seed dibuka."
+"over.berhenti" = "Kamu berhenti, bersih {net}. Seed dibuka."
+"summary" = "Ronde selesai: bersih {net} chip."
+
+[en]
+"tiles" = "Your tiles: {you}. Dealer: {dealer}."
+"hands" = "High {hi}, low {lo}; dealer high {dhi}, low {dlo}."
+"place_bet" = "bet <amount> (multiples of 20) to receive four tiles."
+"set" = "set <tile> <tile> sets one hand, the other two tiles form the second hand; houseway uses the house way."
+"kind.points" = "{n}"
+"kind.gong" = "Gong"
+"kind.wong" = "Wong"
+"kind.pair" = "pair"
+"kind.gee_joon" = "Gee Joon"
+"over.ronde_selesai" = "Round finished, net {net}. The seed is revealed."
+"over.berhenti" = "You stopped, net {net}. The seed is revealed."
+"summary" = "Round finished: net {net} chips."

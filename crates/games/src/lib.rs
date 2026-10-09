@@ -28,6 +28,7 @@ pub mod let_it_ride;
 pub mod meja;
 pub mod omaha;
 pub mod pai_gow;
+pub mod pai_gow_ubin;
 pub mod papan_taruhan;
 pub mod poker;
 pub mod poker_meja;
@@ -68,6 +69,7 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(fan_tan::cartridge()?)?;
     registry.register(chuck_a_luck::cartridge()?)?;
     registry.register(craps::cartridge()?)?;
+    registry.register(pai_gow_ubin::cartridge()?)?;
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

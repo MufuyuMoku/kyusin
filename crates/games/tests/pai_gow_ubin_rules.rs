@@ -117,7 +117,7 @@ fn hw(tiles: [&str; 4]) -> (Vec<String>, Vec<String>) {
 }
 
 #[test]
-fn house_way() {
+fn the_house_way() {
     // Pasangan Teen dipertahankan bila memecahnya membuat dua tangan lebih rendah.
     assert_eq!(
         hw(["6-6", "6-6", "2-1", "4-1"]),
@@ -126,9 +126,16 @@ fn house_way() {
             vec!["2-1".into(), "4-1".into()]
         )
     );
-    // Teen dipecah bila hasilnya dua Wong (lebih baik dari pasangan + 8).
-    assert_eq!(hw(["6-6", "6-6", "5-4", "6-3"]).1.len(), 2);
-    let (a, b) = hw(["6-6", "6-6", "5-4", "6-3"]);
+    // Dua pasangan (Teen dan 9 campuran) dimainkan keduanya.
+    assert_eq!(
+        hw(["6-6", "6-6", "5-4", "6-3"]),
+        (
+            vec!["6-6".into(), "6-6".into()],
+            vec!["5-4".into(), "6-3".into()]
+        )
+    );
+    // Teen dipecah bila hasilnya Wong dan Gong (lebih baik dari pasangan + 7).
+    let (a, b) = hw(["6-6", "6-6", "5-4", "6-2"]);
     assert!(
         a.contains(&"6-6".to_string()) && b.contains(&"6-6".to_string()),
         "{a:?} {b:?}"

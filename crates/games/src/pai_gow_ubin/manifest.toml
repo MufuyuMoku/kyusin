@@ -1,0 +1,31 @@
+id = "pai-gow-ubin"
+nama = { id = "Pai Gow (ubin)", en = "Pai Gow (tiles)" }
+kategori = "casino-dadu"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "bandar"
+kompetitif = false
+lan = false
+agen = true
+# Bandar selalu bankir, komisi 5% dari kemenangan, copy untuk bandar, house
+# way terdokumentasi (D-069). RTP house way lawan house way, dienumerasi tepat
+# di GitHub Actions (rtp_exact).
+rtp = 97.4
+tutorial = "tutorials/pai-gow-ubin.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang taruhan (20–2.000, kelipatan 20) dan terima empat ubin", en = "Place a bet (20–2,000, multiples of 20) and receive four tiles" }
+
+[[perintah]]
+pola = "set <ubin> <ubin>"
+ringkas = { id = "Susun dua ubin menjadi satu tangan; dua ubin lainnya tangan kedua", en = "Set two tiles as one hand; the other two tiles form the second hand" }
+
+[[perintah]]
+pola = "houseway"
+ringkas = { id = "Susun menurut house way bandar", en = "Set the tiles the house way" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum bertaruh", en = "Stop before betting" }
