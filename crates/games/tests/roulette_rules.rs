@@ -29,10 +29,7 @@ fn us(result: &str) -> RouletteAmerika {
     .unwrap()
 }
 
-fn net<G: TurnGame>(mut g: G, bets: &[(&str, i64)]) -> (Value, i64)
-where
-    G: Session,
-{
+fn net<G: TurnGame + Session>(mut g: G, bets: &[(&str, i64)]) -> (Value, i64) {
     for (spot, n) in bets {
         Session::act(&mut g, 0, &format!("bet {spot} {n}"))
             .unwrap_or_else(|e| panic!("bet {spot}: {e:?}"));

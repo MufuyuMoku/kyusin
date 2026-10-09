@@ -128,7 +128,7 @@ impl BoardRules for SicBoRules {
             "small" => win(1, !triple(d) && t <= 10),
             "big" => win(1, !triple(d) && t >= 11),
             "odd" => win(1, !triple(d) && t % 2 == 1),
-            "even" => win(1, !triple(d) && t % 2 == 0),
+            "even" => win(1, !triple(d) && t.is_multiple_of(2)),
             "total" => {
                 let want = num(rest);
                 win(total_pays(want).unwrap_or(0), t == want)
