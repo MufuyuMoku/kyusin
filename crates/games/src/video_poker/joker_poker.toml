@@ -9,7 +9,7 @@ kompetitif = false
 lan = false
 agen = true
 # Joker Poker Kings or Better 18/7/5, 53 kartu (D-071); full pay 100,64% tidak dipakai (D-068). RTP strategi optimal, enumerasi tepat di GitHub Actions.
-rtp = 98.93
+rtp = 98.94
 tutorial = "tutorials/joker-poker.toml"
 
 [[perintah]]

@@ -122,20 +122,22 @@ pub enum Variant {
     JokerPoker,
 }
 
-/// RTP strategi optimal (enumerasi tepat di GitHub Actions; D-072).
+/// RTP strategi optimal, enumerasi tepat semua tangan awal di GitHub Actions
+/// (`rtp_exact`; D-072): 1.653.526.326.983 / 1.661.102.543.100,
+/// 552.196.412.883 / 553.700.847.700, 337.607.612.499 / 341.234.243.350.
 pub const RTP_JACKS: &[WagerRtp] = &[WagerRtp {
     wager: "bet",
-    percent: 99.54,
+    percent: 99.5439,
     manifest: true,
 }];
 pub const RTP_DEUCES: &[WagerRtp] = &[WagerRtp {
     wager: "bet",
-    percent: 99.73,
+    percent: 99.7283,
     manifest: true,
 }];
 pub const RTP_JOKER: &[WagerRtp] = &[WagerRtp {
     wager: "bet",
-    percent: 98.93,
+    percent: 98.9372,
     manifest: true,
 }];
 

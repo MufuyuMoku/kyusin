@@ -15,7 +15,7 @@ Video Poker dengan 52 kartu ditambah satu joker yang bisa menjadi kartu apa saja
 Pasang taruhan, lima kartu dibagi. Tahan kartu yang ingin dipertahankan,
 lalu DRAW mengganti sisanya dengan kartu dari dek yang sama. Tangan akhir
 dibayar menurut tabel. Satu taruhan dibayar seperti lima koin (Royal Flush
-selalu 800×). RTP dengan strategi optimal 98,93% (nilai harapan tepat untuk
+selalu 800×). RTP dengan strategi optimal 98,94% (nilai harapan tepat untuk
 setiap pilihan tahan). Taruhan 10–2.000, kelipatan 10.
 
 Provably fair per tangan: komitmen seed sebelum bertaruh, dek dikocok dari
@@ -29,7 +29,7 @@ Video poker with 52 cards plus one joker that can be any card. Payouts (total mu
 Place a bet and five cards are dealt. Hold the cards you want to keep, then
 DRAW replaces the rest with cards from the same deck. The final hand is paid
 from the table. One bet is paid like five coins (a Royal Flush always pays
-800×). The return with optimal strategy is 98.93% (the exact expected value of
+800×). The return with optimal strategy is 98.94% (the exact expected value of
 every hold). Bets 10–2,000, multiples of 10.
 
 Provably fair per hand: seed commitment before betting, the deck is shuffled
