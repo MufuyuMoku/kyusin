@@ -25,6 +25,7 @@ import { run as blackjack } from './blackjack.e2e.mjs';
 import { run as meja } from './meja.e2e.mjs';
 import { run as pvp } from './pvp.e2e.mjs';
 import { run as capsa } from './capsa.e2e.mjs';
+import { run as lotere } from './lotere.e2e.mjs';
 import { run as papan } from './papan.e2e.mjs';
 import { run as pause } from './pause.e2e.mjs';
 import { run as profile } from './profile.e2e.mjs';
@@ -157,6 +158,7 @@ try {
 			['pvp', 'meja antar-pemain M5b (jendela asli):', pvp],
 			['capsa', 'meja Capsa Susun M5b-2 (jendela asli):', capsa],
 			['papan', 'papan taruhan dadu dan roda M6a (jendela asli):', papan],
+			['lotere', 'casino lotere dan instan M6b (jendela asli):', lotere],
 			['profile', 'profil dan statistik (jendela asli):', profile]
 		];
 		// KYUSIN_E2E_SUITES=pvp,capsa menjalankan sebagian saja (workflow ulang).
