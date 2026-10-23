@@ -136,7 +136,7 @@ pub struct Wager {
     pub run: fn(u64, &Seed) -> Rtp,
 }
 
-/// Semua taruhan meja casino melawan bandar (M5a, M6a) yang diverifikasi RTP-nya.
+/// Semua taruhan casino melawan rumah (M5a, M6a, M6b) yang diverifikasi RTP-nya.
 pub fn wagers() -> Vec<Wager> {
     let mut out = Vec::new();
     out.extend(crate::dragon_tiger::wagers());
@@ -152,5 +152,7 @@ pub fn wagers() -> Vec<Wager> {
     out.extend(crate::papan::wagers());
     out.extend(crate::craps::wagers());
     out.extend(crate::pai_gow_ubin::wagers());
+    out.extend(crate::lotere::wagers());
+    out.extend(crate::video_poker::wagers());
     out
 }
