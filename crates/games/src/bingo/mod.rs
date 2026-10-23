@@ -378,8 +378,8 @@ impl TurnGame for Bingo {
                 self.payouts = self.cards[..self.count]
                     .iter()
                     .map(|c| {
-                        let back = best(c, &self.balls)
-                            .map_or(0, |p| n * i64::from(p.pays_tenths()) / 10);
+                        let back =
+                            best(c, &self.balls).map_or(0, |p| n * i64::from(p.pays_tenths()) / 10);
                         back - n
                     })
                     .collect();

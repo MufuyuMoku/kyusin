@@ -28,7 +28,10 @@ fn prize_table_and_exact_rtp() {
         ]
     );
     assert_eq!(DENOMINATOR, 100_000);
-    let back: u64 = PRIZES.iter().map(|(m, w)| u64::from(*m) * u64::from(*w)).sum();
+    let back: u64 = PRIZES
+        .iter()
+        .map(|(m, w)| u64::from(*m) * u64::from(*w))
+        .sum();
     assert_eq!(back, 95_000, "RTP tepat 95%");
     let wins: u32 = PRIZES.iter().map(|p| p.1).sum();
     assert_eq!(wins, 31_352);
@@ -52,9 +55,16 @@ fn layouts_show_exactly_the_drawn_prize() {
         s[..4].copy_from_slice(&seed.to_le_bytes());
         for prize in [0, 1, 2, 5, 10, 20, 50, 100, 1000] {
             let cells = layout(prize, s);
-            assert!(cells.iter().all(|c| PRIZES.iter().any(|p| p.0 == *c)), "{cells:?}");
+            assert!(
+                cells.iter().all(|c| PRIZES.iter().any(|p| p.0 == *c)),
+                "{cells:?}"
+            );
             let c = counts(&cells);
-            let triples: Vec<u32> = c.iter().filter(|(_, n)| **n >= 3).map(|(v, _)| *v).collect();
+            let triples: Vec<u32> = c
+                .iter()
+                .filter(|(_, n)| **n >= 3)
+                .map(|(v, _)| *v)
+                .collect();
             if prize == 0 {
                 assert!(triples.is_empty(), "kalah tanpa tiga sama: {cells:?}");
             } else {
@@ -81,19 +91,36 @@ fn act(g: &mut KartuGosok, cmd: &str) {
 fn scratching_reveals_then_settles() {
     let mut g = game(20);
     assert_eq!(Session::view_data(&g, 0)["fase"], "taruhan");
-    assert!(Session::act(&mut g, 0, "scratch 1").is_err(), "belum membeli kartu");
+    assert!(
+        Session::act(&mut g, 0, "scratch 1").is_err(),
+        "belum membeli kartu"
+    );
     act(&mut g, "bet 50");
     let v = Session::view_data(&g, 0);
     assert_eq!(v["fase"], "gosok");
     assert_eq!(v["taruhan_meja"], 50, "dipotong saat dibeli");
-    assert_eq!(v["sel"], json!([null, null, null, null, null, null, null, null, null]));
+    assert_eq!(
+        v["sel"],
+        json!([null, null, null, null, null, null, null, null, null])
+    );
     assert_eq!(v["netral"], "scratch all");
     act(&mut g, "scratch 5");
-    assert!(Session::act(&mut g, 0, "scratch 5").is_err(), "sudah digosok");
+    assert!(
+        Session::act(&mut g, 0, "scratch 5").is_err(),
+        "sudah digosok"
+    );
     assert!(Session::act(&mut g, 0, "scratch 10").is_err());
     let v = Session::view_data(&g, 0);
     assert!(v["sel"][4].is_u64());
-    assert_eq!(v["sel"].as_array().unwrap().iter().filter(|c| c.is_null()).count(), 8);
+    assert_eq!(
+        v["sel"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|c| c.is_null())
+            .count(),
+        8
+    );
     assert!(v["bayar"].is_null(), "hadiah belum dibuka");
     act(&mut g, "scratch all");
     let v = Session::view_data(&g, 0);
@@ -123,7 +150,8 @@ fn prizes_come_from_the_round_seed() {
         Session::view_data(&g, 0)["sel"].clone()
     };
     assert_eq!(card(3), card(3));
-    let distinct: std::collections::BTreeSet<String> = (0..20).map(|s| card(s).to_string()).collect();
+    let distinct: std::collections::BTreeSet<String> =
+        (0..20).map(|s| card(s).to_string()).collect();
     assert!(distinct.len() > 15);
     // Frekuensi menang dari 20.000 seed dalam 4σ dari 31,352%.
     let n = 20_000u32;

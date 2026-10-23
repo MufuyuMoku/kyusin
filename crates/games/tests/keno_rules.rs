@@ -153,7 +153,10 @@ fn half_multipliers_and_losses() {
     for n in [1, 2, 4, 5, 6, 8, 9, 10, 11, 13] {
         act(&mut g, &format!("mark {n}"));
     }
-    assert!(Session::act(&mut g, 0, "mark 14").is_err(), "paling banyak 10");
+    assert!(
+        Session::act(&mut g, 0, "mark 14").is_err(),
+        "paling banyak 10"
+    );
     act(&mut g, "bet 100");
     let v = Session::view_data(&g, 0);
     assert_eq!(v["kena"], json!([]));
@@ -193,13 +196,21 @@ fn the_draw_comes_from_the_round_seed() {
     let a = draw(9);
     assert_eq!(a, draw(9));
     assert_ne!(a, draw(10));
-    let mut nums: Vec<u64> = a.as_array().unwrap().iter().map(|x| x.as_u64().unwrap()).collect();
+    let mut nums: Vec<u64> = a
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|x| x.as_u64().unwrap())
+        .collect();
     nums.sort_unstable();
     nums.dedup();
     assert_eq!(nums.len(), 20);
     assert!(nums.iter().all(|n| (1..=80).contains(n)));
     // Hasil tetap di konfigurasi harus 20 angka berbeda 1–80.
-    for bad in [json!([1, 2, 3]), json!((1..=20).map(|_| 5).collect::<Vec<_>>())] {
+    for bad in [
+        json!([1, 2, 3]),
+        json!((1..=20).map(|_| 5).collect::<Vec<_>>()),
+    ] {
         let cfg = serde_json::from_value(json!({ "hasil": bad })).unwrap();
         assert!(Keno::new(cfg, [0; 32]).is_err());
     }

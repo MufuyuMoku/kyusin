@@ -136,7 +136,11 @@ fn cards_come_from_the_round_seed() {
                 Session::act(&mut g, 0, "cashout").unwrap();
                 break;
             }
-            let cmd = if v["pengali_tinggi"].as_u64() <= v["pengali_rendah"].as_u64() { "higher" } else { "lower" };
+            let cmd = if v["pengali_tinggi"].as_u64() <= v["pengali_rendah"].as_u64() {
+                "higher"
+            } else {
+                "lower"
+            };
             Session::act(&mut g, 0, cmd).unwrap();
         }
         Session::view_data(&g, 0)["kartu"].clone()

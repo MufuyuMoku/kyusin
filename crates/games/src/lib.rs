@@ -44,6 +44,7 @@ pub mod sic_bo;
 pub mod teen_patti;
 pub mod texas_holdem;
 pub mod three_card_poker;
+pub mod video_poker;
 
 /// Game katalog yang dikirim bersama aplikasi.
 pub fn builtin() -> Result<Registry, RegistryError> {
@@ -78,6 +79,9 @@ pub fn builtin() -> Result<Registry, RegistryError> {
     registry.register(bingo::cartridge()?)?;
     registry.register(kartu_gosok::cartridge()?)?;
     registry.register(hi_lo::cartridge()?)?;
+    for c in video_poker::cartridges()? {
+        registry.register(c)?;
+    }
     #[cfg(feature = "fixture")]
     registry.register(fixture::cartridge()?)?;
     Ok(registry)

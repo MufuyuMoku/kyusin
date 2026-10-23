@@ -167,7 +167,9 @@ impl TurnGame for KartuGosok {
             && p != 0
             && !PRIZES.iter().any(|x| x.0 == p)
         {
-            return Err(GameError::Config(format!("hadiah `{p}` tidak ada di tabel")));
+            return Err(GameError::Config(format!(
+                "hadiah `{p}` tidak ada di tabel"
+            )));
         }
         Ok(KartuGosok {
             seed,
@@ -300,16 +302,18 @@ impl TurnGame for KartuGosok {
             out.push_str(&cells.join(" "));
             out.push('\n');
         }
-        out.push_str(&match (view.meja.fase.as_str(), view.meja.alasan.as_deref()) {
-            ("taruhan", _) => c.text(lang, "place_bet", &[]),
-            ("gosok", _) => c.text(lang, "scratch", &[]),
-            (_, Some(reason)) => c.text(
-                lang,
-                &format!("over.{reason}"),
-                &[("net", &format!("{:+}", view.bayar.unwrap_or(0)))],
-            ),
-            _ => String::new(),
-        });
+        out.push_str(
+            &match (view.meja.fase.as_str(), view.meja.alasan.as_deref()) {
+                ("taruhan", _) => c.text(lang, "place_bet", &[]),
+                ("gosok", _) => c.text(lang, "scratch", &[]),
+                (_, Some(reason)) => c.text(
+                    lang,
+                    &format!("over.{reason}"),
+                    &[("net", &format!("{:+}", view.bayar.unwrap_or(0)))],
+                ),
+                _ => String::new(),
+            },
+        );
         out
     }
 

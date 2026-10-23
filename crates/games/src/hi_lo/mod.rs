@@ -282,12 +282,14 @@ impl TurnGame for HiLo {
         };
         meja.dipertaruhkan = self.bet;
         if self.phase == Phase::Guess {
-            meja.netral = Some(if self.guesses > 0 {
-                "cashout"
-            } else {
-                self.safer()
-            }
-            .into());
+            meja.netral = Some(
+                if self.guesses > 0 {
+                    "cashout"
+                } else {
+                    self.safer()
+                }
+                .into(),
+            );
         }
         meja.selesai = self.phase == Phase::Over;
         meja.alasan = self.ended.map(str::to_string);
@@ -326,16 +328,18 @@ impl TurnGame for HiLo {
             out.push_str(&c.text(lang, "guess", &[("hi", &x(h)), ("lo", &x(l))]));
             out.push('\n');
         }
-        out.push_str(&match (view.meja.fase.as_str(), view.meja.alasan.as_deref()) {
-            ("taruhan", _) => c.text(lang, "place_bet", &[]),
-            ("tebak", _) => String::new(),
-            (_, Some(reason)) => c.text(
-                lang,
-                &format!("over.{reason}"),
-                &[("net", &format!("{:+}", view.bayar.unwrap_or(0)))],
-            ),
-            _ => String::new(),
-        });
+        out.push_str(
+            &match (view.meja.fase.as_str(), view.meja.alasan.as_deref()) {
+                ("taruhan", _) => c.text(lang, "place_bet", &[]),
+                ("tebak", _) => String::new(),
+                (_, Some(reason)) => c.text(
+                    lang,
+                    &format!("over.{reason}"),
+                    &[("net", &format!("{:+}", view.bayar.unwrap_or(0)))],
+                ),
+                _ => String::new(),
+            },
+        );
         out
     }
 

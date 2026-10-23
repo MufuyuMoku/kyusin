@@ -1,0 +1,25 @@
+id = "jacks-or-better"
+nama = { id = "Jacks or Better", en = "Jacks or Better" }
+kategori = "casino-lotere"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "tidak-ada"
+kompetitif = false
+lan = false
+agen = true
+# Jacks or Better 9/6 (D-071). RTP strategi optimal, enumerasi tepat di GitHub Actions.
+rtp = 99.54
+tutorial = "tutorials/jacks-or-better.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang taruhan (10–2.000, kelipatan 10) dan bagi lima kartu", en = "Place a bet (10–2,000, multiples of 10) and deal five cards" }
+
+[[perintah]]
+pola = "draw <posisi…>"
+ringkas = { id = "Tahan kartu di posisi itu (1–5, boleh kosong) dan ganti sisanya", en = "Hold the cards at those positions (1–5, may be none) and replace the rest" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum bertaruh", en = "Stop before betting" }

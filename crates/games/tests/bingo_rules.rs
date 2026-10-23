@@ -52,9 +52,14 @@ fn patterns_pay_the_highest_one() {
     assert_eq!(best(&CARD, &cells(&x_row)), Some(Pattern::X));
     let three = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14];
     assert_eq!(best(&CARD, &cells(&three)), Some(Pattern::ThreeLines));
-    let frame: Vec<usize> = (0..25).filter(|c| c / 5 == 0 || c / 5 == 4 || c % 5 == 0 || c % 5 == 4).collect();
+    let frame: Vec<usize> = (0..25)
+        .filter(|c| c / 5 == 0 || c / 5 == 4 || c % 5 == 0 || c % 5 == 4)
+        .collect();
     assert_eq!(best(&CARD, &cells(&frame)), Some(Pattern::Frame));
-    assert_eq!(best(&CARD, &cells(&(0..25).collect::<Vec<_>>())), Some(Pattern::Full));
+    assert_eq!(
+        best(&CARD, &cells(&(0..25).collect::<Vec<_>>())),
+        Some(Pattern::Full)
+    );
     let pays: Vec<u32> = [
         Pattern::Line,
         Pattern::Corners,
@@ -98,7 +103,10 @@ fn act(g: &mut Bingo, cmd: &str) {
 /// kartu (11–15, 26–30, 41–45, 56–60, 71–75, dan 33, 38, 57… secukupnya).
 fn balls() -> Vec<u8> {
     let mut v = cells(&[0, 6, 12, 18, 24, 4, 8, 16, 20]);
-    for n in [11, 12, 13, 14, 15, 26, 27, 28, 29, 30, 41, 42, 43, 44, 45, 56, 57, 58, 59, 60, 71, 72, 73, 74, 75, 33, 38] {
+    for n in [
+        11, 12, 13, 14, 15, 26, 27, 28, 29, 30, 41, 42, 43, 44, 45, 56, 57, 58, 59, 60, 71, 72, 73,
+        74, 75, 33, 38,
+    ] {
         v.push(n);
     }
     // Lengkapi dengan angka kartu kedua yang tidak membentuk pola: satu per baris.
@@ -122,7 +130,10 @@ fn a_round_with_two_cards() {
     act(&mut g, "cards 2");
     let v = Session::view_data(&g, 0);
     assert_eq!(v["jumlah_kartu"], 2);
-    assert_eq!(v["pengali"]["bet"], 2, "taruhan per kartu dikali jumlah kartu");
+    assert_eq!(
+        v["pengali"]["bet"], 2,
+        "taruhan per kartu dikali jumlah kartu"
+    );
     act(&mut g, "bet 10");
     let v = Session::view_data(&g, 0);
     assert_eq!(v["fase"], "selesai");
@@ -174,10 +185,20 @@ fn cards_and_balls_come_from_the_round_seed() {
     assert_eq!((c.clone(), b.clone()), round(4));
     assert_ne!(c, round(5).0);
     for card in c.as_array().unwrap() {
-        let v: Vec<u8> = card.as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as u8).collect();
+        let v: Vec<u8> = card
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|x| x.as_u64().unwrap() as u8)
+            .collect();
         assert!(valid_card(&v.try_into().unwrap()));
     }
-    let mut nums: Vec<u64> = b.as_array().unwrap().iter().map(|x| x.as_u64().unwrap()).collect();
+    let mut nums: Vec<u64> = b
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|x| x.as_u64().unwrap())
+        .collect();
     nums.sort_unstable();
     nums.dedup();
     assert_eq!(nums.len(), 40);

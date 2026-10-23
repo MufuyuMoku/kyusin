@@ -1,0 +1,69 @@
+game = "jacks-or-better"
+judul = { id = "Jacks or Better: dasar", en = "Jacks or Better: basics" }
+
+# Urutan dek tetap supaya setiap langkah selalu sama (tes tutorial di CI):
+# lima pertama dibagi, sisanya pengganti berurutan.
+[config]
+kartu = ["Js", "Jh", "4d", "7c", "9h", "Jd", "2c", "3s", "8h", "Kd"]
+
+[man.aturan]
+id = """
+Video Poker dengan 52 kartu. Bayaran (pengali total taruhan):
+- Royal Flush 800, Straight Flush 50, Four of a Kind 25
+- Full House 9, Flush 6, Straight 4, Three of a Kind 3
+- Two Pair 2, sepasang Jack atau lebih tinggi 1
+Pasang taruhan, lima kartu dibagi. Tahan kartu yang ingin dipertahankan,
+lalu DRAW mengganti sisanya dengan kartu dari dek yang sama. Tangan akhir
+dibayar menurut tabel. Satu taruhan dibayar seperti lima koin (Royal Flush
+selalu 800×). RTP dengan strategi optimal 99,54% (nilai harapan tepat untuk
+setiap pilihan tahan). Taruhan 10–2.000, kelipatan 10.
+
+Provably fair per tangan: komitmen seed sebelum bertaruh, dek dikocok dari
+seed ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+Video poker with 52 cards. Payouts (total multiple of the bet):
+- Royal Flush 800, Straight Flush 50, Four of a Kind 25
+- Full House 9, Flush 6, Straight 4, Three of a Kind 3
+- Two Pair 2, a pair of Jacks or better 1
+Place a bet and five cards are dealt. Hold the cards you want to keep, then
+DRAW replaces the rest with cards from the same deck. The final hand is paid
+from the table. One bet is paid like five coins (a Royal Flush always pays
+800×). The return with optimal strategy is 99.54% (the exact expected value of
+every hold). Bets 10–2,000, multiples of 10.
+
+Provably fair per hand: seed commitment before betting, the deck is shuffled
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip lalu [ BAGI · n ]. Klik kartu untuk menahan atau
+melepasnya, lalu [ DRAW ]. Keyboard: panah memindahkan fokus, Enter atau
+Spasi memilih.
+"""
+en = """
+Choose a chip value, then [ DEAL · n ]. Click a card to hold or release it,
+then [ DRAW ]. Keyboard: the arrow keys move the focus, Enter or Space
+selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 dan bagi lima kartu."
+teks.en = "Bet 10 and deal five cards."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pilih BAGI · 10."
+petunjuk.en = "Choose DEAL · 10."
+
+[[langkah]]
+teks.id = "Kamu dibagi sepasang Jack. Strategi optimal: tahan pasangan itu (kartu 1 dan 2), buang tiga lainnya."
+teks.en = "You were dealt a pair of Jacks. The optimal play: hold the pair (cards 1 and 2), discard the other three."
+aksi = "draw 1 2"
+sorot = ["aksi:draw 1 2"]
+petunjuk.id = "Tahan kartu 1 dan 2, lalu pilih DRAW."
+petunjuk.en = "Hold cards 1 and 2, then choose DRAW."
+
+[[langkah]]
+teks.id = "Jd datang: Three of a Kind dibayar 3 × 10 = 30, bersih +20. Seed ronde dibuka. Tutorial selesai."
+teks.en = "Jd arrives: Three of a Kind pays 3 × 10 = 30, net +20. The round seed is revealed. Tutorial finished."

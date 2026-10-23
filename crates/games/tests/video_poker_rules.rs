@@ -7,9 +7,7 @@
 //! terbesar (enumerasi semua kartu pengganti).
 
 use kyusin_core::{Session, TurnGame};
-use kyusin_games::video_poker::{
-    self, Hand, Variant, VpCard, evaluate, optimal::Solver,
-};
+use kyusin_games::video_poker::{self, Hand, Variant, VpCard, evaluate, optimal::Solver};
 use serde_json::{Value, json};
 
 fn hand(cards: &str) -> [VpCard; 5] {
@@ -25,26 +23,69 @@ fn eval(variant: Variant, cards: &str) -> Option<Hand> {
 fn pay_tables() {
     use Hand::*;
     let job = Variant::JacksOrBetter;
-    let table: Vec<(Hand, u32)> = [RoyalFlush, StraightFlush, FourOfAKind, FullHouse, Flush, Straight, ThreeOfAKind, TwoPair, HighPair]
-        .iter()
-        .map(|h| (*h, job.pays(*h)))
-        .collect();
+    let table: Vec<(Hand, u32)> = [
+        RoyalFlush,
+        StraightFlush,
+        FourOfAKind,
+        FullHouse,
+        Flush,
+        Straight,
+        ThreeOfAKind,
+        TwoPair,
+        HighPair,
+    ]
+    .iter()
+    .map(|h| (*h, job.pays(*h)))
+    .collect();
     assert_eq!(
         table,
-        [(RoyalFlush, 800), (StraightFlush, 50), (FourOfAKind, 25), (FullHouse, 9), (Flush, 6), (Straight, 4), (ThreeOfAKind, 3), (TwoPair, 2), (HighPair, 1)]
+        [
+            (RoyalFlush, 800),
+            (StraightFlush, 50),
+            (FourOfAKind, 25),
+            (FullHouse, 9),
+            (Flush, 6),
+            (Straight, 4),
+            (ThreeOfAKind, 3),
+            (TwoPair, 2),
+            (HighPair, 1)
+        ]
     );
     let d = Variant::DeucesWild;
-    let deuces: Vec<u32> = [RoyalFlush, FourDeuces, WildRoyal, FiveOfAKind, StraightFlush, FourOfAKind, FullHouse, Flush, Straight, ThreeOfAKind]
-        .iter()
-        .map(|h| d.pays(*h))
-        .collect();
+    let deuces: Vec<u32> = [
+        RoyalFlush,
+        FourDeuces,
+        WildRoyal,
+        FiveOfAKind,
+        StraightFlush,
+        FourOfAKind,
+        FullHouse,
+        Flush,
+        Straight,
+        ThreeOfAKind,
+    ]
+    .iter()
+    .map(|h| d.pays(*h))
+    .collect();
     assert_eq!(deuces, [800, 200, 25, 16, 10, 4, 4, 3, 2, 1]);
     assert_eq!(d.pays(TwoPair), 0);
     let j = Variant::JokerPoker;
-    let joker: Vec<u32> = [RoyalFlush, FiveOfAKind, WildRoyal, StraightFlush, FourOfAKind, FullHouse, Flush, Straight, ThreeOfAKind, TwoPair, HighPair]
-        .iter()
-        .map(|h| j.pays(*h))
-        .collect();
+    let joker: Vec<u32> = [
+        RoyalFlush,
+        FiveOfAKind,
+        WildRoyal,
+        StraightFlush,
+        FourOfAKind,
+        FullHouse,
+        Flush,
+        Straight,
+        ThreeOfAKind,
+        TwoPair,
+        HighPair,
+    ]
+    .iter()
+    .map(|h| j.pays(*h))
+    .collect();
     assert_eq!(joker, [800, 200, 100, 50, 18, 7, 5, 3, 2, 1, 1]);
     assert_eq!(Variant::JacksOrBetter.deck().len(), 52);
     assert_eq!(Variant::DeucesWild.deck().len(), 52);
@@ -175,7 +216,10 @@ fn deal_hold_draw() {
     let mut g = game(&["Js", "Jh", "4d", "7c", "9h", "Jd", "2c", "3s", "8h", "Kd"]);
     Session::act(&mut g, 0, "bet 10").unwrap();
     Session::act(&mut g, 0, "draw").unwrap();
-    assert_eq!(Session::view_data(&g, 0)["kartu"], json!(["Jd", "2c", "3s", "8h", "Kd"]));
+    assert_eq!(
+        Session::view_data(&g, 0)["kartu"],
+        json!(["Jd", "2c", "3s", "8h", "Kd"])
+    );
     assert_eq!(Session::view_data(&g, 0)["bayar"], -10);
 }
 
