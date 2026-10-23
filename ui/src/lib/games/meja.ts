@@ -372,6 +372,7 @@ export function tableModel(game: string, v: MejaView): TableModel | null {
 export function chipSteps(step: number): number[] {
 	if (step === 20) return [20, 100, 500];
 	if (step === 120) return [120, 600];
+	if (step === 100) return [100, 500];
 	return [10, 50, 100, 500];
 }
 

@@ -19,7 +19,7 @@ Diperbarui di akhir setiap milestone (SPEC §9). Entri terbaru di atas.
 | M5b-1 | selesai | 2026-10-02 | Texas Hold'em (No-Limit), Omaha (Pot-Limit), Teen Patti antar-pemain melawan bot; buy-in dari saldo; rating sesi multipemain; SPEC Rev. 12 |
 | M5b-2 | selesai | 2026-10-05 | Capsa Susun, Domino QiuQiu antar-pemain melawan bot; mesin domino bersama; aturan lokal pilihan klien (D-065) |
 | M6a | selesai | 2026-10-09 | Roulette Eropa dan Amerika, Craps, Sic Bo, Big Six, Fan-Tan, Pai Gow ubin, Chuck-a-luck; varian pilihan klien (D-069), mesin papan taruhan bersama (D-070) |
-| M6b | belum mulai | | Keno, Bingo, kartu gosok, Hi-Lo, Video Poker |
+| M6b | selesai | 2026-10-23 | Keno, Bingo, kartu gosok, Hi-Lo, Video Poker (Jacks or Better 9/6, Deuces Wild NSUD, Joker Poker 18/7/5); pilihan klien D-071, penerapan D-072 |
 | M7 | belum mulai | | |
 | M8 | belum mulai | | |
 | M9 | belum mulai | | |
@@ -61,8 +61,26 @@ Kolom 1–9 mengikuti poin DoD: 1 aturan+tes, 2 bot, 3 visual, 4 perintah teks, 
 | Fan-Tan | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
 | Pai Gow ubin | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
 | Chuck-a-luck | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6a) |
+| Keno | ✓ | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6b); poin 2 tidak berlaku (solo) |
+| Bingo | ✓ | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6b); poin 2 tidak berlaku (solo) |
+| Kartu gosok | ✓ | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6b); poin 2 tidak berlaku (solo) |
+| Hi-Lo | ✓ | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6b); poin 2 tidak berlaku (solo) |
+| Jacks or Better | ✓ | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6b); poin 2 tidak berlaku (solo) |
+| Deuces Wild | ✓ | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6b); poin 2 tidak berlaku (solo) |
+| Joker Poker | ✓ | – | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ya (M6b); poin 2 tidak berlaku (solo) |
 
 ## Log sesi
+
+### 2026-10-23 — M6b: casino lotere dan instan
+
+- Varian dan tabel bayar ditanyakan ke klien lebih dulu (12 pertanyaan dengan rekomendasi dan sumber; semua rekomendasi dipilih): D-071. Tabel Bingo yang mula-mula ditawarkan ternyata tidak monoton (X 10× di bawah 3 garis 4× dalam urutan pola); kesalahan ini dilaporkan ke klien dan diperbaiki lewat pertanyaan susulan (X 6×, 95,43%). Penerapan: D-072.
+- Tes aturan dan pembayaran di-commit sebelum mesinnya (commit 08960ce): Keno (6), Bingo (5), kartu gosok (4), Hi-Lo (6), Video Poker (8: tabel bayar, tangan tiga varian termasuk deuce dan joker liar, EV tepat 866/47, keputusan optimal, sesi, seed).
+- Mesin: `keno`, `bingo`, `kartu_gosok`, `hi_lo`, `video_poker` (tiga cartridge) dengan `optimal::Solver` (nilai harapan tepat lewat inklusi–eksklusi); manifest, man, dan tutorial tujuh game.
+- RTP (semua di bawah 100%): Keno 94,06–95,59% per jumlah angka, Bingo 95,4342%, kartu gosok 95%, Hi-Lo 96,9349% (strategi terbaik), Video Poker strategi optimal tepat di Actions: Jacks or Better 99,5439%, Deuces Wild 99,7283%, Joker Poker 98,9372%. Simulasi 10.000.000 ronde per taruhan (run 39915809448): 17 taruhan baru cocok dalam 4σ; pemeriksaan tepat Video Poker gagal hanya karena angka sementara dari sumber, lalu diganti angka tepat dan dikonfirmasi (run 39918452736).
+- UI: `KenoTable`, `BingoTable`, `GosokTable`, `HiLoTable`, `VideoPokerTable` (+ `ChipBet`, `LotereStatus`); casino tanpa bandar kini dimainkan seperti melawan rumah (`againstHouse`). Tata letak diukur di peramban dengan halaman pratinjau sementara (tidak di-commit; bukan bukti visual), lalu dibuktikan tes jendela asli `lotere.e2e.mjs`.
+- Tes: 375 tes Rust, 49 tes UI. CI (run 39919314508): lulus. Run sebelumnya (39917586496) gagal karena tabel bayar Keno bertambah tinggi saat angka dipilih; tingginya kini tetap (tes M6b saja di workflow ulang, run 39918715166: lulus). Sesudahnya tangkapan layar menunjukkan chip Hi-Lo +10/+50 padahal taruhan kelipatan 100; chip diperbaiki menjadi +100/+500.
+- Belum/sisa: tidak ada untuk M6b.
+- Langkah berikutnya: M7 sesuai SPEC §9 setelah tinjauan klien.
 
 ### 2026-10-09 — M6a: casino dadu dan roda
 
