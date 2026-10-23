@@ -1,0 +1,84 @@
+game = "keno"
+judul = { id = "Keno: dasar", en = "Keno: basics" }
+
+# Tarikan tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+hasil = [3, 7, 12, 18, 21, 25, 33, 37, 40, 44, 48, 52, 55, 61, 64, 68, 71, 75, 79, 80]
+
+[man.aturan]
+id = """
+Papan berisi angka 1–80. Pilih 1 sampai 10 angka, pasang taruhan, lalu 20
+angka ditarik. Bayaran bergantung pada berapa angka yang dipilih dan berapa
+yang kena, sebagai pengali total taruhan:
+- 1 angka: kena 1 3,8×. 2 angka: kena 2 15,8×. 3 angka: 2 2×, 3 48×.
+- 4 angka: 2 1×, 3 5,5×, 4 160×. 5 angka: 3 3×, 4 15×, 5 800×.
+- 6 angka: 3 2×, 4 6,5×, 5 90×, 6 1.800×.
+- 7 angka: 3 1,5×, 4 3×, 5 23×, 6 300×, 7 4.500×.
+- 8 angka: 4 2×, 5 15×, 6 110×, 7 1.100×, 8 18.500×.
+- 9 angka: 4 1,5×, 5 5,5×, 6 43×, 7 360×, 8 3.600×, 9 36.000×.
+- 10 angka: 0 3,5×, 5 2×, 6 22×, 7 145×, 8 1.100×, 9 7.000×, 10 80.000×.
+RTP tepat 94,06% (4 angka) sampai 95,59% (6 angka). Taruhan 10–2.000,
+kelipatan 10. Tabel bayar untuk jumlah angka yang sedang dipilih tampil di
+layar.
+
+Provably fair per ronde: komitmen seed sebelum memilih, 20 angka dari seed
+ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+The board holds the numbers 1–80. Choose 1 to 10 numbers, place a bet, and
+20 numbers are drawn. The payout depends on how many numbers you chose and how
+many were hit, as a total multiple of the bet:
+- 1 number: 1 hit 3.8×. 2 numbers: 2 hits 15.8×. 3 numbers: 2 2×, 3 48×.
+- 4 numbers: 2 1×, 3 5.5×, 4 160×. 5 numbers: 3 3×, 4 15×, 5 800×.
+- 6 numbers: 3 2×, 4 6.5×, 5 90×, 6 1,800×.
+- 7 numbers: 3 1.5×, 4 3×, 5 23×, 6 300×, 7 4,500×.
+- 8 numbers: 4 2×, 5 15×, 6 110×, 7 1,100×, 8 18,500×.
+- 9 numbers: 4 1.5×, 5 5.5×, 6 43×, 7 360×, 8 3,600×, 9 36,000×.
+- 10 numbers: 0 3.5×, 5 2×, 6 22×, 7 145×, 8 1,100×, 9 7,000×, 10 80,000×.
+Exact return 94.06% (4 numbers) to 95.59% (6 numbers). Bets 10–2,000,
+multiples of 10. The pay table for the numbers currently chosen is shown on
+screen.
+
+Provably fair per round: seed commitment before choosing, the 20 numbers come
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Klik angka di papan untuk memilih atau membatalkannya. [ ULANG PILIHAN ]
+membatalkan semua pilihan. Pilih nilai chip, lalu [ TARIK · n ]. Keyboard:
+panah memindahkan fokus, Enter atau Spasi memilih.
+"""
+en = """
+Click a number on the board to choose or remove it. [ CLEAR PICKS ] removes
+every pick. Choose a chip value, then [ DRAW · n ]. Keyboard: the arrow keys
+move the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pilih angka 3."
+teks.en = "Choose number 3."
+aksi = "mark 3"
+sorot = ["aksi:mark 3"]
+petunjuk.id = "Klik angka 3."
+petunjuk.en = "Click number 3."
+
+[[langkah]]
+teks.id = "Pilih angka 7. Dengan dua angka, kena keduanya dibayar 15,8×."
+teks.en = "Choose number 7. With two numbers, hitting both pays 15.8×."
+aksi = "mark 7"
+sorot = ["aksi:mark 7"]
+petunjuk.id = "Klik angka 7."
+petunjuk.en = "Click number 7."
+
+[[langkah]]
+teks.id = "Pasang 10 dan tarik 20 angka."
+teks.en = "Bet 10 and draw 20 numbers."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pilih TARIK · 10."
+petunjuk.en = "Choose DRAW · 10."
+
+[[langkah]]
+teks.id = "3 dan 7 sama-sama ditarik: 15,8 × 10 = 158, bersih +148. Seed ronde dibuka. Tutorial selesai."
+teks.en = "3 and 7 were both drawn: 15.8 × 10 = 158, net +148. The round seed is revealed. Tutorial finished."

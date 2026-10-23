@@ -1,0 +1,27 @@
+id = "bingo"
+nama = { id = "Bingo", en = "Bingo" }
+kategori = "casino-lotere"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "tidak-ada"
+kompetitif = false
+lan = false
+agen = true
+# 75 bola, kartu 5×5 dengan petak bebas, 1–4 kartu, 40 bola ditarik; pola
+# tertinggi dibayar 1,5/2/3/4/6/500/5.000 (D-071). RTP tepat per kartu
+# 95,4342% (enumerasi 2^24).
+rtp = 95.43
+tutorial = "tutorials/bingo.toml"
+
+[[perintah]]
+pola = "cards <jumlah_kartu>"
+ringkas = { id = "Pilih jumlah kartu yang dimainkan (1–4)", en = "Choose how many cards to play (1–4)" }
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang taruhan per kartu (10–2.000, kelipatan 10) dan tarik 40 bola", en = "Place a bet per card (10–2,000, multiples of 10) and draw 40 balls" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum bertaruh", en = "Stop before betting" }

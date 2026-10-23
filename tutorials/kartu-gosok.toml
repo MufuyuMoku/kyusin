@@ -1,0 +1,76 @@
+game = "kartu-gosok"
+judul = { id = "Kartu gosok: dasar", en = "Scratch card: basics" }
+
+# Hadiah tetap supaya setiap langkah selalu sama (tes tutorial di CI); susunan
+# sel tetap dari seed tutorial.
+[config]
+hadiah = 5
+
+[man.aturan]
+id = """
+Beli kartu 3×3, lalu gosok sembilan selnya. Bila tiga sel menunjukkan
+pengali yang sama, kartu dibayar sebesar pengali itu (pengali total harga
+kartu). Peluang tiap hadiah per 100.000 kartu:
+- 1× 16.000, 2× 10.000, 5× 3.000, 10× 1.500
+- 20× 600, 50× 200, 100× 50, 1.000× 2
+Menang 31,35% kartu, RTP tepat 95%. Paling banyak satu nilai muncul tiga
+kali; nilai lain paling banyak dua kali. Harga kartu 10–2.000, kelipatan 10.
+Urutan menggosok tidak mengubah hasil.
+
+Provably fair per kartu: komitmen seed sebelum membeli; hadiah lalu susunan
+sel dari turunan seed ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+Buy a 3×3 card, then scratch its nine cells. If three cells show the same
+multiplier, the card pays that multiplier (a total multiple of the card
+price). Chance of each prize per 100,000 cards:
+- 1× 16,000, 2× 10,000, 5× 3,000, 10× 1,500
+- 20× 600, 50× 200, 100× 50, 1,000× 2
+31.35% of cards win, exact return 95%. At most one value shows three times;
+the others show at most twice. Card price 10–2,000, multiples of 10. The
+order you scratch in does not change the result.
+
+Provably fair per card: seed commitment before buying; the prize and then the
+cell layout come from derivations of the round seed, the seed is revealed
+afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip lalu [ BELI · n ]. Klik sel untuk menggosoknya, atau
+[ GOSOK SEMUA ]. Keyboard: panah memindahkan fokus, Enter atau Spasi
+memilih.
+"""
+en = """
+Choose a chip value, then [ BUY · n ]. Click a cell to scratch it, or
+[ SCRATCH ALL ]. Keyboard: the arrow keys move the focus, Enter or Space
+selects.
+"""
+
+[[langkah]]
+teks.id = "Beli satu kartu seharga 10."
+teks.en = "Buy one card for 10."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pilih BELI · 10."
+petunjuk.en = "Choose BUY · 10."
+
+[[langkah]]
+teks.id = "Gosok sel tengah."
+teks.en = "Scratch the middle cell."
+aksi = "scratch 5"
+sorot = ["aksi:scratch 5"]
+petunjuk.id = "Klik sel tengah."
+petunjuk.en = "Click the middle cell."
+
+[[langkah]]
+teks.id = "Gosok sisanya sekaligus."
+teks.en = "Scratch the rest at once."
+aksi = "scratch all"
+sorot = ["aksi:scratch all"]
+petunjuk.id = "Pilih GOSOK SEMUA."
+petunjuk.en = "Choose SCRATCH ALL."
+
+[[langkah]]
+teks.id = "Tiga sel 5×: kartu dibayar 5 × 10 = 50, bersih +40. Seed ronde dibuka. Tutorial selesai."
+teks.en = "Three 5× cells: the card pays 5 × 10 = 50, net +40. The round seed is revealed. Tutorial finished."
