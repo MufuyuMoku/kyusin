@@ -189,6 +189,8 @@
 	}
 	.pays {
 		width: 18ch;
+		/* Judul + paling banyak 7 baris bayaran (10 angka): tinggi tetap. */
+		height: calc(var(--cell-h) * 8);
 	}
 	.pays p {
 		margin: 0;
