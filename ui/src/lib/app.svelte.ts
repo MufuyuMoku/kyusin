@@ -4,6 +4,7 @@
  */
 
 import {
+	againstHouse,
 	api,
 	type AppInfo,
 	type Allowance,
@@ -247,7 +248,7 @@ export async function startMatch(id: string, level: number, seat: number, clock:
 	const a = await api();
 	// Game casino: tunjangan harian bisa berlaku lagi (hari berganti, atau
 	// saldo sudah di bawah ambang).
-	if (findGame(id)?.lawan === 'bandar') {
+	if (againstHouse(findGame(id))) {
 		const got = await a.chips_daily(localDate()).catch(() => null);
 		if (got?.granted) app.allowance = got;
 	}

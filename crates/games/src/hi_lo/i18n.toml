@@ -1,0 +1,20 @@
+# Teks tampilan Hi-Lo dalam dua bahasa.
+[id]
+"cards" = "Kartu: {cards} · pengali {mult}"
+"guess" = "higher {hi} · lower {lo}"
+"place_bet" = "bet <jumlah> membuka kartu pertama."
+"over.cashout" = "Cash out, bersih {net}. Seed dibuka."
+"over.kalah" = "Tebakan salah, bersih {net}. Seed dibuka."
+"over.batas" = "Pengali 1.000×: cash out otomatis, bersih {net}. Seed dibuka."
+"over.berhenti" = "Kamu berhenti, bersih {net}. Seed dibuka."
+"summary" = "Ronde selesai: bersih {net} chip."
+
+[en]
+"cards" = "Cards: {cards} · multiplier {mult}"
+"guess" = "higher {hi} · lower {lo}"
+"place_bet" = "bet <amount> turns the first card."
+"over.cashout" = "Cashed out, net {net}. The seed is revealed."
+"over.kalah" = "Wrong guess, net {net}. The seed is revealed."
+"over.batas" = "Multiplier 1,000×: automatic cash out, net {net}. The seed is revealed."
+"over.berhenti" = "You stopped, net {net}. The seed is revealed."
+"summary" = "Round finished: net {net} chips."

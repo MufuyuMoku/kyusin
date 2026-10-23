@@ -63,6 +63,21 @@ fn main() {
         t.elapsed().as_secs_f64(),
     );
 
+    // Video Poker: strategi optimal, rata-rata EV terbaik atas semua tangan awal.
+    for variant in kyusin_games::video_poker::Variant::ALL {
+        let t = std::time::Instant::now();
+        let solver = kyusin_games::video_poker::optimal::Solver::new(variant);
+        let (percent, num, den) = solver.exact(threads);
+        println!("{}: RTP tepat = {num} / {den}", variant.id());
+        report(
+            variant.id(),
+            "bet",
+            variant.rtp(),
+            percent,
+            t.elapsed().as_secs_f64(),
+        );
+    }
+
     if check && !failed.is_empty() {
         eprintln!("GAGAL: {failed:?}");
         std::process::exit(1);

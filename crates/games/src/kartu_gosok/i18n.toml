@@ -1,0 +1,14 @@
+# Teks tampilan kartu gosok dalam dua bahasa.
+[id]
+"place_bet" = "bet <jumlah> membeli satu kartu."
+"scratch" = "scratch <1–9> atau scratch all; tiga jumlah sama = hadiah."
+"over.ronde_selesai" = "Kartu terbuka, bersih {net}. Seed dibuka."
+"over.berhenti" = "Kamu berhenti, bersih {net}. Seed dibuka."
+"summary" = "Kartu selesai: bersih {net} chip."
+
+[en]
+"place_bet" = "bet <amount> buys one card."
+"scratch" = "scratch <1–9> or scratch all; three matching amounts win."
+"over.ronde_selesai" = "Card revealed, net {net}. The seed is revealed."
+"over.berhenti" = "You stopped, net {net}. The seed is revealed."
+"summary" = "Card finished: net {net} chips."

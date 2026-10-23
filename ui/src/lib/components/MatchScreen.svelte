@@ -17,6 +17,7 @@
 		startMatch
 	} from '$lib/app.svelte';
 	import ClockPanel from './ClockPanel.svelte';
+	import { againstHouse } from '$lib/backend';
 	import { GAME_UI } from '$lib/games';
 	import { signed } from '$lib/format';
 	import { L, t } from '$lib/i18n.svelte';
@@ -40,7 +41,7 @@
 	const canPass = $derived(m?.your_turn && moveButtons.length === 1 && moveButtons[0] === PASS);
 	const paused = $derived(app.pauseMenu && !!m && !m.over);
 	/** Casino melawan bandar: tanpa kalimat menang/kalah dan tanpa lawan bot. */
-	const house = $derived(game?.lawan === 'bandar');
+	const house = $derived(againstHouse(game));
 	/** Meja casino antar-pemain (buy-in): menu jeda seperti meja casino. */
 	const table = $derived(game?.kategori === 'casino-meja' && game?.lawan === 'bot');
 	const usages = $derived(m?.actions.map((a) => a.usage) ?? []);

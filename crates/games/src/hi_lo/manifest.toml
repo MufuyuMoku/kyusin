@@ -1,0 +1,35 @@
+id = "hi-lo"
+nama = { id = "Hi-Lo", en = "Hi-Lo" }
+kategori = "casino-lotere"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "tidak-ada"
+kompetitif = false
+lan = false
+agen = true
+# Dek tak terbatas, tinggi-atau-sama / rendah-atau-sama, pengali 0,97 ÷
+# peluang dibulatkan ke bawah (D-071). RTP strategi terbaik (satu tebakan
+# lalu cash out) 96,9349% tepat; setiap langkah tambahan ≤ 97%.
+rtp = 96.93
+tutorial = "tutorials/hi-lo.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Pasang taruhan (100–2.000, kelipatan 100) dan buka kartu pertama", en = "Place a bet (100–2,000, multiples of 100) and turn the first card" }
+
+[[perintah]]
+pola = "higher"
+ringkas = { id = "Tebak kartu berikutnya lebih tinggi atau sama", en = "Guess the next card is higher or the same" }
+
+[[perintah]]
+pola = "lower"
+ringkas = { id = "Tebak kartu berikutnya lebih rendah atau sama", en = "Guess the next card is lower or the same" }
+
+[[perintah]]
+pola = "cashout"
+ringkas = { id = "Ambil taruhan × pengali berjalan (setelah tebakan pertama)", en = "Take the bet × the running multiplier (after the first guess)" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum bertaruh", en = "Stop before betting" }

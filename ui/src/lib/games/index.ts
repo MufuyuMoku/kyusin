@@ -12,12 +12,18 @@ import CapsaTable from './CapsaTable.svelte';
 import BlackjackTable from './BlackjackTable.svelte';
 import ChessBoard from './ChessBoard.svelte';
 import ChessStatus from './ChessStatus.svelte';
+import BingoTable from './BingoTable.svelte';
+import GosokTable from './GosokTable.svelte';
+import HiLoTable from './HiLoTable.svelte';
+import KenoTable from './KenoTable.svelte';
+import LotereStatus from './LotereStatus.svelte';
 import MejaStatus from './MejaStatus.svelte';
 import MejaTable from './MejaTable.svelte';
 import PapanStatus from './PapanStatus.svelte';
 import PapanTable from './PapanTable.svelte';
 import PokerStatus from './PokerStatus.svelte';
 import PokerTable from './PokerTable.svelte';
+import VideoPokerTable from './VideoPokerTable.svelte';
 import ReversiBoard from './ReversiBoard.svelte';
 import ReversiStatus from './ReversiStatus.svelte';
 
@@ -67,6 +73,8 @@ export interface GameUi {
 const meja = (perRound: boolean): GameUi => ({ board: MejaTable, status: MejaStatus, seats: [], perRound });
 /** Papan taruhan M6a: satu ronde (Craps: satu penembak) per pertandingan. */
 const papan: GameUi = { board: PapanTable, status: PapanStatus, seats: [], perRound: true };
+/** Casino lotere dan instan M6b: satu ronde (kartu, tangan) per pertandingan. */
+const lotere = (board: Component<BoardProps>): GameUi => ({ board, status: LotereStatus, seats: [], perRound: true });
 
 export const GAME_UI: Record<string, GameUi> = {
 	catur: {
@@ -104,6 +112,13 @@ export const GAME_UI: Record<string, GameUi> = {
 	'fan-tan': papan,
 	craps: papan,
 	'pai-gow-ubin': meja(true),
+	keno: lotere(KenoTable),
+	bingo: lotere(BingoTable),
+	'kartu-gosok': lotere(GosokTable),
+	'hi-lo': lotere(HiLoTable),
+	'jacks-or-better': lotere(VideoPokerTable),
+	'deuces-wild': lotere(VideoPokerTable),
+	'joker-poker': lotere(VideoPokerTable),
 	'texas-holdem': { board: PokerTable, status: PokerStatus, seats: [] },
 	omaha: { board: PokerTable, status: PokerStatus, seats: [] },
 	'teen-patti': { board: PokerTable, status: PokerStatus, seats: [] },

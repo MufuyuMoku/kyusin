@@ -4,7 +4,7 @@
   manifest + tutorial (SPEC §7.6).
 -->
 <script lang="ts">
-	import { api, type ReplaySummary, type SuspendedMatch } from '$lib/backend';
+	import { againstHouse, api, type ReplaySummary, type SuspendedMatch } from '$lib/backend';
 	import {
 		back,
 		findGame,
@@ -26,7 +26,7 @@
 	const game = $derived(findGame(id));
 	const levels = $derived(game?.bot_levels ?? 0);
 	/** Casino melawan bandar: dimainkan tanpa pilihan lawan. */
-	const house = $derived(game?.lawan === 'bandar');
+	const house = $derived(againstHouse(game));
 	const playable = $derived(levels > 0 || house);
 	let chips = $state<number | null>(null);
 	const seatKeys = $derived(GAME_UI[id]?.seats ?? []);

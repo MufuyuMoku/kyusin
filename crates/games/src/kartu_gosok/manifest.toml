@@ -1,0 +1,30 @@
+id = "kartu-gosok"
+nama = { id = "Kartu gosok", en = "Scratch card" }
+kategori = "casino-lotere"
+pemain_min = 1
+pemain_maks = 1
+jenis = "giliran"
+lawan = "tidak-ada"
+kompetitif = false
+lan = false
+agen = true
+# 3×3, cocokkan tiga jumlah; hadiah diundi dulu dari tabel peluang (penyebut
+# 100.000), RTP tepat 95% (D-071).
+rtp = 95.0
+tutorial = "tutorials/kartu-gosok.toml"
+
+[[perintah]]
+pola = "bet <jumlah>"
+ringkas = { id = "Beli satu kartu (10–2.000, kelipatan 10)", en = "Buy one card (10–2,000, multiples of 10)" }
+
+[[perintah]]
+pola = "scratch <sel>"
+ringkas = { id = "Gosok satu sel (1–9, kiri ke kanan, atas ke bawah)", en = "Scratch one cell (1–9, left to right, top to bottom)" }
+
+[[perintah]]
+pola = "scratch all"
+ringkas = { id = "Gosok semua sel yang tersisa", en = "Scratch every remaining cell" }
+
+[[perintah]]
+pola = "leave"
+ringkas = { id = "Berhenti sebelum membeli kartu", en = "Stop before buying a card" }

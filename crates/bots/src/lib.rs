@@ -18,6 +18,7 @@ mod catur_search;
 pub mod craps;
 pub mod dragon_tiger;
 pub mod let_it_ride;
+pub mod lotere;
 pub mod meja;
 pub mod pai_gow;
 pub mod pai_gow_ubin;
@@ -28,6 +29,7 @@ pub mod red_dog;
 pub mod reversi;
 pub mod teen_patti;
 pub mod three_card_poker;
+pub mod video_poker;
 
 /// Jumlah level bot untuk sebuah game (0 = tidak ada bot).
 pub fn levels(game: &str) -> u8 {

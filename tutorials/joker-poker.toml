@@ -1,0 +1,69 @@
+game = "joker-poker"
+judul = { id = "Joker Poker: dasar", en = "Joker Poker: basics" }
+
+# Urutan dek tetap supaya setiap langkah selalu sama (tes tutorial di CI):
+# lima pertama dibagi, sisanya pengganti berurutan.
+[config]
+kartu = ["JK", "Ks", "7h", "4d", "2c", "Kd", "9s", "3h", "8c", "Qd"]
+
+[man.aturan]
+id = """
+Video Poker dengan 52 kartu ditambah satu joker yang bisa menjadi kartu apa saja. Bayaran (pengali total taruhan):
+- Royal Flush alami 800, Five of a Kind 200, Royal Flush dengan joker 100
+- Straight Flush 50, Four of a Kind 18, Full House 7, Flush 5
+- Straight 3, Three of a Kind 2, Two Pair 1, sepasang King atau As 1
+Pasang taruhan, lima kartu dibagi. Tahan kartu yang ingin dipertahankan,
+lalu DRAW mengganti sisanya dengan kartu dari dek yang sama. Tangan akhir
+dibayar menurut tabel. Satu taruhan dibayar seperti lima koin (Royal Flush
+selalu 800×). RTP dengan strategi optimal 98,94% (nilai harapan tepat untuk
+setiap pilihan tahan). Taruhan 10–2.000, kelipatan 10.
+
+Provably fair per tangan: komitmen seed sebelum bertaruh, dek dikocok dari
+seed ronde, seed dibuka sesudahnya, verify memutar ulang.
+"""
+en = """
+Video poker with 52 cards plus one joker that can be any card. Payouts (total multiple of the bet):
+- Natural Royal Flush 800, Five of a Kind 200, Royal Flush with the joker 100
+- Straight Flush 50, Four of a Kind 18, Full House 7, Flush 5
+- Straight 3, Three of a Kind 2, Two Pair 1, a pair of Kings or Aces 1
+Place a bet and five cards are dealt. Hold the cards you want to keep, then
+DRAW replaces the rest with cards from the same deck. The final hand is paid
+from the table. One bet is paid like five coins (a Royal Flush always pays
+800×). The return with optimal strategy is 98.94% (the exact expected value of
+every hold). Bets 10–2,000, multiples of 10.
+
+Provably fair per hand: seed commitment before betting, the deck is shuffled
+from the round seed, the seed is revealed afterwards, verify replays it.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip lalu [ BAGI · n ]. Klik kartu untuk menahan atau
+melepasnya, lalu [ DRAW ]. Keyboard: panah memindahkan fokus, Enter atau
+Spasi memilih.
+"""
+en = """
+Choose a chip value, then [ DEAL · n ]. Click a card to hold or release it,
+then [ DRAW ]. Keyboard: the arrow keys move the focus, Enter or Space
+selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 10 dan bagi lima kartu."
+teks.en = "Bet 10 and deal five cards."
+aksi = "bet 10"
+sorot = ["aksi:bet 10"]
+petunjuk.id = "Pilih BAGI · 10."
+petunjuk.en = "Choose DEAL · 10."
+
+[[langkah]]
+teks.id = "Joker dan King sudah sepasang King (dibayar 1×). Tahan keduanya (kartu 1 dan 2)."
+teks.en = "The joker and a King already make a pair of Kings (pays 1×). Hold both (cards 1 and 2)."
+aksi = "draw 1 2"
+sorot = ["aksi:draw 1 2"]
+petunjuk.id = "Tahan kartu 1 dan 2, lalu pilih DRAW."
+petunjuk.en = "Hold cards 1 and 2, then choose DRAW."
+
+[[langkah]]
+teks.id = "Kd datang: joker + dua King = Three of a Kind, 2 × 10 = 20, bersih +10. Seed ronde dibuka. Tutorial selesai."
+teks.en = "Kd arrives: the joker + two Kings = Three of a Kind, 2 × 10 = 20, net +10. The round seed is revealed. Tutorial finished."

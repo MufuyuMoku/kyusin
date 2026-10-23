@@ -1,0 +1,83 @@
+game = "hi-lo"
+judul = { id = "Hi-Lo: dasar", en = "Hi-Lo: basics" }
+
+# Kartu tetap supaya setiap langkah selalu sama (tes tutorial di CI).
+[config]
+kartu = ["7h", "9s", "9d"]
+
+[man.aturan]
+id = """
+Pasang taruhan; kartu pertama dibuka. Tebak apakah kartu berikutnya lebih
+tinggi atau sama (HIGHER) atau lebih rendah atau sama (LOWER); A terendah, K
+tertinggi, kartu sama selalu menang. Setiap kartu diundi bebas dari 13
+peringkat dengan peluang sama (dek tak terbatas).
+
+Pengali tebakan = 0,97 ÷ peluang menang, dibulatkan ke bawah ke dua desimal,
+misalnya 1,80× untuk HIGHER dari 7. Tebakan benar mengalikan pengali
+berjalan; tebakan salah kehilangan taruhan. Setelah tebakan pertama kamu
+boleh CASH OUT kapan saja (taruhan × pengali). Pengali 1.000× langsung
+dibayar. Setiap tebakan mengembalikan paling banyak 97%; RTP strategi
+terbaik (satu tebakan lalu cash out) 96,93%. Taruhan 100–2.000, kelipatan
+100.
+
+Provably fair per ronde: komitmen seed sebelum bertaruh; kartu ke-n dari
+turunan seed ronde, seed dibuka saat kalah atau cash out, verify memutar
+ulang. Ronde yang belum selesai tersimpan setelah setiap aksi.
+"""
+en = """
+Place a bet; the first card is turned. Guess whether the next card is higher
+or the same (HIGHER) or lower or the same (LOWER); A is lowest, K highest,
+and an equal card always wins. Every card is drawn freely from the 13 ranks
+with equal chance (an infinite deck).
+
+A guess pays 0.97 ÷ its chance of winning, rounded down to two decimals, for
+example 1.80× for HIGHER from a 7. A right guess multiplies the running
+multiplier; a wrong guess loses the bet. After the first guess you may CASH
+OUT at any time (bet × multiplier). A 1,000× multiplier is paid at once.
+Each guess returns at most 97%; the best strategy (one guess, then cash out)
+returns 96.93%. Bets 100–2,000, multiples of 100.
+
+Provably fair per round: seed commitment before betting; card n comes from a
+derivation of the round seed, the seed is revealed on a loss or a cash out,
+verify replays it. An unfinished round is saved after every action.
+"""
+
+[man.kontrol]
+id = """
+Pilih nilai chip lalu [ BUKA · n ]. [ HIGHER ] dan [ LOWER ] menunjukkan
+pengalinya; [ CASH OUT ] mengambil kemenangan. Keyboard: panah memindahkan
+fokus, Enter atau Spasi memilih.
+"""
+en = """
+Choose a chip value, then [ DEAL · n ]. [ HIGHER ] and [ LOWER ] show their
+multipliers; [ CASH OUT ] takes the winnings. Keyboard: the arrow keys move
+the focus, Enter or Space selects.
+"""
+
+[[langkah]]
+teks.id = "Pasang 100 dan buka kartu pertama."
+teks.en = "Bet 100 and turn the first card."
+aksi = "bet 100"
+sorot = ["aksi:bet 100"]
+petunjuk.id = "Pilih BUKA · 100."
+petunjuk.en = "Choose DEAL · 100."
+
+[[langkah]]
+teks.id = "Kartu 7: tujuh peringkat (7–K) menang untuk HIGHER, pengali 0,97 × 13 ÷ 7 dibulatkan ke bawah = 1,80×."
+teks.en = "A 7: seven ranks (7–K) win for HIGHER, multiplier 0.97 × 13 ÷ 7 rounded down = 1.80×."
+aksi = "higher"
+sorot = ["aksi:higher"]
+petunjuk.id = "Pilih HIGHER."
+petunjuk.en = "Choose HIGHER."
+
+[[langkah]]
+teks.id = "9 lebih tinggi dari 7: pengali 1,80×. Ambil kemenanganmu."
+teks.en = "9 is higher than 7: the multiplier is 1.80×. Take your winnings."
+aksi = "cashout"
+sorot = ["aksi:cashout"]
+petunjuk.id = "Pilih CASH OUT."
+petunjuk.en = "Choose CASH OUT."
+
+[[langkah]]
+teks.id = "100 × 1,80 = 180, bersih +80. Seed ronde dibuka. Tutorial selesai."
+teks.en = "100 × 1.80 = 180, net +80. The round seed is revealed. Tutorial finished."

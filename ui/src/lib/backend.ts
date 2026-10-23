@@ -17,6 +17,15 @@ export type ActionSpec =
 	| { kind: 'fixed'; command: string }
 	| { kind: 'template'; verb: string; params: ({ name: string } & ParamKind)[] };
 
+/**
+ * Casino melawan rumah: game casino yang lawannya bandar atau tidak ada
+ * (Keno, Bingo, Video Poker, …), sama dengan `Manifest::is_against_house`.
+ * Chip profil dipakai dan dimainkan tanpa pilihan lawan.
+ */
+export function againstHouse(g: { kategori: string; lawan: string } | undefined): boolean {
+	return !!g && g.kategori.startsWith('casino') && g.lawan !== 'bot';
+}
+
 export interface CommandDoc {
 	pola: string;
 	ringkas: Localized;
