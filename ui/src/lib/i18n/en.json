@@ -661,5 +661,6 @@
 	"lt.status.deuces-wild.taruhan": "Place a bet to deal five cards ({min}–{max}).",
 	"lt.status.deuces-wild.tahan": "Choose the cards to hold, then DRAW.",
 	"lt.status.joker-poker.taruhan": "Place a bet to deal five cards ({min}–{max}).",
-	"lt.status.joker-poker.tahan": "Choose the cards to hold, then DRAW."
+	"lt.status.joker-poker.tahan": "Choose the cards to hold, then DRAW.",
+	"pp.cr.roll_n": "Roll {n}"
 }

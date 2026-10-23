@@ -661,5 +661,6 @@
 	"lt.status.deuces-wild.taruhan": "Pasang taruhan untuk membagi lima kartu ({min}–{max}).",
 	"lt.status.deuces-wild.tahan": "Pilih kartu yang ditahan, lalu DRAW.",
 	"lt.status.joker-poker.taruhan": "Pasang taruhan untuk membagi lima kartu ({min}–{max}).",
-	"lt.status.joker-poker.tahan": "Pilih kartu yang ditahan, lalu DRAW."
+	"lt.status.joker-poker.tahan": "Pilih kartu yang ditahan, lalu DRAW.",
+	"pp.cr.roll_n": "Lemparan {n}"
 }
